@@ -1,6 +1,6 @@
 // JSX type definitions
 // Note: This is JSXInternal, which gets renamed to JSX on export from jsx-runtime
-import type { Ref } from './state';
+import type { Ref } from "./state";
 
 export namespace JSXInternal {
   export type Element = any;
@@ -26,8 +26,7 @@ export namespace JSXInternal {
   export interface HTMLAttributes<T = HTMLElement> {
     ref?: Ref<T> | ((element: T | null) => void);
     id?: string;
-    className?: string;
-    class?: string;
+    class?: string | Record<string, boolean>;
     style?: string | CSSProperties;
     title?: string;
     role?: string;

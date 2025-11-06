@@ -1,5 +1,5 @@
 {
-  "name": "@snabbdom-components/core",
+  "name": "rask-ui",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",

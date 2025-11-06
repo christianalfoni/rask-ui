@@ -36,7 +36,7 @@ importers:
 
   packages/demo:
     dependencies:
-      '@snabbdom-components/core':
+      rask-ui:
         specifier: workspace:*
         version: link:../core
     devDependencies:

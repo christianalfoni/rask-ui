@@ -1,14 +1,14 @@
 {
-  "name": "snabbdom-components-monorepo",
+  "name": "rask-ui-monorepo",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter @snabbdom-components/demo dev",
-    "build:core": "pnpm --filter @snabbdom-components/core build",
-    "build:demo": "pnpm --filter @snabbdom-components/demo build",
+    "dev": "pnpm --filter @rask-ui/demo dev",
+    "build:core": "pnpm --filter rask-ui build",
+    "build:demo": "pnpm --filter @rask-ui/demo build",
     "build": "pnpm build:core && pnpm build:demo",
-    "preview": "pnpm --filter @snabbdom-components/demo preview"
+    "preview": "pnpm --filter @rask-ui/demo preview"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

@@ -1,5 +1,5 @@
 {
-  "name": "@snabbdom-components/demo",
+  "name": "@rask-ui/demo",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@snabbdom-components/core": "workspace:*"
+    "rask-ui": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

@@ -9,7 +9,7 @@
 
     /* JSX Configuration */
     "jsx": "react-jsx",
-    "jsxImportSource": "@snabbdom-components/core",
+    "jsxImportSource": "rask-ui",
 
     /* Bundler mode */
     "moduleResolution": "bundler",

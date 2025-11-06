@@ -1,28 +1,19 @@
-import {
-  createAsyncState,
-  createState,
-  render,
-} from "@snabbdom-components/core";
+import { createState, render } from "rask-ui";
 
 import "./style.css";
 
 function App() {
-  const state = createState({ count: 0 });
-  const asyncString = createAsyncState(
-    new Promise<string>((resolve) => setTimeout(() => resolve("woooh"), 3000))
-  );
+  const state = createState({ count: 0, items: ["foo"] });
 
   return () => (
     <div>
-      <button onClick={() => state.count++}>Increment ({state.count})</button>
-      <div>
-        This is async:{" "}
-        {asyncString.isPending
-          ? "Pending..."
-          : asyncString.error === null
-          ? asyncString.value
-          : asyncString.error}
-      </div>
+      <h1 onClick={() => state.count++}>Counter {state.count}</h1>
+      <button onClick={() => state.items.push("bar")}>Add</button>
+      <ul>
+        {state.items.map((item, index) => (
+          <li onClick={() => state.items.splice(index, 1)}>{item}</li>
+        ))}
+      </ul>
     </div>
   );
 }

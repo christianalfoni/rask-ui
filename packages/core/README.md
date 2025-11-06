@@ -1,12 +1,12 @@
-# @superfine-components/core
+# RASK
 
-A lightweight reactive component library built on [Superfine](https://github.com/jorgebucaran/superfine) with MobX-inspired reactivity.
+A lightweight reactive component library built on [Snabbdom](https://github.com/snabbdom/snabbdom) with MobX-inspired reactivity.
 
 ## Component and Element Lifecycle
 
 ### Overview
 
-Superfine Components uses a **host-based architecture** where each component creates a host DOM element (`<component>` tag with `display: contents`) and manages its own virtual DOM independently. Components track their direct children for efficient cleanup detection.
+RASK uses a **host-based architecture** where each component creates a host DOM element (`<component>` tag with `display: contents`) and manages its own virtual DOM independently. Components track their direct children for efficient cleanup detection.
 
 ### Component Lifecycle Phases
 
@@ -86,31 +86,21 @@ Observer notified (reactive dependency)
   ↓
 observer() callback executes
   ↓
-Check if hostElement.isConnected
-  ↓
 Render function executes
   ↓
-jsxToVNode() - Convert new JSX to VNodes
+jsx() - Convert new JSX to VNodes
   ↓
-patch(hostElement, newVNode)
+patch(hostNode, newVNode)
   ↓
-setupComponentInstances() - Track new children
-  ↓
-applyRefs() - Update refs
-  ↓
-checkChildrenConnected() - Detect removed children
+Snabbdom updates DOM
 ```
 
 **Key steps:**
 1. **State Change**: Setting a state property notifies observers
 2. **Observer Execution**: The component's observer callback runs
-3. **Connected Check**: First checks if component is still in DOM
-4. **Re-render**: Render function executes, accessing state (tracks dependencies)
-5. **JSX to VNode**: New JSX is converted to VNodes
-6. **Patch**: Superfine updates the host element's children
-7. **Setup New Children**: Any new child components are set up
-8. **Apply Refs**: DOM refs are updated
-9. **Check Children**: Direct children are checked for disconnection
+3. **Re-render**: Render function executes, accessing state (tracks dependencies)
+4. **JSX to VNode**: New JSX is converted to VNodes
+5. **Patch**: Snabbdom updates the host element's children
 
 #### 4. Component Cleanup
 
@@ -123,117 +113,49 @@ Parent re-renders
   ↓
 patch(parentHost, newVNode)
   ↓
-Superfine removes child <component> from DOM
+Snabbdom removes child <component> from DOM
   ↓
-checkChildrenConnected(parent)
-  ↓
-Iterate parent.children Set
-  ↓
-Check child.hostElement.isConnected
-  ↓
-If disconnected:
-  ↓
-parent.children.delete(child)
-  ↓
-cleanupComponentTree(child)
-  ↓
-Recursively cleanup child.children
-  ↓
-Run child.cleanupCallbacks
-  ↓
-Call child.dispose() (stops observer)
-```
-
-##### B. Component's Own Observer Detects Disconnection
-
-```
-State change triggers observer
-  ↓
-Check hostElement.isConnected
-  ↓
-If disconnected:
+Destroy hook called
   ↓
 Run cleanupCallbacks
-  ↓
-Call dispose() (stops observer)
 ```
 
 **Key steps:**
-1. **Detection**: Parent checks children after re-render, or component checks itself
-2. **Parent Removal**: Child is removed from parent's children Set
-3. **Recursive Cleanup**: `cleanupComponentTree()` walks entire subtree
-4. **Callbacks**: `onCleanup()` callbacks execute (clear timers, subscriptions, etc.)
-5. **Observer Disposal**: Observer is disposed to stop reactivity
+1. **Detection**: Snabbdom's destroy hook is called when element is removed
+2. **Callbacks**: `onCleanup()` callbacks execute (clear timers, subscriptions, etc.)
 
 ### Element Lifecycle (Regular DOM Elements)
 
-Regular DOM elements (div, span, etc.) follow Superfine's patching lifecycle:
+Regular DOM elements (div, span, etc.) follow Snabbdom's patching lifecycle:
 
 ```
-JSX: <div ref={ref}>Hello</div>
+JSX: <div>Hello</div>
   ↓
-jsxToVNode() creates VNode
+jsx() creates VNode
   ↓
 patch() creates or updates DOM
   ↓
-vnode.node contains DOM element
-  ↓
-applyRefs() assigns to ref.current
+vnode.elm contains DOM element
 ```
 
 **Key points:**
 - Regular elements don't create component instances
-- They're managed entirely by Superfine's patch algorithm
-- Refs are applied after patching
+- They're managed entirely by Snabbdom's patch algorithm
 - No special cleanup needed (browser handles DOM removal)
-
-### Cleanup Optimization
-
-The cleanup system is optimized to avoid unnecessary checks:
-
-```
-Component A re-renders
-  ↓
-checkChildrenConnected(A)
-  ↓
-Only checks A's DIRECT children (shallow)
-  ↓
-If child B is disconnected:
-  ↓
-cleanupComponentTree(B)
-  ↓
-Recursively cleans B's entire subtree
-```
-
-**Why this is efficient:**
-- Only checks direct children when parent re-renders
-- No traversal of connected subtrees
-- Disconnected subtrees are cleaned recursively
-- Uses native `isConnected` property (no DOM observation)
 
 ### Parent-Child Relationship Tracking
 
+Components track their parent via the component stack during initialization:
+
 ```
-setupComponentInstances(vnode)
-  ↓
-instance.hostElement = vnode.node
-  ↓
-Walk up DOM tree:
-  let parent = element.parentElement
-  while (parent) {
-    if (parent.__componentInstance) {
-      parent.children.add(instance)
-      break
-    }
-    parent = parent.parentElement
-  }
+componentStack.unshift(instance)
+const render = component(instance.reactiveProps)
 ```
 
 **Key points:**
-- Relationships established via DOM tree traversal
-- Uses `__componentInstance` property on DOM elements
-- Stored in parent's `children` Set
-- Enables efficient cleanup checking
+- Parent-child relationships tracked through component stack
+- Used for context propagation
+- Cleanup handled by Snabbdom's destroy hooks
 
 ### Complete Lifecycle Example
 
@@ -267,14 +189,10 @@ render(<Counter />, document.getElementById('app'));
 // → state.count++ triggers observer
 // → Render function executes
 // → DOM updates via patch()
-// → No children removed, no cleanup
 
 // Component removed (parent re-renders without it)
-// → Parent's checkChildrenConnected() runs
-// → Detects Counter is disconnected
-// → Runs cleanupComponentTree()
+// → Snabbdom destroy hook called
 // → Logs: "Counter cleaning up"
-// → Observer disposed
 ```
 
 ## Key Architectural Decisions
@@ -285,11 +203,11 @@ render(<Counter />, document.getElementById('app'));
 - No parent-child instance relationships for rendering
 - Isolation enables fine-grained updates
 
-### 2. Component Tree for Cleanup
-- Parents track direct children in a Set
-- Only check children when parent re-renders
-- Recursive cleanup for disconnected subtrees
-- Efficient with native `isConnected` property
+### 2. Lifecycle Management
+- Snabbdom hooks manage component lifecycle
+- Insert hook runs onMount callbacks
+- Destroy hook runs onCleanup callbacks
+- Parent-child tracking for context propagation
 
 ### 3. Observer Pattern for Reactivity
 - Render functions wrapped with observer
@@ -297,123 +215,49 @@ render(<Counter />, document.getElementById('app'));
 - Re-renders only when observed properties change
 - No manual subscriptions needed
 
-### 4. DOM-Based Traversal
-- Context and Suspense find boundaries via DOM tree
-- Uses `__componentInstance` property on elements
-- Decoupled from component instance relationships
-- Works naturally with host element architecture
+### 4. Context Traversal
+- Context walks component tree via parent references
+- Set during component initialization
+- Natural hierarchical lookup
+- Works with host element architecture
 
-### 5. Immediate Cleanup
-- Children checked immediately after parent re-renders
-- No deferred cleanup or garbage collection needed
-- Cleanup callbacks run synchronously
-- Predictable lifecycle behavior
+### 5. Hook-Based Cleanup
+- Cleanup callbacks run via Snabbdom destroy hooks
+- Synchronous and predictable
+- No manual tracking required
+- Integrated with virtual DOM lifecycle
 
-### 6. Component Keys and Instance Caching
+### 6. Thunk-Based Components
 
-Components are cached by parent to preserve identity across re-renders:
+Components use Snabbdom's thunk feature for optimization:
 
 ```tsx
-function TodoList() {
-  const state = createState({
-    todos: [{ id: 1, text: "Learn keys" }, { id: 2, text: "Build app" }]
-  });
-
-  return () => (
-    <ul>
-      {state.todos.map(todo => (
-        <TodoItem key={todo.id} {...todo} />
-      ))}
-    </ul>
-  );
-}
+const thunkNode = thunk("component", props.key, component, [props, children]);
 ```
 
 **How it works:**
-- **Cache Key Format**:
-  - With explicit `key` prop: `key:${componentFnId}:${keyValue}` (e.g., `key:2:1`)
-  - Without key (positional): `pos:${componentFnId}:${position}` (e.g., `pos:2:0`)
-- **Composite Keys**: vnodes use `${componentFnId}:${keyValue}` for Superfine reconciliation
-- **Instance Reuse**: When parent re-renders, children are looked up in cache and reused
-- **Props Update**: Cached instances get updated props (triggers observer if changed)
+- Components wrapped as thunks with custom hooks
+- Init hook: Creates component instance and runs setup
+- Prepatch hook: Updates reactive props before render
+- Postpatch hook: Syncs props after patch
+- Insert hook: Runs onMount callbacks
+- Destroy hook: Runs onCleanup callbacks
 
 **Benefits:**
-- Component instances persist across parent re-renders
-- State preserved when list order changes (with proper keys)
-- Avoids recreation of component instances
-- Prevents collision between different component types with same key
-
-### 7. VNode Caching and Superfine Short-Circuiting
-
-The framework optimizes rendering by caching vnodes at component boundaries:
-
-```tsx
-// In renderComponent():
-if (instance.dispose && instance.cachedVNode) {
-  // Return cached vnode - Superfine skips entire subtree!
-  return instance.cachedVNode;
-}
-```
-
-**How it works:**
-
-1. **Component First Render**:
-   - Observer creates vnode for host element with children
-   - Vnode cached: `instance.cachedVNode = newHostVNode`
-
-2. **Parent Re-renders**:
-   - Calls `renderComponent()` for each child
-   - Finds cached instance, updates props
-   - Returns `instance.cachedVNode` to parent
-
-3. **Superfine Optimization**:
-   - Superfine checks: `if (oldVNode === newVNode) { /* skip */ }`
-   - Same vnode reference → entire subtree skipped!
-   - Massive performance win for unchanged components
-
-4. **Async Child Update**:
-   - Props update schedules observer in microtask
-   - If props changed, observer runs and patches host element directly
-   - Creates new cached vnode for next parent render
-
-**Rendering Flow:**
-```
-Parent renders
-  ├─> renderComponent(Child1)
-  │     ├─> Find cached instance ✓
-  │     ├─> Update props → schedules observer
-  │     └─> Return cachedVNode → Superfine skips subtree
-  │
-  ├─> renderComponent(Child2)
-  │     ├─> Find cached instance ✓
-  │     ├─> Update props → schedules observer
-  │     └─> Return cachedVNode → Superfine skips subtree
-  │
-  └─> Parent patch completes (synchronous)
-        │
-        └─> Microtask queue runs (async):
-              ├─> Child1 observer patches host element
-              └─> Child2 observer patches host element
-```
-
-**Benefits:**
-- Parent re-renders don't cascade synchronously to children
-- Leverages Superfine's built-in referential equality check
-- Child updates happen asynchronously in microtasks
-- Massive performance improvement for large component trees
-- Each component independently manages its own rendering
-
-**Key Insight:**
-The cached vnode includes the composite key (e.g., `key: "2:1"`), allowing Superfine to properly reconcile components by key when list order changes. This combines:
-- Component instance caching (for identity preservation)
-- VNode caching (for Superfine optimization)
-- Composite keys (for collision prevention and reconciliation)
+- Leverages Snabbdom's thunk optimization
+- Props changes trigger reactive updates
+- Lifecycle hooks integrated with virtual DOM
+- Efficient component reconciliation
 
 ## API Reference
 
-See main repository documentation for full API details:
+See main [README](../../README.md) for full API details:
 - `createState(initialState)` - Create reactive state
-- `createRef()` - Create DOM element ref
 - `onMount(callback)` - Register mount callback
 - `onCleanup(callback)` - Register cleanup callback
+- `createContext()` - Create context for data sharing
+- `createAsync(promise)` - Handle async operations
+- `createQuery(fetcher)` - Create query with refetch
+- `createMutation(mutator)` - Create mutation handler
+- `ErrorBoundary` - Error boundary component
 - `render(jsx, container)` - Mount component to DOM

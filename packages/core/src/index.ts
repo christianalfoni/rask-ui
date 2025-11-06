@@ -5,3 +5,4 @@ export { createState } from "./createState";
 export { createAsync } from "./createAsync";
 export { ErrorBoundary } from "./error";
 export { createQuery } from "./createQuery";
+export { createMutation } from "./createMutation";
