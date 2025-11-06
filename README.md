@@ -41,9 +41,8 @@ function MyApp() {
 Solid offers a simpler mental model with fine-grained reactivity. Updates don't happen by calling the component function again, but in "hidden" parts of expressions in the UI. However:
 
 - Requires understanding special compiler transformations
-- Special components with special rules (`<Show>`, `<For>`, etc.)
+- Special components for expressing dynamic UIs (`<Show>`, `<For>`, etc.)
 - Function call syntax for accessing values: `count()`
-- Limited reconciler capabilities (no traditional component trees)
 
 ### RASK: Best of Both Worlds
 
@@ -247,14 +246,6 @@ import { onMount } from "rask-ui";
 function Example() {
   onMount(() => {
     console.log("Component mounted!");
-
-    // Setup side effects
-    const interval = setInterval(() => {
-      console.log("tick");
-    }, 1000);
-
-    // Return cleanup function
-    return () => clearInterval(interval);
   });
 
   return () => <div>Hello</div>;
@@ -263,13 +254,12 @@ function Example() {
 
 **Parameters:**
 
-- `callback: () => void | (() => void)` - Function to call on mount. Can optionally return a cleanup function.
+- `callback: () => void` - Function to call on mount. Can optionally return a cleanup function.
 
 **Notes:**
 
 - Only call during component setup phase (not in render function)
 - Can be called multiple times to register multiple mount callbacks
-- Cleanup functions run when component unmounts
 
 ---
 
