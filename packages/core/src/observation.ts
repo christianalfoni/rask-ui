@@ -18,33 +18,30 @@ export class Signal {
   }
 }
 
-let pendingObservations: Array<() => void> = [];
-
-function queueObservation(cb: () => void) {
-  pendingObservations.push(cb);
-
-  if (pendingObservations.length > 1) {
-    return;
-  }
-  queueMicrotask(() => {
-    const current = pendingObservations;
-    pendingObservations = [];
-    current.forEach((cb) => cb());
-  });
-}
-
 export class Observer {
   private signalDisposers = new Set<() => void>();
   private clearSignals() {
     this.signalDisposers.forEach((dispose) => dispose());
     this.signalDisposers.clear();
   }
-  private onSignal: () => void;
-  constructor(onSignal: () => void) {
-    this.onSignal = () => queueObservation(onSignal);
+  private onNotify: () => void;
+  private isQueued = false;
+  constructor(onNotify: () => void) {
+    this.onNotify = () => {
+      if (this.isQueued) {
+        return;
+      }
+
+      queueMicrotask(() => {
+        this.isQueued = false;
+        onNotify();
+      });
+
+      this.isQueued = true;
+    };
   }
   subscribeSignal(signal: Signal) {
-    this.signalDisposers.add(signal.subscribe(this.onSignal));
+    this.signalDisposers.add(signal.subscribe(this.onNotify));
   }
   observe() {
     this.clearSignals();

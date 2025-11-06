@@ -1,7 +1,7 @@
 import { thunk, type VNode, type VNodeData } from "snabbdom";
 
 import { getCurrentObserver, Observer, Signal } from "./observation";
-import { jsx, patch } from "./render";
+import { jsx, patch, ChildNode } from "./render";
 import { createState } from "./createState";
 
 export type Component<P> = ((props: P) => () => VNode) | (() => () => VNode);
@@ -15,7 +15,8 @@ export type ComponentInstance = {
   hostNode?: VNode;
   observer: Observer;
   reactiveProps: object;
-  renderError: unknown;
+  error: unknown;
+  notifyError(error: unknown): void;
 };
 
 const componentStack: ComponentInstance[] = [];
@@ -46,23 +47,19 @@ export function onCleanup(cb: () => void) {
 
 const hook = {
   insert(vnode: VNode & { data: { componentInstance: ComponentInstance } }) {
-    console.log("INSERT", vnode.data.componentInstance.component.name);
     componentStack.shift();
     vnode.data.componentInstance.onMounts.forEach((cb) => cb());
   },
   destroy(vnode: VNode & { data: { componentInstance: ComponentInstance } }) {
-    console.log("DESTROY", vnode.data.componentInstance.component.name);
     componentStack.shift();
     vnode.data.componentInstance.onCleanups.forEach((cb) => cb());
   },
   prepatch(oldVnode: VNode, thunk: VNode): void {
     copyToThunk(oldVnode, thunk);
-    console.log("PREPATCH", thunk.data!.componentInstance.component.name);
     componentStack.unshift(thunk.data!.componentInstance);
   },
   postpatch(_: VNode, newNode: VNode) {
     const componentInstance = newNode.data!.componentInstance;
-    console.log("POSTPATCH", componentInstance.component.name);
     componentStack.shift();
     const props = newNode.data!.args![0];
     const children = newNode.data!.args![1];
@@ -76,14 +73,19 @@ const hook = {
   init(thunk: VNode) {
     const component = thunk.data!.fn! as unknown as Component<any>;
     const args = thunk.data!.args!;
-    // Implement a value to signals, then optionally create an error signal
-    const renderErrorSignal = new Signal();
-    let renderError: boolean = false;
+    let errorSignal: Signal | undefined;
+    let error: unknown;
 
     const executeRender = () => {
       const stopObserving = instance.observer.observe();
-      const renderResult = render();
-      stopObserving();
+      let renderResult = null;
+      try {
+        renderResult = render();
+      } catch (error) {
+        instance.notifyError(error);
+      } finally {
+        stopObserving();
+      }
 
       return jsx(
         "component",
@@ -113,33 +115,42 @@ const hook = {
         ...args![0],
         children: args![1],
       }),
-      get renderError() {
+      get error() {
+        if (!errorSignal) {
+          errorSignal = new Signal();
+        }
         const observer = getCurrentObserver();
         if (observer) {
-          observer.subscribeSignal(renderErrorSignal);
+          observer.subscribeSignal(errorSignal);
         }
-        return renderError;
+        return error;
       },
-      set renderError(value) {
-        renderError = value;
-        renderErrorSignal.notify();
+      notifyError(childError) {
+        if (errorSignal) {
+          error = childError;
+          errorSignal.notify();
+        } else if (instance.parent) {
+          instance.parent.notifyError(childError);
+        } else {
+          throw childError;
+        }
       },
     };
 
     componentStack.unshift(instance);
     const render = component(instance.reactiveProps);
-    instance.hostNode = executeRender();
+    const renderResult = executeRender();
 
-    instance.hostNode!.data!.componentInstance = instance;
-
-    copyToThunk(instance.hostNode!, thunk);
+    renderResult.data!.componentInstance = instance;
+    copyToThunk(renderResult, thunk);
+    instance.hostNode = thunk;
   },
 };
 
 export function createComponent(
   component: Component<any>,
   props: Record<string, unknown>,
-  children: VNode[] | VNode
+  children: ChildNode[] | ChildNode
 ) {
   const thunkNode = thunk("component", props.key, component, [props, children]);
 

@@ -17,7 +17,7 @@ type AsyncState<T> =
       error: string;
     };
 
-export function createAsyncState<T>(promise: Promise<T>) {
+export function createAsync<T>(promise: Promise<T>) {
   const state = createState<AsyncState<T>>({
     isPending: true,
     error: null,

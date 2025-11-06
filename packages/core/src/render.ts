@@ -19,6 +19,8 @@ export const patch = init([
   attributesModule,
 ]);
 
+export type ChildNode = VNode | string | null | number;
+
 export function render(vnode: VNode, container: HTMLElement) {
   const style = document.createElement("style");
   style.innerHTML = "component { display: contents; }";
@@ -29,7 +31,7 @@ export function render(vnode: VNode, container: HTMLElement) {
 export function jsx(
   type: string | Component<any>,
   props: Record<string, unknown>,
-  children: VNode[]
+  children: ChildNode[]
 ) {
   let flatChildren = children.flat();
 
