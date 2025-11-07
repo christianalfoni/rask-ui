@@ -799,6 +799,60 @@ function ShoppingCart() {
 
 Computed functions automatically track dependencies when called during render.
 
+### Composition
+
+Compose complex logic by combining state and methods using `createView`:
+
+```tsx
+function createAuthStore() {
+  const state = createState({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+  });
+
+  const login = async (username, password) => {
+    state.isLoading = true;
+    try {
+      const user = await fetch("/api/login", {
+        method: "POST",
+        body: JSON.stringify({ username, password }),
+      }).then((r) => r.json());
+      state.user = user;
+      state.isAuthenticated = true;
+    } finally {
+      state.isLoading = false;
+    }
+  };
+
+  const logout = () => {
+    state.user = null;
+    state.isAuthenticated = false;
+  };
+
+  return createView(state, { login, logout });
+}
+
+function App() {
+  const auth = createAuthStore();
+
+  return () => (
+    <div>
+      {auth.isAuthenticated ? (
+        <div>
+          <p>Welcome, {auth.user.name}!</p>
+          <button onClick={auth.logout}>Logout</button>
+        </div>
+      ) : (
+        <button onClick={() => auth.login("user", "pass")}>Login</button>
+      )}
+    </div>
+  );
+}
+```
+
+This pattern is great for organizing complex business logic while keeping both state and methods accessible through a single object.
+
 ### External State Management
 
 Share state across components:
