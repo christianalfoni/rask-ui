@@ -176,6 +176,50 @@ function Parent() {
 
 When `state.count` changes in Parent, only Child re-renders because it accesses `props.value`.
 
+### Important: Do Not Destructure Reactive Objects
+
+**RASK follows the same rule as Solid.js**: Never destructure reactive objects (state, props, context values, async, query, mutation). Destructuring extracts plain values and breaks reactivity.
+
+```tsx
+// ❌ BAD - Destructuring breaks reactivity
+function Counter(props) {
+  const state = createState({ count: 0 });
+  const { count } = state; // Extracts plain value!
+
+  return () => <div>{count}</div>; // Won't update!
+}
+
+function Child({ value, name }) { // Destructuring props!
+  return () => <div>{value} {name}</div>; // Won't update!
+}
+
+// ✅ GOOD - Access properties directly in render
+function Counter(props) {
+  const state = createState({ count: 0 });
+
+  return () => <div>{state.count}</div>; // Reactive!
+}
+
+function Child(props) { // Don't destructure
+  return () => <div>{props.value} {props.name}</div>; // Reactive!
+}
+```
+
+**Why this happens:**
+
+Reactive objects are implemented using JavaScript Proxies. When you access a property during render (e.g., `state.count`), the proxy tracks that dependency. But when you destructure (`const { count } = state`), the destructuring happens during setup—before any tracking context exists. You get a plain value instead of a tracked property access.
+
+**This applies to:**
+- `createState()` - Never destructure state objects
+- Props - Never destructure component props
+- `createContext().get()` - Never destructure context values
+- `createAsync()` - Never destructure async state
+- `createQuery()` - Never destructure query objects
+- `createMutation()` - Never destructure mutation objects
+- `createView()` - Never destructure view objects
+
+**Learn more:** This is the same design decision as [Solid.js reactive primitives](https://www.solidjs.com/tutorial/introduction_signals), which also use this pattern for fine-grained reactivity.
+
 ## API Reference
 
 ### Core Functions
@@ -231,6 +275,84 @@ function Example() {
 - Deep reactivity - nested objects and arrays are automatically reactive
 - Direct mutations - no setter functions required
 - Efficient tracking - only re-renders components that access changed properties
+
+---
+
+#### `createView<T>(...objects)`
+
+Creates a view that merges multiple objects (reactive or plain) into a single object while maintaining reactivity through getters. Properties from later arguments override earlier ones.
+
+```tsx
+import { createView, createState } from "rask-ui";
+
+function Counter() {
+  const state = createState({ count: 0, name: "Counter" });
+  const helpers = {
+    increment: () => state.count++,
+    decrement: () => state.count--,
+    reset: () => (state.count = 0),
+  };
+
+  const view = createView(state, helpers);
+
+  return () => (
+    <div>
+      <h1>
+        {view.name}: {view.count}
+      </h1>
+      <button onClick={view.increment}>+</button>
+      <button onClick={view.decrement}>-</button>
+      <button onClick={view.reset}>Reset</button>
+    </div>
+  );
+}
+```
+
+**Parameters:**
+
+- `...objects: object[]` - Objects to merge (reactive or plain). Later arguments override earlier ones.
+
+**Returns:** A view object with getters for all properties, maintaining reactivity
+
+**Use Cases:**
+
+1. **Merge state with helper methods:**
+
+   ```tsx
+   const state = createState({ count: 0 });
+   const helpers = { increment: () => state.count++ };
+   const view = createView(state, helpers);
+   // Access both: view.count, view.increment()
+   ```
+
+2. **Combine multiple reactive objects:**
+
+   ```tsx
+   const user = createState({ name: "Alice" });
+   const settings = createState({ theme: "dark" });
+   const view = createView(user, settings);
+   // Access both: view.name, view.theme
+   ```
+
+3. **Override properties with computed values:**
+   ```tsx
+   const state = createState({ firstName: "John", lastName: "Doe" });
+   const computed = {
+     get fullName() {
+       return `${state.firstName} ${state.lastName}`;
+     },
+   };
+   const view = createView(state, computed);
+   // view.fullName returns "John Doe" and updates when state changes
+   ```
+
+**Notes:**
+
+- Reactivity is maintained through getters that reference the source objects
+- Changes to source objects are reflected in the view
+- Only enumerable properties are included
+- Symbol keys are supported
+- **Do not destructure** - See warning section above
 
 ---
 
@@ -367,7 +489,7 @@ import { createContext } from "rask-ui";
 const ThemeContext = createContext<{ color: string }>();
 
 function App() {
-  ThemeContext.set({ color: "blue" });
+  ThemeContext.inject({ color: "blue" });
 
   return () => <Child />;
 }
@@ -379,11 +501,11 @@ function Child() {
 }
 ```
 
-**Returns:** Context object with `set` and `get` methods
+**Returns:** Context object with `inject` and `get` methods
 
 **Methods:**
 
-- `set(value: T)` - Sets context value for child components (call during setup)
+- `inject(value: T)` - Injects context value for child components (call during setup)
 - `get(): T` - Gets context value from nearest parent (call during setup)
 
 **Notes:**
