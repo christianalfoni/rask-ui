@@ -1,30 +1,30 @@
-import { describe, it, expect } from 'vitest';
-import { createRef } from './createRef';
-import { render } from './render';
+import { describe, it, expect } from "vitest";
+import { createRef } from "./createRef";
+import { render } from "./vdom";
 
-describe('createRef', () => {
-  it('should create a ref with null initial value', () => {
+describe("createRef", () => {
+  it("should create a ref with null initial value", () => {
     const ref = createRef<HTMLDivElement>();
     expect(ref.current).toBeNull();
   });
 
-  it('should be callable as a function', () => {
+  it("should be callable as a function", () => {
     const ref = createRef<HTMLDivElement>();
-    expect(typeof ref).toBe('function');
+    expect(typeof ref).toBe("function");
   });
 
-  it('should update current when called with a node', () => {
+  it("should update current when called with a node", () => {
     const ref = createRef<HTMLDivElement>();
-    const element = document.createElement('div');
+    const element = document.createElement("div");
 
     ref(element);
 
     expect(ref.current).toBe(element);
   });
 
-  it('should update current when called with null', () => {
+  it("should update current when called with null", () => {
     const ref = createRef<HTMLDivElement>();
-    const element = document.createElement('div');
+    const element = document.createElement("div");
 
     ref(element);
     expect(ref.current).toBe(element);
@@ -33,14 +33,14 @@ describe('createRef', () => {
     expect(ref.current).toBeNull();
   });
 
-  it('should work with JSX ref attribute', async () => {
+  it("should work with JSX ref attribute", async () => {
     const ref = createRef<HTMLDivElement>();
 
     function TestComponent() {
       return () => <div ref={ref}>Hello</div>;
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     const vnode = render(<TestComponent />, container);
@@ -48,17 +48,17 @@ describe('createRef', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(ref.current).not.toBeNull();
-    expect(ref.current?.tagName).toBe('DIV');
-    expect(ref.current?.textContent).toBe('Hello');
+    expect(ref.current?.tagName).toBe("DIV");
+    expect(ref.current?.textContent).toBe("Hello");
 
     document.body.removeChild(vnode.elm as HTMLElement);
   });
 
-  it('should handle multiple ref updates', () => {
+  it("should handle multiple ref updates", () => {
     const ref = createRef<HTMLElement>();
 
-    const div = document.createElement('div');
-    const span = document.createElement('span');
+    const div = document.createElement("div");
+    const span = document.createElement("span");
 
     ref(div);
     expect(ref.current).toBe(div);
@@ -70,7 +70,7 @@ describe('createRef', () => {
     expect(ref.current).toBeNull();
   });
 
-  it('should work with different element types', async () => {
+  it("should work with different element types", async () => {
     const inputRef = createRef<HTMLInputElement>();
     const buttonRef = createRef<HTMLButtonElement>();
 
@@ -83,35 +83,35 @@ describe('createRef', () => {
       );
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     const vnode = render(<TestComponent />, container);
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(inputRef.current?.tagName).toBe('INPUT');
-    expect(buttonRef.current?.tagName).toBe('BUTTON');
+    expect(inputRef.current?.tagName).toBe("INPUT");
+    expect(buttonRef.current?.tagName).toBe("BUTTON");
 
     document.body.removeChild(vnode.elm as HTMLElement);
   });
 
-  it('should allow accessing DOM properties', async () => {
+  it("should allow accessing DOM properties", async () => {
     const ref = createRef<HTMLInputElement>();
 
     function TestComponent() {
       return () => <input ref={ref} type="text" value="test" />;
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     const vnode = render(<TestComponent />, container);
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(ref.current?.value).toBe('test');
-    expect(ref.current?.type).toBe('text');
+    expect(ref.current?.value).toBe("test");
+    expect(ref.current?.type).toBe("text");
 
     document.body.removeChild(vnode.elm as HTMLElement);
   });

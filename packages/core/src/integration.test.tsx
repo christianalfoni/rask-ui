@@ -1,27 +1,27 @@
-import { describe, it, expect, vi } from 'vitest';
-import { onMount, onCleanup, getCurrentComponent } from './component';
-import { render } from './render';
-import { createState } from './createState';
-import { createRef } from './createRef';
-import { createContext } from './createContext';
-import { ErrorBoundary } from './error';
+import { describe, it, expect, vi } from "vitest";
+import { onCleanup, onMount } from "./vdom/ComponentVNode";
+import { render } from "./vdom";
+import { createState } from "./createState";
+import { createRef } from "./createRef";
+import { createContext } from "./createContext";
+import { ErrorBoundary } from "./error";
 
-describe('Integration Tests', () => {
-  it('should render a simple component', () => {
+describe("Integration Tests", () => {
+  it("should render a simple component", () => {
     function App() {
       return () => <div>Hello World</div>;
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     render(<App />, container);
 
     // After patch, container is replaced, so check body instead
-    expect(document.body.textContent).toContain('Hello World');
+    expect(document.body.textContent).toContain("Hello World");
   });
 
-  it('should handle reactive state updates', async () => {
+  it("should handle reactive state updates", async () => {
     function Counter() {
       const state = createState({ count: 0 });
 
@@ -33,35 +33,35 @@ describe('Integration Tests', () => {
       );
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     render(<Counter />, container);
 
-    expect(document.body.textContent).toContain('Count: 0');
+    expect(document.body.textContent).toContain("Count: 0");
 
     // Simulate click
-    const button = document.querySelector('button');
+    const button = document.querySelector("button");
     button?.click();
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(document.body.textContent).toContain('Count: 1');
+    expect(document.body.textContent).toContain("Count: 1");
   });
 
-  it('should work with refs', async () => {
+  it("should work with refs", async () => {
     function App() {
       const ref = createRef<HTMLDivElement>();
 
       onMount(() => {
         expect(ref.current).not.toBeNull();
-        expect(ref.current?.tagName).toBe('DIV');
+        expect(ref.current?.tagName).toBe("DIV");
       });
 
       return () => <div ref={ref}>Test</div>;
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     render(<App />, container);
@@ -69,7 +69,7 @@ describe('Integration Tests', () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
   });
 
-  it('should handle context', () => {
+  it("should handle context", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     function Child() {
@@ -78,22 +78,22 @@ describe('Integration Tests', () => {
     }
 
     function Parent() {
-      ThemeContext.inject({ theme: 'dark' });
+      ThemeContext.inject({ theme: "dark" });
       return () => <Child />;
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     render(<Parent />, container);
 
-    expect(document.body.textContent).toContain('dark');
+    expect(document.body.textContent).toContain("dark");
   });
 
-  it.skip('should handle error boundaries', async () => {
+  it("should handle error boundaries", async () => {
     function ThrowingChild() {
       return () => {
-        throw new Error('Test error');
+        throw new Error("Test error");
       };
     }
 
@@ -107,21 +107,22 @@ describe('Integration Tests', () => {
       );
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     render(<App />, container);
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const errorDiv = document.querySelector('.error');
+    const errorDiv = document.querySelector(".error");
     expect(errorDiv).not.toBeNull();
-    expect(errorDiv?.textContent).toContain('Test error');
+    expect(errorDiv?.textContent).toContain("Test error");
   });
 
-  it.skip('should call onMount and onCleanup', async () => {
+  it("should call onMount and onCleanup", async () => {
     const mountFn = vi.fn();
     const cleanupFn = vi.fn();
+    let stateFn: { show: boolean } | undefined;
 
     function Component() {
       onMount(mountFn);
@@ -129,27 +130,31 @@ describe('Integration Tests', () => {
       return () => <div>Test</div>;
     }
 
-    const container = document.createElement('div');
+    function App() {
+      const state = createState({ show: true });
+      stateFn = state;
+      return () => (state.show ? <Component /> : <div>Empty</div>);
+    }
+
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
-    render(<Component />, container);
+    render(<App />, container);
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     expect(mountFn).toHaveBeenCalledTimes(1);
     expect(cleanupFn).not.toHaveBeenCalled();
 
-    // Unmount by rendering something else
-    const container2 = document.createElement('div');
-    document.body.appendChild(container2);
-    render(<div>Empty</div>, container2);
+    // Unmount by toggling state to render something else
+    stateFn!.show = false;
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     expect(cleanupFn).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle nested components', () => {
+  it("should handle nested components", () => {
     function GrandChild() {
       return () => <span>GrandChild</span>;
     }
@@ -170,17 +175,17 @@ describe('Integration Tests', () => {
       );
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     render(<Parent />, container);
 
-    expect(document.body.textContent).toContain('Parent');
-    expect(document.body.textContent).toContain('Child');
-    expect(document.body.textContent).toContain('GrandChild');
+    expect(document.body.textContent).toContain("Parent");
+    expect(document.body.textContent).toContain("Child");
+    expect(document.body.textContent).toContain("GrandChild");
   });
 
-  it.skip('should handle conditional rendering', async () => {
+  it("should handle conditional rendering", async () => {
     function App() {
       const state = createState({ show: true });
 
@@ -192,7 +197,7 @@ describe('Integration Tests', () => {
       );
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     render(<App />, container);
@@ -200,23 +205,27 @@ describe('Integration Tests', () => {
     // Wait for initial render
     await new Promise((resolve) => setTimeout(resolve, 5));
 
-    expect(document.querySelector('.content')).not.toBeNull();
+    expect(document.querySelector(".content")).not.toBeNull();
 
-    const button = document.querySelector('button');
+    const button = document.querySelector("button");
     button?.click();
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(document.querySelector('.content')).toBeNull();
+    expect(document.querySelector(".content")).toBeNull();
   });
 
-  it('should handle list rendering', async () => {
+  it("should handle list rendering", async () => {
     function TodoList() {
-      const state = createState({ items: ['Item 1', 'Item 2'] });
+      const state = createState({ items: ["Item 1", "Item 2"] });
 
       return () => (
         <div>
-          <button onClick={() => state.items.push(`Item ${state.items.length + 1}`)}>
+          <button
+            onClick={() => {
+              state.items.push(`Item ${state.items.length + 1}`);
+            }}
+          >
             Add
           </button>
           <ul>
@@ -228,18 +237,18 @@ describe('Integration Tests', () => {
       );
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     document.body.appendChild(container);
 
     render(<TodoList />, container);
 
-    expect(document.querySelectorAll('li').length).toBe(2);
+    expect(document.querySelectorAll("li").length).toBe(2);
 
-    const button = document.querySelector('button');
+    const button = document.querySelector("button");
     button?.click();
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(document.querySelectorAll('li').length).toBe(3);
+    expect(document.querySelectorAll("li").length).toBe(3);
   });
 });

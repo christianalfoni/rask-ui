@@ -1,8 +1,8 @@
 // JSX runtime implementation
 import type { JSXInternal } from "./jsx";
-import { jsx as internalJsx } from "./render";
+import { jsx as internalJsx } from "./vdom";
 
-export const FragmentSymbol = Symbol.for("superfine-components.Fragment");
+export { Fragment } from "./vdom/FragmentVNode";
 
 export function jsx(
   type: string,
@@ -17,15 +17,7 @@ export function jsx<P>(
   key?: string
 ): any;
 export function jsx(type: any, props: any, key?: any): any {
-  const { children, ...restProps } = props;
-  const finalProps = key !== undefined ? { ...restProps, key } : restProps;
-  const finalChildren = Array.isArray(children)
-    ? children
-    : children === undefined
-    ? []
-    : [children];
-
-  return internalJsx(type, finalProps, finalChildren);
+  return internalJsx(type, props, key);
 }
 
 export function jsxs(
@@ -43,12 +35,6 @@ export function jsxs<P>(
 export function jsxs(type: any, props: any, key?: any): any {
   return jsx(type, props, key);
 }
-
-export function Fragment(props?: { children?: any }): any {
-  return props?.children;
-}
-
-(Fragment as any).$$typeof = FragmentSymbol;
 
 // Export the JSXInternal namespace renamed as JSX for TypeScript
 export type { JSXInternal as JSX } from "./jsx";

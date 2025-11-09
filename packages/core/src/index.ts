@@ -1,5 +1,5 @@
-export { render } from "./render";
-export { onMount, onCleanup } from "./component";
+export { render } from "./vdom";
+export { onCleanup, onMount } from "./vdom/ComponentVNode";
 export { createContext } from "./createContext";
 export { createState } from "./createState";
 export { createAsync } from "./createAsync";

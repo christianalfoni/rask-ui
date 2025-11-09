@@ -966,7 +966,7 @@ RASK is designed for performance:
 
 - **Fine-grained reactivity**: Only components that access changed state re-render
 - **No wasted renders**: Components skip re-render if reactive dependencies haven't changed
-- **Efficient DOM updates**: Powered by Snabbdom's battle-tested virtual DOM
+- **Efficient DOM updates**: Powered by a custom virtual DOM implementation optimized for reactive components
 - **No reconciler overhead for state**: State changes are direct, no diffing required
 - **Automatic cleanup**: Components and effects cleaned up automatically
 
@@ -977,7 +977,7 @@ RASK is designed for performance:
 | State management  | Complex (hooks, closures) | Simple (signals)         | Simple (proxies) |
 | UI expression     | Excellent                 | Limited                  | Excellent        |
 | Reactivity        | Coarse (component level)  | Fine-grained             | Fine-grained     |
-| Reconciler        | Yes                       | Limited                  | Yes (Snabbdom)   |
+| Reconciler        | Yes                       | Limited                  | Yes (custom)     |
 | Syntax            | JSX                       | JSX + special components | JSX              |
 | Compiler required | No                        | Yes                      | No               |
 | Learning curve    | Steep                     | Moderate                 | Gentle           |

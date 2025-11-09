@@ -19,6 +19,7 @@ export class Signal {
 }
 
 export class Observer {
+  private _isDisposed = false;
   private signalDisposers = new Set<() => void>();
   private clearSignals() {
     this.signalDisposers.forEach((dispose) => dispose());
@@ -34,6 +35,11 @@ export class Observer {
 
       queueMicrotask(() => {
         this.isQueued = false;
+
+        if (this._isDisposed) {
+          return;
+        }
+
         onNotify();
       });
 
@@ -52,5 +58,6 @@ export class Observer {
   }
   dispose() {
     this.clearSignals();
+    this._isDisposed = true;
   }
 }

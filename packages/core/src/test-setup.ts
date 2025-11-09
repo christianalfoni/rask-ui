@@ -1,14 +1,14 @@
 // Test setup file for vitest
-import { afterEach } from 'vitest';
-import { render, patch } from './render';
-import type { VNode } from 'snabbdom';
+import { afterEach } from "vitest";
+import { render } from "./vdom";
+import { VNode } from "./vdom/types";
 
 // Clean up after each test
 afterEach(() => {
-  document.body.innerHTML = '';
+  document.body.innerHTML = "";
 
   // Remove any style tags added by render function
-  document.querySelectorAll('style').forEach(style => style.remove());
+  document.querySelectorAll("style").forEach((style) => style.remove());
 });
 
 /**
@@ -20,7 +20,7 @@ afterEach(() => {
  * unmount();
  */
 export function renderComponent(vnode: VNode) {
-  const container = document.createElement('div');
+  const container = document.createElement("div");
   document.body.appendChild(container);
 
   let currentVnode = render(vnode, container);
@@ -39,8 +39,7 @@ export function renderComponent(vnode: VNode) {
     },
     // Re-render with new vnode
     rerender: (newVnode: VNode) => {
-      currentVnode = patch(currentVnode, newVnode);
-      return currentVnode;
-    }
+      (currentVnode as any).patch(newVnode);
+    },
   };
 }

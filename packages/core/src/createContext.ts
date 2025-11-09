@@ -1,4 +1,8 @@
-import { getCurrentComponent, type ComponentInstance } from "./component";
+import {
+  getCurrentComponent,
+  type ComponentInstance,
+} from "./vdom/ComponentVNode";
+import { findComponentVNode } from "./vdom/utils";
 
 /**
  * Creates a context object for providing and consuming values across component trees.
@@ -24,7 +28,7 @@ import { getCurrentComponent, type ComponentInstance } from "./component";
  *
  * @returns Context object with inject() and get() methods
  */
-export function createContext<T extends object>() {
+export function createContext<T>() {
   const context = {
     inject(value: T) {
       const currentComponent = getCurrentComponent();
@@ -50,7 +54,8 @@ export function createContext<T extends object>() {
         if (currentComponent.contexts?.has(context)) {
           return currentComponent.contexts.get(context) as T;
         }
-        currentComponent = currentComponent.parent;
+        const componentNode = findComponentVNode(currentComponent.parent);
+        currentComponent = componentNode?.instance ?? null;
       }
 
       throw new Error("Could not find context in parent components");
