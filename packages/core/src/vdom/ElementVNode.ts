@@ -32,11 +32,7 @@ export class ElementVNode extends AbstractVNode {
     this.ref = ref as any;
   }
   rerender(): void {
-    const childrenElms = this.children
-      .map((child) => child.getElements())
-      .flat();
-
-    (this.elm as HTMLElement).replaceChildren(...childrenElms);
+    this.syncDOMChildren();
   }
   mount(parent?: VNode): Node {
     this.parent = parent;
@@ -81,12 +77,7 @@ export class ElementVNode extends AbstractVNode {
     this.patchProps(newNode.props);
     this.props = newNode.props;
     this.children = this.patchChildren(newNode.children);
-
-    const childrenElms = this.children
-      .map((child) => child.getElements())
-      .flat();
-
-    (this.elm as HTMLElement).replaceChildren(...childrenElms);
+    this.syncDOMChildren();
   }
   unmount() {
     this.children.forEach((child) => child.unmount());
@@ -154,6 +145,36 @@ export class ElementVNode extends AbstractVNode {
       this.eventListeners[type] = cb;
     } else {
       delete this.eventListeners[type];
+    }
+  }
+  /**
+   * Intelligently sync DOM to match children VNode order.
+   * Only performs DOM operations when elements are out of position.
+   * This is used by both patch() and rerender() to efficiently update children.
+   */
+  private syncDOMChildren() {
+    const elm = this.elm as HTMLElement;
+    let currentDomChild = elm.firstChild;
+
+    for (const child of this.children) {
+      const childNodes = child.getElements();
+
+      for (const node of childNodes) {
+        if (currentDomChild === node) {
+          // Already in correct position, advance pointer
+          currentDomChild = currentDomChild.nextSibling;
+        } else {
+          // Insert (or move if it exists elsewhere in DOM)
+          elm.insertBefore(node, currentDomChild);
+        }
+      }
+    }
+
+    // Remove any leftover nodes (shouldn't happen if unmount works correctly)
+    while (currentDomChild) {
+      const next = currentDomChild.nextSibling;
+      elm.removeChild(currentDomChild);
+      currentDomChild = next;
     }
   }
 }

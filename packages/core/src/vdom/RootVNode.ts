@@ -13,6 +13,8 @@ export class RootVNode extends AbstractVNode {
     toMount: [] as Array<() => void>,
     toUnmount: [] as Array<() => void>,
   };
+  private hasPendingMicroTask: boolean = false;
+  private pendingObservers: Array<() => void> = [];
 
   constructor(rootNode: VNode, container: HTMLElement) {
     super();
@@ -27,7 +29,19 @@ export class RootVNode extends AbstractVNode {
   queueUnmount(cb: () => void) {
     this.lifecycleQueue.toUnmount.push(cb);
   }
-
+  queueObserver(cb: () => void) {
+    this.pendingObservers.push(cb);
+    if (!this.hasPendingMicroTask) {
+      this.hasPendingMicroTask = true;
+      queueMicrotask(() => {
+        this.hasPendingMicroTask = false;
+        const pendingObservers = this.pendingObservers;
+        this.pendingObservers = [];
+        pendingObservers.forEach((pendingObserver) => pendingObserver());
+        this.flushLifecycle();
+      });
+    }
+  }
   flushLifecycle() {
     this.lifecycleQueue.toUnmount.forEach((cb) => cb());
     this.lifecycleQueue.toUnmount = [];

@@ -54,33 +54,6 @@ describe("Signal", () => {
 });
 
 describe("Observer", () => {
-  it("should queue notifications in microtasks", async () => {
-    let callCount = 0;
-    const observer = new Observer(() => {
-      callCount++;
-    });
-
-    const signal = new Signal();
-
-    const dispose = observer.observe();
-    observer.subscribeSignal(signal);
-    dispose();
-
-    // Trigger multiple notifications
-    signal.notify();
-    signal.notify();
-    signal.notify();
-
-    // Should not be called synchronously
-    expect(callCount).toBe(0);
-
-    // Wait for microtask
-    await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
-
-    // Should be called only once due to queuing
-    expect(callCount).toBe(1);
-  });
-
   it("should track signals during observation", () => {
     const callback = vi.fn();
     const observer = new Observer(callback);
@@ -176,28 +149,5 @@ describe("Observer", () => {
 
     dispose1();
     expect(getCurrentObserver()).toBeUndefined();
-  });
-
-  it("should prevent duplicate notifications while queued", async () => {
-    let callCount = 0;
-    const observer = new Observer(() => {
-      callCount++;
-    });
-
-    const signal = new Signal();
-
-    const dispose = observer.observe();
-    observer.subscribeSignal(signal);
-    dispose();
-
-    // Rapid-fire notifications
-    for (let i = 0; i < 100; i++) {
-      signal.notify();
-    }
-
-    await new Promise<void>((resolve) => queueMicrotask(() => resolve()));
-
-    // Should only be called once
-    expect(callCount).toBe(1);
   });
 });

@@ -19,32 +19,15 @@ export class Signal {
 }
 
 export class Observer {
-  private _isDisposed = false;
+  isDisposed = false;
   private signalDisposers = new Set<() => void>();
   private clearSignals() {
     this.signalDisposers.forEach((dispose) => dispose());
     this.signalDisposers.clear();
   }
   private onNotify: () => void;
-  private isQueued = false;
   constructor(onNotify: () => void) {
-    this.onNotify = () => {
-      if (this.isQueued) {
-        return;
-      }
-
-      queueMicrotask(() => {
-        this.isQueued = false;
-
-        if (this._isDisposed) {
-          return;
-        }
-
-        onNotify();
-      });
-
-      this.isQueued = true;
-    };
+    this.onNotify = onNotify;
   }
   subscribeSignal(signal: Signal) {
     this.signalDisposers.add(signal.subscribe(this.onNotify));
@@ -58,6 +41,6 @@ export class Observer {
   }
   dispose() {
     this.clearSignals();
-    this._isDisposed = true;
+    this.isDisposed = true;
   }
 }

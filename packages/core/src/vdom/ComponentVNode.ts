@@ -141,31 +141,47 @@ export class ComponentVNode extends AbstractVNode {
       return normalizeChildren(renderResult);
     };
 
+    let isObserverQueued = false;
+
     const instance = (this.instance = {
       parent,
       contexts: null,
       onCleanups: [],
       onMounts: [],
       observer: new Observer(() => {
-        this.root?.setAsCurrent();
-        const newChildren = executeRender();
-        const prevChildren = this.children;
-        this.children = this.patchChildren(newChildren);
-        // Typically components return a single element, which does
-        // not require the parent to apply elements to the DOM again
-        const canSelfUpdate =
-          prevChildren.length === 1 &&
-          this.children.length === 1 &&
-          prevChildren[0] instanceof ElementVNode &&
-          this.children[0] instanceof ElementVNode &&
-          this.canPatch(prevChildren[0], this.children[0]);
-
-        if (!canSelfUpdate) {
-          this.parent?.rerender();
+        if (isObserverQueued) {
+          return;
         }
 
-        this.root?.flushLifecycle();
-        this.root?.clearCurrent();
+        isObserverQueued = true;
+
+        this.root?.queueObserver(() => {
+          if (instance.observer.isDisposed) {
+            return;
+          }
+
+          isObserverQueued = false;
+
+          this.root?.setAsCurrent();
+          const newChildren = executeRender();
+          const prevChildren = this.children;
+          this.children = this.patchChildren(newChildren);
+
+          // Typically components return a single element, which does
+          // not require the parent to apply elements to the DOM again
+          const canSelfUpdate =
+            prevChildren.length === 1 &&
+            this.children.length === 1 &&
+            prevChildren[0] instanceof ElementVNode &&
+            this.children[0] instanceof ElementVNode &&
+            this.canPatch(prevChildren[0], this.children[0]);
+
+          if (!canSelfUpdate) {
+            this.parent?.rerender();
+          }
+
+          this.root?.clearCurrent();
+        });
       }),
       reactiveProps: createReactiveProps(this.props),
       get error() {

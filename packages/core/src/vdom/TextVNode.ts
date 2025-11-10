@@ -24,6 +24,10 @@ export class TextVNode extends AbstractVNode {
     return textNode;
   }
   patch(newNode: TextVNode) {
+    if (newNode.text === this.text) {
+      return;
+    }
+
     this.text = newNode.text;
     this.elm!.textContent = this.text;
   }
