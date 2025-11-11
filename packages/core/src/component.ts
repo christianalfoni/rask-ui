@@ -43,11 +43,10 @@ class RaskComponent<P extends Props<any>> extends Component<
 > {
   private renderFn?: () => VNode;
   private reactiveProps?: Props<any>;
-  private prevChildren: any;
   private observer = new Observer(() => {
     this.forceUpdate();
   });
-  private hasDirtyProps = false;
+  private isRendering = false;
   contexts = new Map();
   getChildContext() {
     const parentGetContext = this.context.getContext;
@@ -61,28 +60,72 @@ class RaskComponent<P extends Props<any>> extends Component<
   }
   onMounts: Array<() => void> = [];
   onCleanups: Array<() => void> = [];
+  private createReactiveProps() {
+    const reactiveProps = {} as any;
+    const self = this;
+    for (const prop in this.props) {
+      const signal = new Signal();
+      // @ts-ignore
+      let reactiveValue = this.props[prop];
+      Object.defineProperty(reactiveProps, prop, {
+        get() {
+          if (!self.isRendering) {
+            const observer = getCurrentObserver();
+
+            if (observer) {
+              observer.subscribeSignal(signal);
+            }
+          }
+
+          // @ts-ignore
+          return self.props[prop];
+        },
+        set(value) {
+          if (reactiveValue !== value) {
+            reactiveValue = value;
+            signal.notify();
+          }
+        },
+      });
+    }
+
+    return reactiveProps;
+  }
+
   componentDidMount(): void {
     this.onMounts.forEach((cb) => cb());
   }
-
   componentWillUnmount(): void {
     this.onCleanups.forEach((cb) => cb());
   }
+  componentDidUpdate() {
+    for (const prop in this.props) {
+      if (prop === "__component" || prop === "children") {
+        continue;
+      }
+
+      // @ts-ignore
+      this.reactiveProps[prop] = this.props[prop];
+    }
+  }
   shouldComponentUpdate(nextProps: Props<any>): boolean {
+    // Shallow comparison of props, excluding internal props
     for (const prop in nextProps) {
       if (prop === "__component") {
         continue;
       }
 
       // @ts-ignore
-      this.reactiveProps[prop] = nextProps[prop];
+      if (this.props[prop] !== nextProps[prop]) {
+        return true;
+      }
     }
 
-    return true;
+    return false;
   }
   render() {
     if (!this.renderFn) {
-      this.reactiveProps = createReactiveProps(this.props);
+      this.reactiveProps = this.createReactiveProps();
       currentComponent = this;
       try {
         this.renderFn = this.props.__component(this.reactiveProps as any);
@@ -106,7 +149,9 @@ class RaskComponent<P extends Props<any>> extends Component<
     let result: any = null;
 
     try {
+      this.isRendering = true;
       result = this.renderFn();
+      this.isRendering = false;
     } catch (error) {
       if (typeof this.context.notifyError !== "function") {
         throw error;
@@ -128,31 +173,4 @@ export function createComponent(props: Props<any>, key?: string) {
     props as any,
     key
   );
-}
-
-function createReactiveProps(props: Record<string, unknown>) {
-  const reactiveProps = {} as any;
-
-  for (const prop in props) {
-    const signal = new Signal();
-    Object.defineProperty(reactiveProps, prop, {
-      get() {
-        const observer = getCurrentObserver();
-
-        if (observer) {
-          observer.subscribeSignal(signal);
-        }
-
-        return props[prop];
-      },
-      set(value) {
-        if (props[prop] !== value) {
-          props[prop] = value;
-          signal.notify();
-        }
-      },
-    });
-  }
-
-  return reactiveProps;
 }
