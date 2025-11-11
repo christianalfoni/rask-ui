@@ -1,5 +1,21 @@
+import { elementsToFragment } from "./dom-utils";
 import { RootVNode } from "./RootVNode";
 import { VNode } from "./types";
+
+export type PatchOperation =
+  | {
+      type: "add";
+      elm: Node | Node[];
+    }
+  | {
+      type: "replace";
+      oldElm: Node | Node[];
+      newElm: Node | Node[];
+    }
+  | {
+      type: "remove";
+      elm: Node | Node[];
+    };
 
 export abstract class AbstractVNode {
   key?: string;
@@ -10,7 +26,7 @@ export abstract class AbstractVNode {
   abstract mount(parent?: VNode): Node | Node[];
   abstract patch(oldNode: VNode): void;
   abstract unmount(): void;
-  abstract rerender(): void;
+  abstract rerender(operations?: PatchOperation[]): void;
   protected getHTMLElement() {
     if (!this.elm || !(this.elm instanceof HTMLElement)) {
       throw new Error("This VNode does not have an HTMLElement");
@@ -72,6 +88,7 @@ export abstract class AbstractVNode {
   patchChildren(newChildren: VNode[]): {
     children: VNode[];
     hasChangedStructure: boolean;
+    operations: PatchOperation[];
   } {
     const prevChildren = this.children!;
 
@@ -79,14 +96,18 @@ export abstract class AbstractVNode {
     if (newChildren && prevChildren.length === 0) {
       newChildren.forEach((child) => child.mount(this as any));
 
-      return { children: newChildren, hasChangedStructure: true };
+      return {
+        children: newChildren,
+        hasChangedStructure: true,
+        operations: [],
+      };
     }
 
     // If we want to remove all children, we just unmount the previous ones
     if (!newChildren.length && prevChildren.length) {
       prevChildren.forEach((child) => child.unmount());
 
-      return { children: [], hasChangedStructure: true };
+      return { children: [], hasChangedStructure: true, operations: [] };
     }
 
     const oldKeys: Record<string, { vnode: VNode; index: number }> = {};
@@ -102,6 +123,7 @@ export abstract class AbstractVNode {
     const result: VNode[] = [];
 
     let hasChangedStructure = false;
+    const operations: PatchOperation[] = [];
 
     newChildren.forEach((newChild, index) => {
       const key = newChild.key || index;
@@ -109,36 +131,128 @@ export abstract class AbstractVNode {
 
       if (!prevChild) {
         // New child - mount and add to result
-        newChild.mount(this as any);
+        const elm = newChild.mount(this as any);
         result.push(newChild);
-        hasChangedStructure = true;
+
+        // If we already had a child here we assume that this is a structural change
+        if (prevChildren[index]) {
+          hasChangedStructure = true;
+        } else {
+          // If not, this will be a new element added
+          operations.push({ type: "add", elm });
+        }
       } else if (prevChild?.vnode === newChild) {
         // Same instance - no patching needed, just reuse
         result.push(prevChild.vnode);
         delete oldKeys[key];
+        // If moved to a different index it means there is a structural change
         hasChangedStructure = hasChangedStructure || prevChild.index !== index;
       } else if (this.canPatch(prevChild.vnode, newChild)) {
         // Compatible types - patch and reuse old VNode
         prevChild.vnode.patch(newChild as any);
         result.push(prevChild.vnode);
         delete oldKeys[key];
+        // If moved to a different index it means there is a structural change
         hasChangedStructure = hasChangedStructure || prevChild.index !== index;
       } else {
         // Incompatible types - replace completely
-        newChild.mount(this as any);
+        const newElm = newChild.mount(this as any);
         prevChild.vnode.unmount();
         result.push(newChild);
         delete oldKeys[key];
-        hasChangedStructure = true;
+
+        operations.push({
+          type: "replace",
+          oldElm: prevChild.vnode.getElements(),
+          newElm,
+        });
       }
     });
 
     // Unmount any old children that weren't reused
     for (const key in oldKeys) {
       oldKeys[key].vnode.unmount();
-      hasChangedStructure = true;
+      operations.push({
+        type: "remove",
+        elm: oldKeys[key].vnode.getElements(),
+      });
     }
 
-    return { children: result, hasChangedStructure };
+    if (hasChangedStructure) {
+      operations.length = 0;
+    }
+
+    return { children: result, hasChangedStructure, operations };
+  }
+  applyPatchOperations(target: HTMLElement, operations: PatchOperation[]) {
+    operations.forEach((operation) => {
+      switch (operation.type) {
+        case "add": {
+          target.appendChild(elementsToFragment(operation.elm));
+          break;
+        }
+        case "remove": {
+          if (Array.isArray(operation.elm)) {
+            const range = new Range();
+            range.setStartBefore(operation.elm[0]);
+            range.setEndAfter(operation.elm[operation.elm.length - 1]);
+            range.deleteContents();
+          } else {
+            target.removeChild(operation.elm);
+          }
+          break;
+        }
+        case "replace": {
+          if (Array.isArray(operation.oldElm)) {
+            const range = new Range();
+
+            range.setStartBefore(operation.oldElm[0]);
+            range.setEndAfter(operation.oldElm[operation.oldElm.length - 1]);
+            range.deleteContents();
+            range.insertNode(elementsToFragment(operation.newElm));
+          } else {
+            target.replaceChild(
+              elementsToFragment(operation.newElm),
+              operation.oldElm
+            );
+          }
+          break;
+        }
+      }
+    });
+  }
+  /**
+   * Intelligently sync DOM to match children VNode order.
+   * Only performs DOM operations when elements are out of position.
+   * This is used by both patch() and rerender() to efficiently update children.
+   */
+  protected syncDOMChildren() {
+    if (!this.children) {
+      return;
+    }
+
+    const elm = this.elm as HTMLElement;
+    let currentDomChild = elm.firstChild;
+
+    for (const child of this.children) {
+      const childNodes = child.getElements();
+
+      for (const node of childNodes) {
+        if (currentDomChild === node) {
+          // Already in correct position, advance pointer
+          currentDomChild = currentDomChild.nextSibling;
+        } else {
+          // Insert (or move if it exists elsewhere in DOM)
+          elm.insertBefore(node, currentDomChild);
+        }
+      }
+    }
+
+    // Remove any leftover nodes (shouldn't happen if unmount works correctly)
+    while (currentDomChild) {
+      const next = currentDomChild.nextSibling;
+      elm.removeChild(currentDomChild);
+      currentDomChild = next;
+    }
   }
 }

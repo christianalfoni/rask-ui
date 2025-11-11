@@ -1,5 +1,5 @@
 import { getCurrentObserver, Observer, Signal } from "../observation";
-import { AbstractVNode } from "./AbstractVNode";
+import { AbstractVNode, PatchOperation } from "./AbstractVNode";
 import { FragmentVNode } from "./FragmentVNode";
 import { RootVNode } from "./RootVNode";
 import { Props, VNode } from "./types";
@@ -112,8 +112,8 @@ export class ComponentVNode extends AbstractVNode {
     this.children = [];
     this.key = key;
   }
-  rerender(): void {
-    this.parent?.rerender();
+  rerender(operations?: PatchOperation[]): void {
+    this.parent?.rerender(operations);
   }
   mount(parent?: VNode): Node[] {
     this.parent = parent;
@@ -164,14 +164,15 @@ export class ComponentVNode extends AbstractVNode {
 
           this.root?.setAsCurrent();
           const newChildren = executeRender();
-          const prevChildren = this.children;
-          const { children, hasChangedStructure } =
+          const { children, hasChangedStructure, operations } =
             this.patchChildren(newChildren);
 
           this.children = children;
 
           if (hasChangedStructure) {
             this.parent?.rerender();
+          } else if (operations.length) {
+            this.parent?.rerender(operations);
           }
 
           this.root?.clearCurrent();

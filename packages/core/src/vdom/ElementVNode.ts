@@ -1,4 +1,4 @@
-import { AbstractVNode } from "./AbstractVNode";
+import { AbstractVNode, PatchOperation } from "./AbstractVNode";
 import { RootVNode } from "./RootVNode";
 
 import { Props, VNode } from "./types";
@@ -31,8 +31,12 @@ export class ElementVNode extends AbstractVNode {
     this.key = key;
     this.ref = ref as any;
   }
-  rerender(): void {
-    this.syncDOMChildren();
+  rerender(operations?: PatchOperation[]): void {
+    if (operations) {
+      this.applyPatchOperations(this.getHTMLElement(), operations);
+    } else {
+      this.syncDOMChildren();
+    }
   }
   mount(parent?: VNode): Node {
     this.parent = parent;
@@ -76,13 +80,15 @@ export class ElementVNode extends AbstractVNode {
   patch(newNode: ElementVNode) {
     this.patchProps(newNode.props);
     this.props = newNode.props;
-    const { children, hasChangedStructure } = this.patchChildren(
+    const { children, hasChangedStructure, operations } = this.patchChildren(
       newNode.children
     );
     this.children = children;
 
     if (hasChangedStructure) {
       this.syncDOMChildren();
+    } else {
+      this.applyPatchOperations(this.getHTMLElement(), operations);
     }
   }
   unmount() {
@@ -151,36 +157,6 @@ export class ElementVNode extends AbstractVNode {
       this.eventListeners[type] = cb;
     } else {
       delete this.eventListeners[type];
-    }
-  }
-  /**
-   * Intelligently sync DOM to match children VNode order.
-   * Only performs DOM operations when elements are out of position.
-   * This is used by both patch() and rerender() to efficiently update children.
-   */
-  private syncDOMChildren() {
-    const elm = this.elm as HTMLElement;
-    let currentDomChild = elm.firstChild;
-
-    for (const child of this.children) {
-      const childNodes = child.getElements();
-
-      for (const node of childNodes) {
-        if (currentDomChild === node) {
-          // Already in correct position, advance pointer
-          currentDomChild = currentDomChild.nextSibling;
-        } else {
-          // Insert (or move if it exists elsewhere in DOM)
-          elm.insertBefore(node, currentDomChild);
-        }
-      }
-    }
-
-    // Remove any leftover nodes (shouldn't happen if unmount works correctly)
-    while (currentDomChild) {
-      const next = currentDomChild.nextSibling;
-      elm.removeChild(currentDomChild);
-      currentDomChild = next;
     }
   }
 }

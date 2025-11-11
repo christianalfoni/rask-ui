@@ -1,4 +1,4 @@
-import { AbstractVNode } from "./AbstractVNode";
+import { AbstractVNode, PatchOperation } from "./AbstractVNode";
 import { VNode } from "./types";
 import { ComponentInstance } from "./ComponentVNode";
 
@@ -71,14 +71,14 @@ export class RootVNode extends AbstractVNode {
     return this.children.map((childNode) => childNode.mount(this)).flat();
   }
   patch(): void {}
-  rerender(): void {
-    const childrenElms = this.children
-      .map((child) => child.getElements())
-      .flat();
-
-    (this.elm as HTMLElement).replaceChildren(...childrenElms);
-
+  rerender(operations?: PatchOperation[]): void {
+    if (operations) {
+      this.applyPatchOperations(this.getHTMLElement(), operations);
+    } else {
+      this.syncDOMChildren();
+    }
     this.flushLifecycle();
   }
+
   unmount(): void {}
 }

@@ -1,4 +1,4 @@
-import { AbstractVNode } from "./AbstractVNode";
+import { AbstractVNode, PatchOperation } from "./AbstractVNode";
 import { ComponentVNode } from "./ComponentVNode";
 import { ElementVNode } from "./ElementVNode";
 import { RootVNode } from "./RootVNode";
@@ -27,8 +27,8 @@ export class FragmentVNode extends AbstractVNode {
 
     return this.children.map((child) => child.mount(this)).flat();
   }
-  rerender(): void {
-    this.parent?.rerender();
+  rerender(operations?: PatchOperation[]): void {
+    this.parent?.rerender(operations);
   }
   patch(newNode: FragmentVNode) {
     const { children, hasChangedStructure } = this.patchChildren(
