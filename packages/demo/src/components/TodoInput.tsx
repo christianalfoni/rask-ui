@@ -1,5 +1,6 @@
 import { createState } from "rask-ui";
 
+// TodoInput component
 interface TodoInputProps {
   onAdd: (text: string) => void;
 }

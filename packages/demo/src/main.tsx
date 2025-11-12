@@ -1,5 +1,6 @@
-import { render } from "rask-ui";
+import { createRoot } from "react-dom/client";
 import { TodoApp } from "./components/TodoApp";
 import "./style.css";
 
-render(<TodoApp />, document.querySelector("#app")!);
+const root = createRoot(document.getElementById("app")!);
+root.render(<TodoApp />);

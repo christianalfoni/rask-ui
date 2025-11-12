@@ -9,13 +9,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./jsx-runtime": {
-      "types": "./dist/jsx-runtime.d.ts",
-      "import": "./dist/jsx-runtime.js"
-    },
-    "./jsx-dev-runtime": {
-      "types": "./dist/jsx-dev-runtime.d.ts",
-      "import": "./dist/jsx-dev-runtime.js"
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.js"
     }
   },
   "files": [
@@ -23,22 +19,30 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc && cp src/jsx.d.ts dist/ && cp ../../README.md .",
+    "build": "tsc && cp ../../README.md .",
     "dev": "tsc --watch",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run"
   },
   "devDependencies": {
+    "@babel/generator": "^7.28.5",
+    "@babel/parser": "^7.28.5",
+    "@babel/traverse": "^7.28.5",
+    "@babel/types": "^7.28.5",
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__traverse": "^7.28.0",
+    "@types/react": "^19.2.3",
     "@vitest/ui": "^4.0.7",
     "happy-dom": "^20.0.10",
     "jsdom": "^27.1.0",
     "typescript": "^5.7.3",
+    "vite": "^6.4.1",
     "vitest": "^4.0.7"
   },
   "dependencies": {
-    "inferno": "^9.0.4",
     "inferno-create-element": "^9.0.4",
-    "inferno-vnode-flags": "^9.0.4"
+    "inferno-vnode-flags": "^9.0.4",
+    "react": "^19.2.0"
   }
 }

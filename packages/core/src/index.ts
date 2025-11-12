@@ -1,12 +1,9 @@
-import { options } from "inferno";
+export { onCleanup, onMount, RaskComponent } from "./component";
 
-export { render } from "inferno";
-export { onCleanup, onMount } from "./component";
-export { createContext } from "./createContext";
 export { createState } from "./createState";
 export { createAsync } from "./createAsync";
 export { ErrorBoundary } from "./error";
 export { createQuery } from "./createQuery";
 export { createMutation } from "./createMutation";
-export { createRef } from "inferno";
+export { createRef } from "react";
 export { createView } from "./createView";

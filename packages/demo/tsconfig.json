@@ -6,10 +6,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
     "skipLibCheck": true,
-
-    /* JSX Configuration */
     "jsx": "react-jsx",
-    "jsxImportSource": "rask-ui",
 
     /* Bundler mode */
     "moduleResolution": "bundler",

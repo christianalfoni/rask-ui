@@ -1,11 +1,4 @@
-import {
-  createComponentVNode,
-  VNode,
-  Component,
-  Props,
-  InfernoNode,
-} from "inferno";
-import { VNodeFlags } from "inferno-vnode-flags";
+import { Component, PropsWithChildren, ReactNode } from "react";
 import { getCurrentObserver, Observer, Signal } from "./observation";
 
 let currentComponent: RaskComponent<any> | undefined;
@@ -34,30 +27,20 @@ export function onCleanup(cb: () => void) {
   currentComponent.onCleanups.push(cb);
 }
 
-export type RaskFunctionComponent<P extends Props<any>> =
-  | (() => () => VNode)
-  | ((props: P) => () => VNode);
+export type RaskFunctionComponent<P extends PropsWithChildren<any>> =
+  | (() => () => ReactNode)
+  | ((props: P) => () => ReactNode);
 
-class RaskComponent<P extends Props<any>> extends Component<
-  P & { __component: RaskFunctionComponent<P> }
+export class RaskComponent<P extends PropsWithChildren<any>> extends Component<
+  P & { __component?: RaskFunctionComponent<P> }
 > {
-  private renderFn?: () => VNode;
-  private reactiveProps?: Props<any>;
+  setup?: RaskFunctionComponent<P>;
+  private renderFn?: () => ReactNode;
+  private reactiveProps?: PropsWithChildren<any>;
   private observer = new Observer(() => {
     this.forceUpdate();
   });
   private isRendering = false;
-  contexts = new Map();
-  getChildContext() {
-    const parentGetContext = this.context.getContext;
-
-    return {
-      ...this.context,
-      getContext: (context: any) => {
-        return this.contexts.get(context) || parentGetContext(context);
-      },
-    };
-  }
   onMounts: Array<() => void> = [];
   onCleanups: Array<() => void> = [];
   private createReactiveProps() {
@@ -108,7 +91,7 @@ class RaskComponent<P extends Props<any>> extends Component<
       this.reactiveProps[prop] = this.props[prop];
     }
   }
-  shouldComponentUpdate(nextProps: Props<any>): boolean {
+  shouldComponentUpdate(nextProps: PropsWithChildren<any>): boolean {
     // Shallow comparison of props, excluding internal props
     for (const prop in nextProps) {
       if (prop === "__component") {
@@ -127,20 +110,19 @@ class RaskComponent<P extends Props<any>> extends Component<
     if (!this.renderFn) {
       this.reactiveProps = this.createReactiveProps();
       currentComponent = this;
-      try {
-        this.renderFn = this.props.__component(this.reactiveProps as any);
+      // Support both setup property (for extended classes) and __component prop (for JSX runtime)
+      const componentFn = this.setup || this.props.__component;
 
-        if (typeof this.renderFn !== "function") {
-          throw new Error("Component must return a render function");
-        }
-      } catch (error) {
-        if (typeof this.context.notifyError !== "function") {
-          throw error;
-        }
+      if (!componentFn) {
+        throw new Error(
+          "Component must have either a setup property or __component prop"
+        );
+      }
 
-        this.context.notifyError(error);
+      this.renderFn = componentFn.call(this, this.reactiveProps as any);
 
-        return null;
+      if (typeof this.renderFn !== "function") {
+        throw new Error("Component must return a render function");
       }
       currentComponent = undefined;
     }
@@ -148,29 +130,11 @@ class RaskComponent<P extends Props<any>> extends Component<
     const stopObserving = this.observer.observe();
     let result: any = null;
 
-    try {
-      this.isRendering = true;
-      result = this.renderFn();
-      this.isRendering = false;
-    } catch (error) {
-      if (typeof this.context.notifyError !== "function") {
-        throw error;
-      }
-
-      this.context.notifyError(error);
-    } finally {
-      stopObserving();
-    }
+    this.isRendering = true;
+    result = this.renderFn();
+    this.isRendering = false;
+    stopObserving();
 
     return result;
   }
-}
-
-export function createComponent(props: Props<any>, key?: string) {
-  return createComponentVNode(
-    VNodeFlags.ComponentClass,
-    RaskComponent,
-    props as any,
-    key
-  );
 }

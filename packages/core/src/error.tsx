@@ -1,7 +1,7 @@
-import { Component, VNode } from "inferno";
+import { Component, ReactNode } from "react";
 
 export class ErrorBoundary extends Component<
-  { children: any; error: (error: unknown) => VNode },
+  { children: any; error: (error: unknown) => ReactNode },
   { error: unknown }
 > {
   getChildContext() {
