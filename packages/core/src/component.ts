@@ -8,6 +8,7 @@ import {
 import { VNodeFlags } from "inferno-vnode-flags";
 import { getCurrentObserver, Observer, Signal } from "./observation";
 import { syncBatch } from "./batch";
+import { PROXY_MARKER } from "./createState";
 
 let currentComponent: RaskComponent<any> | undefined;
 
@@ -65,16 +66,43 @@ class RaskComponent<P extends Props<any>> extends Component<
   private createReactiveProps() {
     const reactiveProps = {} as any;
     const self = this;
+    const signals = new Map<string, Signal>();
+
     for (const prop in this.props) {
-      const signal = new Signal();
-      // @ts-ignore
-      let reactiveValue = this.props[prop];
+      const value = (this.props as any)[prop];
+
+      // Skip known non-reactive props
+      if (
+        typeof value === "function" ||
+        prop === "__component" ||
+        prop === "children" ||
+        prop === "key" ||
+        prop === "ref"
+      ) {
+        reactiveProps[prop] = value;
+        continue;
+      }
+
+      // Skip objects/arrays - they're already reactive if they're proxies
+      // No need to wrap them in additional signals
+      if (typeof value === "object" && value !== null) {
+        reactiveProps[prop] = value;
+        continue;
+      }
+
+      // Only create reactive getters for primitives
       Object.defineProperty(reactiveProps, prop, {
         get() {
           if (!self.isRendering) {
             const observer = getCurrentObserver();
 
             if (observer) {
+              // Lazy create signal only when accessed in reactive context
+              let signal = signals.get(prop);
+              if (!signal) {
+                signal = new Signal();
+                signals.set(prop, signal);
+              }
               observer.subscribeSignal(signal);
             }
           }
@@ -83,8 +111,9 @@ class RaskComponent<P extends Props<any>> extends Component<
           return self.props[prop];
         },
         set(value) {
-          if (reactiveValue !== value) {
-            reactiveValue = value;
+          // Only notify if signal was created (i.e., prop was accessed reactively)
+          const signal = signals.get(prop);
+          if (signal && (self.props as any)[prop] !== value) {
             signal.notify();
           }
         },

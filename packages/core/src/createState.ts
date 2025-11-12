@@ -29,7 +29,7 @@ export function createState<T extends object>(state: T): T {
 }
 
 const proxyCache = new WeakMap<any, any>();
-const PROXY_MARKER = Symbol("isProxy");
+export const PROXY_MARKER = Symbol("isProxy");
 
 function getProxy(value: object) {
   // Check if already a proxy to avoid double-wrapping
