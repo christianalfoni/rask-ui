@@ -10,7 +10,7 @@
     "build": "pnpm build:core && pnpm build:demo",
     "preview": "pnpm --filter @rask-ui/demo preview",
     "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
+    "docs:build": "cd slides && pnpm build && cd .. && mkdir -p docs/public/slides && cp -r slides/dist/* docs/public/slides/ && vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "slides:dev": "cd slides && pnpm dev"
   },

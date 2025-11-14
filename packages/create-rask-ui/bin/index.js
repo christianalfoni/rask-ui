@@ -76,7 +76,7 @@ async function main() {
           { title: 'Current folder', value: '.' },
           { title: 'New folder', value: 'new' }
         ],
-        initial: 1
+        initial: 0
       },
       {
         type: prev => prev === 'new' ? 'text' : null,

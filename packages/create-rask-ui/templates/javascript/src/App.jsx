@@ -1,39 +1,43 @@
-import { component, signal } from "rask-ui";
+import { createState } from "rask-ui";
 
-export const App = component(() => {
-  const count = signal(0);
+export function App() {
+  const state = createState({ count: 0 });
 
   return () => (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>Welcome to Rask UI!</h1>
-      <p>
-        A fast, reactive UI library built on Inferno with a powerful component
-        model.
-      </p>
+    <div className="app-container">
+      <div className="card">
+        <img src="/logo.png" alt="RASK Logo" className="logo" />
 
-      <div style={{ marginTop: "2rem" }}>
-        <button
-          onClick={() => count.value++}
-          style={{
-            padding: "0.5rem 1rem",
-            fontSize: "1rem",
-            cursor: "pointer",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          Count: {count}
-        </button>
-      </div>
+        <h1 className="title">Welcome to RASK</h1>
 
-      <div style={{ marginTop: "2rem", color: "#666" }}>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test hot module
-          replacement.
+        <p className="description">
+          A lightweight UI library that combines the simplicity of observable
+          state management with the simplicity of reconciling UI.
+        </p>
+
+        <div className="counter-container">
+          <button
+            onClick={() => state.count--}
+            className="counter-button decrement"
+          >
+            −
+          </button>
+
+          <div className="counter-display">{state.count}</div>
+
+          <button
+            onClick={() => state.count++}
+            className="counter-button increment"
+          >
+            +
+          </button>
+        </div>
+
+        <p className="footer-text">
+          Edit <code>src/App.jsx</code> and save to see changes instantly with
+          HMR.
         </p>
       </div>
     </div>
   );
-});
+}
