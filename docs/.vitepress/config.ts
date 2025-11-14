@@ -15,7 +15,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Get Started', link: '/guide/getting-started' },
       { text: 'API Reference', link: '/api/' },
-      { text: 'Slides', link: '/slides/' }
+      { text: 'Slides', link: '/slides/', target: '_self' }
     ],
 
     sidebar: [
