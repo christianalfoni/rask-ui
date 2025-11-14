@@ -14,7 +14,7 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/yourusername/rask-ui
+      link: https://github.com/christianalfoni/rask
 
 features:
   - title: Write code that feels natural
@@ -26,6 +26,20 @@ features:
   - title: Tame async complexity
     details: Built-in tools for handling loading states and data fetching. Transform complex async patterns into simple, declarative code.
 ---
+
+## Open For Feedback
+
+::: tip WE NEED YOUR FEEDBACK
+RASK has concluded its core implementation including the **Inferno-based reconciler**, **JSX transformation plugin**, and **reactive primitives**. The library is feature-complete and considered ready for release.
+
+**Before we officially launch, we need your feedback:**
+- Would a library like this be valuable for your projects?
+- Is the API clear and intuitive?
+- Is the documentation helpful and complete?
+- Does the approach make sense to you?
+
+[**Share your feedback by creating an issue**](https://github.com/christianalfoni/rask/issues/new) - your input will help shape the final release.
+:::
 
 ## Quick Example
 

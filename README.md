@@ -10,6 +10,29 @@ A lightweight reactive component library that combines the simplicity of observa
 npm install rask-ui
 ```
 
+---
+
+## 📢 Open For Feedback
+
+**RASK is feature-complete and ready for community feedback!**
+
+The core implementation is finished, including:
+- ✅ Inferno-based reconciler for powerful UI expression
+- ✅ JSX transformation plugin (Inferno JSX + stateful components)
+- ✅ Reactive primitives for simple state management
+
+**Before the official release, we need your input:**
+- Would a library like this be valuable for your projects?
+- Is the API clear and intuitive?
+- Is the documentation helpful and complete?
+- Does the approach resonate with you?
+
+**[Share your feedback by creating an issue →](https://github.com/christianalfoni/rask/issues/new)**
+
+Your feedback will directly shape the final release. All perspectives welcome!
+
+---
+
 ## The Itch with Modern UI Frameworks
 
 Modern UI frameworks present developers with a fundamental tradeoff between state management and UI expression:
