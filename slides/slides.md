@@ -228,14 +228,10 @@ function App() {
 
 ---
 
-layout: center
-class: text-center
-
----
-
 <img src="/logo.png" alt="Logo" class="mx-auto mb-8 w-32 h-32" />
 
-# RASK
+<div text-align="center">
+<h1> RASK</h1>
 
 **https://rask-ui.io**
 
@@ -247,8 +243,4 @@ npm create rask-ui
 
 </div>
 
----
-
-# Thank You
-
-[Documentation](https://github.com/yourusername/rask-ui) · [GitHub](https://github.com/yourusername/rask-ui)
+</div>
