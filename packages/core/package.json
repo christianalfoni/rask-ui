@@ -25,10 +25,11 @@
   "files": [
     "dist",
     "swc-plugin",
+    "logo.png",
     "README.md"
   ],
   "scripts": {
-    "build": "npm run build:plugin && tsc && cp ../../README.md .",
+    "build": "npm run build:plugin && tsc && cp ../../README.md . && cp ../../logo.png .",
     "build:plugin": "cd swc-plugin && cargo build --release --target wasm32-wasip1",
     "dev": "tsc --watch",
     "test": "vitest",
