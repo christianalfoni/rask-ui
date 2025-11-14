@@ -96,6 +96,9 @@ function Counter() {
   const [count, setCount] = createSignal(0);
   const increment = () => setCount(count() + 1);
 
+  // onMount
+  // onCleanup
+
   return (
     <div>
       <h1>Count is: {count()}</h1>
@@ -120,6 +123,9 @@ function Counter() {
 function Counter() {
   const state = createState({ count: 0 });
   const increment = () => state.count++;
+
+  // createMountEffect
+  // createCleanup
 
   return () => (
     <div>
@@ -221,8 +227,10 @@ function App() {
 ```
 
 ---
+
 layout: center
 class: text-center
+
 ---
 
 <img src="/logo.png" alt="Logo" class="mx-auto mb-8 w-32 h-32" />
