@@ -50,7 +50,7 @@ Children passed to components behaves as you expect. They are used in the render
 
 ```tsx
 function Header(props) {
-  return () => <h1>{props.children}</h1>;
+  return <h1>{props.children}</h1>;
 }
 
 function Parent() {
