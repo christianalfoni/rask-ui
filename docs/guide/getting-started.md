@@ -186,5 +186,4 @@ Notice that we are not returning a render function!
 Now that you have RASK set up, learn about the core concepts:
 
 - [Core Concepts](/guide/core-concepts) - Understanding reactive state and effects
-- [TypeScript Support](/guide/typescript) - Getting the most out of TypeScript
 - [API Reference](/api/) - Complete API documentation
