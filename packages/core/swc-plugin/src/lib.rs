@@ -181,6 +181,29 @@ impl RaskComponentTransform {
         })
     }
 
+    /// Rewrite imports from "inferno" to the configured import source
+    fn rewrite_inferno_imports(&mut self, module: &mut Module) {
+        let import_source = self
+            .config
+            .import_source
+            .as_ref()
+            .map(|s| s.as_str())
+            .unwrap_or("rask-ui");
+
+        for item in &mut module.body {
+            if let ModuleItem::ModuleDecl(ModuleDecl::Import(import)) = item {
+                if &*import.src.value == "inferno" {
+                    // Rewrite the import source from "inferno" to the configured source
+                    import.src = Box::new(Str {
+                        span: Default::default(),
+                        value: Wtf8Atom::from(import_source),
+                        raw: None,
+                    });
+                }
+            }
+        }
+    }
+
     /// Inject the RaskComponent import at the top of the module
     fn inject_runtime(&mut self, module: &mut Module) {
         if self.import_rask_component.is_none() {
@@ -244,6 +267,9 @@ impl VisitMut for RaskComponentTransform {
     fn visit_mut_module(&mut self, module: &mut Module) {
         // First visit all items to transform them
         module.visit_mut_children_with(self);
+
+        // Rewrite any "inferno" imports to use the configured import source
+        self.rewrite_inferno_imports(module);
 
         // Then inject imports if needed
         self.inject_runtime(module);

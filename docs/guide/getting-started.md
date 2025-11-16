@@ -77,34 +77,10 @@ Create or update your `vite.config.ts`:
 
 ```ts
 import { defineConfig } from "vite";
-import { raskPlugin } from "rask-ui/plugin";
+import raskPlugin from "rask-ui/plugin";
 
 export default defineConfig({
   plugins: [raskPlugin()],
-});
-```
-
-#### Plugin Options
-
-The plugin accepts several options to customize its behavior:
-
-```ts
-raskPlugin({
-  // Enable/disable function component transformation
-  // Default: true
-  transformComponents: true,
-
-  // Add imports for JSX runtime from rask-ui (automatically enabled)
-  // Default: true
-  imports: true,
-
-  // Package to import from when transformComponents is enabled
-  // Default: "rask-ui"
-  importSource: "rask-ui",
-
-  // Define all arguments for createVNode (for debugging)
-  // Default: false
-  defineAllArguments: false,
 });
 ```
 

@@ -15,13 +15,7 @@ export interface RaskPluginOptions {
   transformComponents?: boolean;
 
   /**
-   * Import source for Inferno imports
-   * @default true (imports from rask-ui)
-   */
-  imports?: boolean;
-
-  /**
-   * Import source for RaskComponent
+   * Import source for Inferno JSX runtime functions
    * @default "rask-ui"
    */
   importSource?: string;
@@ -36,10 +30,9 @@ export interface RaskPluginOptions {
 /**
  * Vite plugin for transforming JSX to Inferno and function components to RaskComponent classes
  */
-export function raskPlugin(options: RaskPluginOptions = {}): Plugin {
+export default function raskPlugin(options: RaskPluginOptions = {}): Plugin {
   const {
     transformComponents = true,
-    imports = true,
     importSource = 'rask-ui',
     defineAllArguments = false,
   } = options;
@@ -85,7 +78,7 @@ export function raskPlugin(options: RaskPluginOptions = {}): Plugin {
         [
           infernoPluginPath,
           {
-            imports: imports ? importSource : false,
+            importSource,
             defineAllArguments,
           },
         ],

@@ -268,7 +268,7 @@ Component instances become completely disconnected from the latest code definiti
 ```typescript
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
-import { raskPlugin } from "rask-ui/plugin";
+import raskPlugin from "rask-ui/plugin";
 
 export default defineConfig({
   plugins: [tailwindcss(), raskPlugin()],
@@ -283,7 +283,7 @@ export default defineConfig({
 
 ```typescript
 import { defineConfig } from "vite";
-import { raskPlugin } from "rask-ui/plugin";
+import raskPlugin from "rask-ui/plugin";
 
 export default defineConfig({
   plugins: [raskPlugin()],

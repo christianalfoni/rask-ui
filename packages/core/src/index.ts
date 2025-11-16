@@ -18,4 +18,5 @@ export {
   createFragment,
   createTextVNode,
   normalizeProps,
+  Component,
 } from "inferno";
