@@ -1,12 +1,22 @@
-import { PROXY_MARKER } from "./createState";
-import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorCallback, InspectorRef } from "./inspect";
+import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorRef } from "./inspect";
 
-type Simplify<T> = { [K in keyof T]: T[K] } & {};
+/**
+ * Utility type that preserves unions while "flattening" object types.
+ */
+type Simplify<T> = T extends any ? { [K in keyof T]: T[K] } : never;
 
-type MergeTwo<A extends object, B extends object> = Simplify<
-  Omit<A, keyof B> & B
->;
+/**
+ * Merge two object types where properties from B override properties from A.
+ * Distributes over unions in A.
+ */
+type MergeTwo<A extends object, B extends object> = A extends any
+  ? Simplify<Omit<A, keyof B> & B>
+  : never;
 
+/**
+ * Merge a readonly tuple of objects left-to-right, with later entries
+ * overriding earlier ones. Distributes over unions in the head element.
+ */
 type MergeMany<T extends readonly object[]> = T extends [
   infer H extends object,
   ...infer R extends object[]
@@ -15,79 +25,52 @@ type MergeMany<T extends readonly object[]> = T extends [
   : {};
 
 /**
- * Creates a view that merges multiple objects (reactive or not) into a single object while
- * maintaining reactivity through getters. Properties from later arguments override earlier ones.
+ * Creates a view that merges multiple objects (reactive or not) into a single
+ * object while maintaining reactivity through getters. Properties from later
+ * arguments override earlier ones.
  *
- * @warning **Do not destructure the returned view object!** Destructuring breaks reactivity
- * because it extracts plain values instead of maintaining getter access. This is the same rule
- * as other reactive primitives.
- *
- * @example
- * // ❌ Bad - destructuring loses reactivity
- * function Component() {
- *   const state = createState({ count: 0 });
- *   const helpers = { increment: () => state.count++ };
- *   const view = createView(state, helpers);
- *   const { count, increment } = view; // Don't do this!
- *   return () => <button onClick={increment}>{count}</button>; // Won't update!
- * }
- *
- * // ✅ Good - access properties directly in render
- * function Component() {
- *   const state = createState({ count: 0 });
- *   const helpers = { increment: () => state.count++ };
- *   const view = createView(state, helpers);
- *   return () => <button onClick={view.increment}>{view.count}</button>; // Reactive!
- * }
- *
- * @example
- * // Merge multiple reactive objects
- * const state = createState({ count: 0 });
- * const user = createState({ name: "Alice" });
- * const view = createView(state, user);
- * // view has both count and name properties, maintaining reactivity
- *
- * @example
- * // Later arguments override earlier ones
- * const a = { x: 1, y: 2 };
- * const b = { y: 3, z: 4 };
- * const view = createView(a, b);
- * // view.x === 1, view.y === 3, view.z === 4
- *
- * @param args - Objects to merge (reactive or plain objects)
- * @returns A view object with getters for all properties, maintaining reactivity
+ * ⚠️ Do not destructure the returned view object; always read properties
+ * directly from the view to preserve reactivity.
  */
+export function createView<A extends object>(a: A): A;
+export function createView<A extends object, B extends object>(
+  a: A,
+  b: B
+): MergeTwo<A, B>;
 export function createView<T extends readonly object[]>(
   ...args: T
-): MergeMany<T> {
+): MergeMany<T>;
+export function createView(...args: readonly object[]): any {
   const result: any = {};
   const seen = new Set<PropertyKey>();
   let notifyInspectorRef: InspectorRef = {};
 
   for (let i = args.length - 1; i >= 0; i--) {
     const src = args[i] as any;
+    if (!src) continue;
 
     if (INSPECTOR_ENABLED && src[INSPECT_MARKER]) {
       src[INSPECT_MARKER] = notifyInspectorRef;
     }
 
-    // mimic Object.assign: only enumerable own property keys
+    // Mimic Object.assign: only enumerable own property keys
     for (const key of Reflect.ownKeys(src)) {
       if (seen.has(key)) continue;
+
       const desc = Object.getOwnPropertyDescriptor(src, key as any);
       if (!desc || !desc.enumerable) continue;
 
-      // Capture the current source for this key (last write wins).
       Object.defineProperty(result, key, {
         enumerable: true,
         configurable: true,
         get: () => {
-          const value = (src as any)[key as any];
+          const value = src[key as any];
 
           if (!INSPECTOR_ENABLED || !notifyInspectorRef.current) {
             return value;
           }
 
+          // Propagate inspector marker into nested observables
           if (value?.[INSPECT_MARKER]) {
             value[INSPECT_MARKER] = {
               current: {
@@ -96,6 +79,7 @@ export function createView<T extends readonly object[]>(
               },
             };
           } else if (typeof value === "function") {
+            // Wrap actions to notify inspector
             return (...params: any[]) => {
               notifyInspectorRef.current!.notify({
                 type: "action",
@@ -121,8 +105,9 @@ export function createView<T extends readonly object[]>(
       get() {
         return !notifyInspectorRef.current;
       },
-      set: (value) => {
+      set: (value: InspectorRef) => {
         Object.defineProperty(notifyInspectorRef, "current", {
+          configurable: true,
           get() {
             return value.current;
           },
@@ -131,5 +116,6 @@ export function createView<T extends readonly object[]>(
     });
   }
 
-  return result as MergeMany<T>;
+  // The overload signatures expose a precise type; this is the shared impl.
+  return result;
 }
