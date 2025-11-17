@@ -328,7 +328,7 @@ function Example() {
 
 #### `assignState<T>(state, newState)`
 
-Merges properties from a new state object into an existing reactive state object. This is a convenience function that uses `Object.assign` internally.
+Merges properties from a new state object into an existing reactive state object. Returns the updated state object.
 
 ```tsx
 import { assignState, createState } from "rask-ui";
@@ -341,7 +341,7 @@ function Example() {
   });
 
   const updateProfile = (updates) => {
-    assignState(state, updates);
+    return assignState(state, updates);
   };
 
   return () => (
@@ -360,9 +360,11 @@ function Example() {
 - `state: T` - The reactive state object to update
 - `newState: T` - Object with properties to merge into the state
 
+**Returns:** The updated state object (same reference as input state)
+
 **Notes:**
 
-- Equivalent to `Object.assign(state, newState)`
+- Equivalent to `Object.assign(state, newState)` - returns the state for chaining
 - Triggers reactivity for all updated properties
 - Useful for bulk state updates from form data or API responses
 
@@ -724,9 +726,11 @@ function Child() {
 
 ### Async Data Management
 
-#### `createTask<T, P>(task)`
+#### `createTask<P, T>(task)`
 
 A low-level reactive primitive for managing any async operation. `createTask` provides the foundation for building data fetching, mutations, polling, debouncing, and any other async pattern you need. It gives you full control without prescribing specific patterns.
+
+The `Task<T, P>` type is also exported for type annotations (result type first, params type second).
 
 ```tsx
 import { createTask, createState } from "rask-ui";
@@ -870,10 +874,24 @@ createTask<T>(task: () => Promise<T>): Task<T, never> & {
 }
 
 // Task with parameters - manual control
-createTask<T, P>(task: (params: P) => Promise<T>): Task<T, P> & {
+createTask<P, T>(task: (params: P) => Promise<T>): Task<T, P> & {
   run(params: P): Promise<T>;
   rerun(params: P): Promise<T>;
 }
+```
+
+**Task Type:**
+
+The `Task` type is exported and can be used for type annotations:
+
+```tsx
+import { Task } from "rask-ui";
+
+// Task that returns a string, no parameters
+const myTask: Task<string>;
+
+// Task that returns a User object, accepts a number parameter
+const myTask: Task<User, number>;
 ```
 
 **Returns:** Task object with reactive state and methods:

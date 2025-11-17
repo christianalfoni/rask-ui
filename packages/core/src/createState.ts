@@ -2,7 +2,7 @@ import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorRef } from "./inspect";
 import { getCurrentObserver, Signal } from "./observation";
 
 export function assignState<T extends object>(state: T, newState: T) {
-  Object.assign(state, newState);
+  return Object.assign(state, newState);
 }
 
 /**

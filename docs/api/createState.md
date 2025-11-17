@@ -60,15 +60,18 @@ state.count
 
 ### assignState()
 
-Merges properties from a new state object into an existing reactive state object.
+Merges properties from a new state object into an existing reactive state object. Returns the updated state object.
 
 ```tsx
-assignState<T>(state: T, newState: T): void
+assignState<T>(state: T, newState: T): T
 ```
 
 **Parameters:**
 - `state: T` - The reactive state object to update
 - `newState: T` - Object with properties to merge into the state
+
+**Returns:**
+- `T` - The updated state object (same reference as input state)
 
 **Example:**
 
@@ -84,7 +87,7 @@ function UserProfile() {
 
   const loadProfile = async () => {
     const profile = await fetch("/api/profile").then(r => r.json());
-    assignState(state, profile);
+    return assignState(state, profile);
   };
 
   return () => (
@@ -99,7 +102,7 @@ function UserProfile() {
 ```
 
 **Notes:**
-- Equivalent to `Object.assign(state, newState)`
+- Equivalent to `Object.assign(state, newState)` - returns the state for chaining
 - Triggers reactivity for all updated properties
 - Useful for bulk state updates from form data or API responses
 - Properties not present in `newState` remain unchanged

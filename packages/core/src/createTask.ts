@@ -1,6 +1,6 @@
-import { createState } from "./createState";
+import { assignState, createState } from "./createState";
 
-export type Task<T, P> =
+export type Task<P, T> =
   | {
       isRunning: false;
       params: null;
@@ -30,22 +30,19 @@ export function createTask<T>(task: () => Promise<T>): Task<T, never> & {
   run(): Promise<T>;
   rerun(): Promise<T>;
 };
-export function createTask<T, P>(
+export function createTask<P, T>(
   task: (params: P) => Promise<T>
 ): Task<T, P> & {
   run(params: P): Promise<T>;
   rerun(params: P): Promise<T>;
 };
-export function createTask<T, P>(task: (params?: P) => Promise<T>) {
-  const state = createState<Task<T, P>>({
+export function createTask<P, T>(task: (params?: P) => Promise<T>) {
+  const state = createState<Task<P, T>>({
     isRunning: false,
     result: null,
     error: null,
     params: null,
   });
-  const assign = (newState: Task<T, P>) => {
-    Object.assign(state, newState);
-  };
 
   let currentAbortController: AbortController | undefined;
 
@@ -61,7 +58,7 @@ export function createTask<T, P>(task: (params?: P) => Promise<T>) {
           return;
         }
 
-        assign({
+        assignState(state, {
           isRunning: false,
           result,
           error: null,
@@ -72,7 +69,7 @@ export function createTask<T, P>(task: (params?: P) => Promise<T>) {
         if (abortController.signal.aborted) {
           return;
         }
-        assign({
+        assignState(state, {
           isRunning: false,
           result: null,
           error: String(error),
@@ -98,7 +95,7 @@ export function createTask<T, P>(task: (params?: P) => Promise<T>) {
     },
     run(params?: P) {
       const promise = fetch(params);
-      assign({
+      assignState(state, {
         isRunning: true,
         result: null,
         error: null,
@@ -108,7 +105,7 @@ export function createTask<T, P>(task: (params?: P) => Promise<T>) {
     },
     rerun(params?: P) {
       const promise = fetch(params);
-      assign({
+      assignState(state, {
         isRunning: true,
         result: state.result,
         error: null,

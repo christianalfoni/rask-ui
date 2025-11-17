@@ -8,7 +8,7 @@ export {
 export { createContext } from "./createContext";
 
 export { createState, assignState } from "./createState";
-export { createTask } from "./createTask";
+export { createTask, Task } from "./createTask";
 export { ErrorBoundary } from "./error";
 export { createRef } from "inferno";
 export { createView } from "./createView";
