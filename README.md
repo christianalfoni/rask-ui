@@ -730,7 +730,7 @@ function Child() {
 
 A low-level reactive primitive for managing any async operation. `createTask` provides the foundation for building data fetching, mutations, polling, debouncing, and any other async pattern you need. It gives you full control without prescribing specific patterns.
 
-The `Task<T, P>` type is also exported for type annotations (result type first, params type second).
+The `Task<P, T>` type is also exported for type annotations. When used with one type parameter, it represents a task with no parameters. With two type parameters, the first is the params type and the second is the return type.
 
 ```tsx
 import { createTask, createState } from "rask-ui";
@@ -868,13 +868,13 @@ function TodoList() {
 
 ```tsx
 // Task without parameters - auto-runs on creation
-createTask<T>(task: () => Promise<T>): Task<T, never> & {
+createTask<T>(task: () => Promise<T>): Task<T> & {
   run(): Promise<T>;
   rerun(): Promise<T>;
 }
 
 // Task with parameters - manual control
-createTask<P, T>(task: (params: P) => Promise<T>): Task<T, P> & {
+createTask<P, T>(task: (params: P) => Promise<T>): Task<P, T> & {
   run(params: P): Promise<T>;
   rerun(params: P): Promise<T>;
 }
@@ -890,8 +890,11 @@ import { Task } from "rask-ui";
 // Task that returns a string, no parameters
 const myTask: Task<string>;
 
-// Task that returns a User object, accepts a number parameter
-const myTask: Task<User, number>;
+// Task that accepts string parameters and returns a string
+const myTask: Task<string, string>;
+
+// Task that accepts a number parameter and returns a User object
+const myTask: Task<number, User>;
 ```
 
 **Returns:** Task object with reactive state and methods:

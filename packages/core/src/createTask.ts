@@ -1,6 +1,6 @@
 import { assignState, createState } from "./createState";
 
-export type Task<P, T> =
+export type TaskState<P, T> =
   | {
       isRunning: false;
       params: null;
@@ -26,18 +26,20 @@ export type Task<P, T> =
       error: string;
     };
 
-export function createTask<T>(task: () => Promise<T>): Task<T, never> & {
-  run(): Promise<T>;
-  rerun(): Promise<T>;
-};
-export function createTask<P, T>(
-  task: (params: P) => Promise<T>
-): Task<T, P> & {
-  run(params: P): Promise<T>;
-  rerun(params: P): Promise<T>;
-};
+export type Task<A, B = never> = [B] extends [never]
+  ? TaskState<null, A> & {
+      run(): Promise<A>;
+      rerun(): Promise<A>;
+    }
+  : TaskState<A, B> & {
+      run(params: A): Promise<B>;
+      rerun(params: A): Promise<B>;
+    };
+
+export function createTask<T>(task: () => Promise<T>): Task<T>;
+export function createTask<P, T>(task: (params: P) => Promise<T>): Task<P, T>;
 export function createTask<P, T>(task: (params?: P) => Promise<T>) {
-  const state = createState<Task<P, T>>({
+  const state = createState<TaskState<P, T>>({
     isRunning: false,
     result: null,
     error: null,

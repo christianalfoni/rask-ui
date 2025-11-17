@@ -6,10 +6,10 @@ A low-level reactive primitive for managing any async operation. `createTask` pr
 
 ```tsx
 // Task without parameters - auto-runs on creation
-createTask<T>(task: () => Promise<T>): Task<T, never>
+createTask<T>(task: () => Promise<T>): Task<T>
 
 // Task with parameters - manual control
-createTask<P, T>(task: (params: P) => Promise<T>): Task<T, P>
+createTask<P, T>(task: (params: P) => Promise<T>): Task<P, T>
 ```
 
 ### Task Type
@@ -22,9 +22,16 @@ import { Task } from "rask-ui";
 // Task that returns a string, no parameters
 const myTask: Task<string>;
 
-// Task that returns a User object, accepts a number parameter
-const myTask: Task<User, number>;
+// Task that accepts string parameters and returns a string
+const myTask: Task<string, string>;
+
+// Task that accepts a number parameter and returns a User object
+const myTask: Task<number, User>;
 ```
+
+**Type Parameters:**
+- `Task<T>` - Task with no parameters, returns type `T`
+- `Task<P, T>` - Task with parameters of type `P`, returns type `T`
 
 ### Parameters
 
