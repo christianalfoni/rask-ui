@@ -1,5 +1,9 @@
-import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorCallback, InspectorRef } from "./inspect";
+import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorRef } from "./inspect";
 import { getCurrentObserver, Signal } from "./observation";
+
+export function assignState<T extends object>(state: T, newState: T) {
+  Object.assign(state, newState);
+}
 
 /**
  * Creates a reactive state object that tracks property access and notifies observers on changes.

@@ -55,3 +55,51 @@ const { count } = state;
 state.count
 ```
 :::
+
+## Related
+
+### assignState()
+
+Merges properties from a new state object into an existing reactive state object.
+
+```tsx
+assignState<T>(state: T, newState: T): void
+```
+
+**Parameters:**
+- `state: T` - The reactive state object to update
+- `newState: T` - Object with properties to merge into the state
+
+**Example:**
+
+```tsx
+import { assignState, createState } from "rask-ui";
+
+function UserProfile() {
+  const state = createState({
+    name: "Alice",
+    age: 30,
+    email: "alice@example.com",
+  });
+
+  const loadProfile = async () => {
+    const profile = await fetch("/api/profile").then(r => r.json());
+    assignState(state, profile);
+  };
+
+  return () => (
+    <div>
+      <h1>{state.name}</h1>
+      <p>Age: {state.age}</p>
+      <p>Email: {state.email}</p>
+      <button onClick={loadProfile}>Reload Profile</button>
+    </div>
+  );
+}
+```
+
+**Notes:**
+- Equivalent to `Object.assign(state, newState)`
+- Triggers reactivity for all updated properties
+- Useful for bulk state updates from form data or API responses
+- Properties not present in `newState` remain unchanged

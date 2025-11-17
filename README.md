@@ -326,6 +326,48 @@ function Example() {
 
 ---
 
+#### `assignState<T>(state, newState)`
+
+Merges properties from a new state object into an existing reactive state object. This is a convenience function that uses `Object.assign` internally.
+
+```tsx
+import { assignState, createState } from "rask-ui";
+
+function Example() {
+  const state = createState({
+    name: "Alice",
+    age: 30,
+    email: "alice@example.com",
+  });
+
+  const updateProfile = (updates) => {
+    assignState(state, updates);
+  };
+
+  return () => (
+    <div>
+      <p>{state.name} - {state.email}</p>
+      <button onClick={() => updateProfile({ name: "Bob", age: 35 })}>
+        Update Profile
+      </button>
+    </div>
+  );
+}
+```
+
+**Parameters:**
+
+- `state: T` - The reactive state object to update
+- `newState: T` - Object with properties to merge into the state
+
+**Notes:**
+
+- Equivalent to `Object.assign(state, newState)`
+- Triggers reactivity for all updated properties
+- Useful for bulk state updates from form data or API responses
+
+---
+
 #### `createView<T>(...objects)`
 
 Creates a view that merges multiple objects (reactive or plain) into a single object while maintaining reactivity through getters. Properties from later arguments override earlier ones.

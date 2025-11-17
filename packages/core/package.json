@@ -1,6 +1,6 @@
 {
   "name": "rask-ui",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -24,7 +24,7 @@
   },
   "files": [
     "dist",
-    "swc-plugin",
+    "swc-plugin/target/wasm32-wasip1/release/swc_plugin_rask_component.wasm",
     "logo.png",
     "README.md"
   ],

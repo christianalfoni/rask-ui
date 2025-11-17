@@ -6,7 +6,8 @@ export {
   RaskStatelessComponent,
 } from "./component";
 export { createContext } from "./createContext";
-export { createState } from "./createState";
+
+export { createState, assignState } from "./createState";
 export { createTask } from "./createTask";
 export { ErrorBoundary } from "./error";
 export { createRef } from "inferno";
