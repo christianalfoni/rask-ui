@@ -40,6 +40,7 @@ export default defineConfig({
           { text: "createCleanup", link: "/api/createCleanup" },
           { text: "createContext", link: "/api/createContext" },
           { text: "createTask", link: "/api/createTask" },
+          { text: "createRouter", link: "/api/createRouter" },
           { text: "ErrorBoundary", link: "/api/ErrorBoundary" },
           { text: "inspect", link: "/api/inspect" },
         ],
