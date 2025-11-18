@@ -17,8 +17,10 @@ describe("createTask", () => {
     it("should resolve to result state on success", async () => {
       const task = createTask(() => Promise.resolve("success"));
 
-      // Initial fetch() doesn't set isRunning
+      // Task doesn't auto-run anymore
       expect(task.isRunning).toBe(false);
+
+      task.run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -30,6 +32,8 @@ describe("createTask", () => {
 
     it("should resolve to error state on rejection", async () => {
       const task = createTask(() => Promise.reject(new Error("failed")));
+
+      task.run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -43,8 +47,8 @@ describe("createTask", () => {
       const fetcher = vi.fn(() => Promise.resolve("data"));
       const task = createTask(fetcher);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      expect(fetcher).toHaveBeenCalledTimes(1);
+      // Tasks no longer auto-run, so fetcher hasn't been called yet
+      expect(fetcher).toHaveBeenCalledTimes(0);
 
       task.run();
       expect(task.isRunning).toBe(true);
@@ -52,7 +56,7 @@ describe("createTask", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(fetcher).toHaveBeenCalledTimes(2);
+      expect(fetcher).toHaveBeenCalledTimes(1);
       expect(task.result).toBe("data");
     });
 
@@ -64,6 +68,8 @@ describe("createTask", () => {
 
       const task = createTask(fetcher);
 
+      // First run
+      task.run();
       await new Promise((resolve) => setTimeout(resolve, 10));
       expect(task.result).toBe("data1");
 
@@ -78,17 +84,16 @@ describe("createTask", () => {
   });
 
   describe("with parameters", () => {
-    it("should auto-run with undefined params on creation", () => {
+    it("should not auto-run on creation", () => {
       const fetcher = vi.fn((page: number) => Promise.resolve(`page-${page}`));
       const task = createTask(fetcher);
 
-      // Initial fetch() is called with undefined, but doesn't set isRunning
+      // Tasks no longer auto-run
       expect(task.isRunning).toBe(false);
       expect(task.result).toBeNull();
       expect(task.error).toBeNull();
       expect(task.params).toBeNull();
-      expect(fetcher).toHaveBeenCalledWith(undefined);
-      expect(fetcher).toHaveBeenCalledTimes(1);
+      expect(fetcher).toHaveBeenCalledTimes(0);
     });
 
     it("should run when run() is called with params", async () => {
@@ -110,7 +115,7 @@ describe("createTask", () => {
     });
 
     it("should handle error state with params", async () => {
-      const task = createTask((id: number) =>
+      const task = createTask<number, any>((id: number) =>
         Promise.reject(new Error(`failed-${id}`))
       );
 
@@ -130,15 +135,12 @@ describe("createTask", () => {
     it("should handle rerun with params", async () => {
       const fetcher = vi
         .fn()
-        .mockResolvedValueOnce("initial") // First call from auto-run
         .mockResolvedValueOnce("data1")
         .mockResolvedValueOnce("data2");
 
       const task = createTask((page: number) => fetcher());
 
-      // Wait for initial auto-run to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
+      // First run
       task.run(1);
       await new Promise((resolve) => setTimeout(resolve, 10));
       expect(task.result).toBe("data1");
@@ -190,10 +192,11 @@ describe("createTask", () => {
 
       const task = createTask(fetcher);
 
-      // Initial auto-run doesn't set isRunning
-      expect(task.isRunning).toBe(false);
+      // First run
+      task.run();
+      expect(task.isRunning).toBe(true);
 
-      // Trigger second run before first completes - this cancels the auto-run
+      // Trigger second run before first completes - this cancels the first run
       task.run();
       expect(task.isRunning).toBe(true);
 
@@ -211,13 +214,9 @@ describe("createTask", () => {
     });
 
     it("should cancel previous request with params", async () => {
-      let resolveInitial: (value: string) => void;
       let resolveFirst: (value: string) => void;
       let resolveSecond: (value: string) => void;
 
-      const initialPromise = new Promise<string>((resolve) => {
-        resolveInitial = resolve;
-      });
       const firstPromise = new Promise<string>((resolve) => {
         resolveFirst = resolve;
       });
@@ -227,7 +226,6 @@ describe("createTask", () => {
 
       const fetcher = vi
         .fn()
-        .mockReturnValueOnce(initialPromise) // Auto-run
         .mockReturnValueOnce(firstPromise)
         .mockReturnValueOnce(secondPromise);
 
@@ -240,8 +238,7 @@ describe("createTask", () => {
       task.run(2);
       expect(task.params).toBe(2);
 
-      // Resolve initial and first (should be ignored due to cancellation)
-      resolveInitial!("initial");
+      // Resolve first (should be ignored due to cancellation)
       resolveFirst!("first");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -259,8 +256,6 @@ describe("createTask", () => {
       const fetcher = vi.fn(() => Promise.resolve(`data-${++counter}`));
       const task = createTask(fetcher);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
       // Rapid runs
       task.run();
       task.run();
@@ -269,14 +264,16 @@ describe("createTask", () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
 
       // Only the last run should complete
-      expect(fetcher).toHaveBeenCalledTimes(4); // Initial + 3 runs
-      expect(task.result).toBe("data-4");
+      expect(fetcher).toHaveBeenCalledTimes(3); // 3 runs
+      expect(task.result).toBe("data-3");
     });
   });
 
   describe("type handling", () => {
     it("should handle numeric values", async () => {
       const task = createTask(() => Promise.resolve(42));
+
+      task.run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -287,6 +284,8 @@ describe("createTask", () => {
       const data = { id: 1, name: "Test" };
       const task = createTask(() => Promise.resolve(data));
 
+      task.run();
+
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(task.result).toEqual(data);
@@ -296,6 +295,8 @@ describe("createTask", () => {
       const data = [1, 2, 3, 4, 5];
       const task = createTask(() => Promise.resolve(data));
 
+      task.run();
+
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(task.result).toEqual(data);
@@ -303,6 +304,8 @@ describe("createTask", () => {
 
     it("should convert error to string", async () => {
       const task = createTask(() => Promise.reject("string error"));
+
+      task.run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -313,6 +316,8 @@ describe("createTask", () => {
     it("should handle error objects", async () => {
       const error = new Error("Something went wrong");
       const task = createTask(() => Promise.reject(error));
+
+      task.run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -347,6 +352,8 @@ describe("createTask", () => {
     it("should handle immediate resolution", async () => {
       const task = createTask(() => Promise.resolve("immediate"));
 
+      task.run();
+
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(task.isRunning).toBe(false);
@@ -355,6 +362,8 @@ describe("createTask", () => {
 
     it("should handle immediate rejection", async () => {
       const task = createTask(() => Promise.reject("immediate error"));
+
+      task.run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -370,8 +379,8 @@ describe("createTask", () => {
           })
       );
 
-      // Initial auto-run doesn't set isRunning
-      expect(task.isRunning).toBe(false);
+      task.run();
+      expect(task.isRunning).toBe(true);
 
       await new Promise((resolve) => setTimeout(resolve, 20));
 
@@ -386,6 +395,8 @@ describe("createTask", () => {
         .mockResolvedValueOnce("success");
 
       const task = createTask(fetcher);
+
+      task.run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -405,14 +416,15 @@ describe("createTask", () => {
     it("should expose reactive getters", async () => {
       const task = createTask(() => Promise.resolve("data"));
 
+      task.run();
+
       // Access getters before completion
       const running1 = task.isRunning;
       const result1 = task.result;
       const error1 = task.error;
       const params1 = task.params;
 
-      // Initial auto-run doesn't set isRunning
-      expect(running1).toBe(false);
+      expect(running1).toBe(true);
       expect(result1).toBeNull();
       expect(error1).toBeNull();
       expect(params1).toBeNull();
@@ -427,8 +439,11 @@ describe("createTask", () => {
     });
 
     it("should track params during execution", async () => {
-      const task = createTask((id: number) =>
-        new Promise((resolve) => setTimeout(() => resolve(`result-${id}`), 20))
+      const task = createTask(
+        (id: number) =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve(`result-${id}`), 20)
+          )
       );
 
       task.run(123);

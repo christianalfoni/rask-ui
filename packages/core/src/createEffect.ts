@@ -1,3 +1,4 @@
+import { syncBatch } from "./batch";
 import { getCurrentComponent, createCleanup } from "./component";
 import { Observer } from "./observation";
 
@@ -10,9 +11,8 @@ export function createEffect(cb: () => void | (() => void)) {
   }
   let disposer: (() => void) | void;
   const observer = new Observer(() => {
-    // We trigger effects on micro task as synchronous observer notifications
-    // (Like when components sets props) should not synchronously trigger effects
-    queueMicrotask(runEffect);
+    console.log("FIRED");
+    syncBatch(runEffect);
   });
   const runEffect = () => {
     try {
@@ -26,7 +26,10 @@ export function createEffect(cb: () => void | (() => void)) {
   };
 
   if (currentComponent) {
-    createCleanup(() => observer.dispose());
+    createCleanup(() => {
+      observer.dispose();
+      disposer?.();
+    });
   }
 
   runEffect();

@@ -181,9 +181,9 @@ function Timer() {
 
 ### Effect Behavior
 
-- Runs immediately on creation
+- Runs immediately and synchronously on creation during setup
 - Automatically tracks reactive dependencies
-- Re-runs on microtask when dependencies change
+- Re-runs when dependencies change
 - Automatically cleaned up when component unmounts
 
 ## Computed Values

@@ -3,10 +3,10 @@
 // This file only provides type declarations for TypeScript's "jsx": "react-jsx" mode
 
 // Import inferno to get the global JSX namespace
-import 'inferno';
+import "inferno";
 
 // Re-export Fragment for JSX fragment syntax
-export { Fragment } from 'inferno';
+export { Fragment } from "inferno";
 
 // Type declarations for jsx/jsxs functions (never called at runtime)
 // TypeScript uses these signatures for JSX type checking

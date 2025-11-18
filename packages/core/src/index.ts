@@ -16,6 +16,7 @@ export { createEffect } from "./createEffect";
 export { createComputed } from "./createComputed";
 export { syncBatch } from "./batch";
 export { inspect } from "./inspect";
+export { Router, createRouter } from "./createRouter";
 
 // Re-export Inferno JSX runtime functions so users don't need to install Inferno directly
 export {

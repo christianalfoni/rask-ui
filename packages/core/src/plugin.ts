@@ -7,10 +7,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
+export interface RaskPluginOptions {
+  /**
+   * The import source to use for rask-ui imports
+   * Defaults to "rask-ui"
+   * In tests, you might want to use ".." to point to source files
+   */
+  importSource?: string;
+}
+
 /**
  * Vite plugin for transforming JSX to Inferno and function components to RaskComponent classes
  */
-export default function raskPlugin(): Plugin {
+export default function raskPlugin(options: RaskPluginOptions = {}): Plugin {
+  const importSource = options.importSource || "rask-ui";
   // Resolve the path to swc-plugin-inferno WASM file
   const infernoPluginPath = require.resolve(
     "swc-plugin-inferno/swc_plugin_inferno.wasm"
@@ -53,7 +63,7 @@ export default function raskPlugin(): Plugin {
         [
           infernoPluginPath,
           {
-            importSource: "rask-ui",
+            importSource: importSource,
             defineAllArguments: false,
           },
         ],
@@ -64,7 +74,7 @@ export default function raskPlugin(): Plugin {
       plugins.push([
         componentPluginPath,
         {
-          importSource: "rask-ui",
+          importSource: importSource,
         },
       ]);
 

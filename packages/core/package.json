@@ -47,7 +47,8 @@
     "@swc/core": "^1.9.2",
     "inferno": "^9.0.4",
     "inferno-vnode-flags": "^9.0.4",
-    "swc-plugin-inferno": "^2.9.0"
+    "swc-plugin-inferno": "^2.9.0",
+    "typed-client-router": "^0.8.2"
   },
   "peerDependencies": {
     "vite": ">=5.0.0"

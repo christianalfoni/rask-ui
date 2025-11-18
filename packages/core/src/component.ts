@@ -1,13 +1,8 @@
-import {
-  createComponentVNode,
-  VNode,
-  Component,
-  Props,
-  InfernoNode,
-} from "inferno";
+import { createComponentVNode, VNode, Component, Props } from "inferno";
 import { VNodeFlags } from "inferno-vnode-flags";
 import { getCurrentObserver, Observer, Signal } from "./observation";
 import { syncBatch } from "./batch";
+import { PROXY_MARKER } from "./createState";
 
 export type RaskStatelessFunctionComponent<P extends Props<any>> =
   | (() => VNode)
@@ -71,9 +66,19 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
   private renderFn?: () => VNode;
   private reactiveProps?: Props<any>;
   private observer = new Observer(() => {
+    console.log("OBSERVER", this.willRender, this.setup.name);
+    if (this.willRender) {
+      return;
+    }
     this.forceUpdate();
   });
+  // Flag to prevent props from tracking in render scope (We use props reconciliation)
   private isRendering = false;
+  // Flag to prevent observer notifications to cause render during reconciliation
+  private willRender = true;
+  // Since reactive props updates before the reconciliation (without causing a new one), we
+  // need to return these from the reactive props
+  private nextProps: any = this.props;
   effects: Array<{ isDirty: boolean; run: () => void }> = [];
   contexts = new Map();
   getChildContext() {
@@ -93,51 +98,49 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
     const self = this;
     const signals = new Map<string, Signal>();
 
-    for (const prop in this.props) {
-      const value = (this.props as any)[prop];
+    for (const prop in this.nextProps) {
+      const value = (this.nextProps as any)[prop];
 
       // Skip known non-reactive props
-      if (
-        typeof value === "function" ||
-        prop === "children" ||
-        prop === "key" ||
-        prop === "ref"
-      ) {
+      if (prop === "key" || prop === "ref") {
         reactiveProps[prop] = value;
         continue;
       }
 
       // Skip objects/arrays - they're already reactive if they're proxies
       // No need to wrap them in additional signals
-      if (typeof value === "object" && value !== null) {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        PROXY_MARKER in value
+      ) {
         reactiveProps[prop] = value;
         continue;
       }
 
       // Only create reactive getters for primitives
       Object.defineProperty(reactiveProps, prop, {
+        enumerable: true,
         get() {
-          if (!self.isRendering) {
-            const observer = getCurrentObserver();
+          const observer = getCurrentObserver();
 
-            if (observer) {
-              // Lazy create signal only when accessed in reactive context
-              let signal = signals.get(prop);
-              if (!signal) {
-                signal = new Signal();
-                signals.set(prop, signal);
-              }
-              observer.subscribeSignal(signal);
+          if (!self.isRendering && observer) {
+            // Lazy create signal only when accessed in reactive context
+            let signal = signals.get(prop);
+            if (!signal) {
+              signal = new Signal();
+              signals.set(prop, signal);
             }
+            observer.subscribeSignal(signal);
           }
 
           // @ts-ignore
-          return self.props[prop];
+          return self.nextProps[prop];
         },
         set(value) {
           // Only notify if signal was created (i.e., prop was accessed reactively)
           const signal = signals.get(prop);
-          if (signal && (self.props as any)[prop] !== value) {
+          if (signal) {
             signal.notify();
           }
         },
@@ -157,9 +160,16 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
    *
    */
   componentWillUpdate(nextProps: any) {
+    this.willRender = true;
+    this.nextProps = nextProps;
+
+    console.log("Props update", this.setup.name);
     syncBatch(() => {
       for (const prop in nextProps) {
-        if (prop === "children") {
+        if (
+          prop === "children" ||
+          (this.props as any)[prop] === nextProps[prop]
+        ) {
           continue;
         }
 
@@ -167,8 +177,8 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
         this.reactiveProps[prop] = nextProps[prop];
       }
     });
+    console.log("Props update end");
   }
-  componentWillReceiveProps(): void {}
   shouldComponentUpdate(nextProps: Props<any>): boolean {
     // Shallow comparison of props, excluding internal props
     for (const prop in nextProps) {
@@ -206,9 +216,11 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
     let result: any = null;
 
     try {
+      console.log("RENDER", this.setup.name);
       this.isRendering = true;
       result = this.renderFn();
       this.isRendering = false;
+      this.willRender = false;
     } catch (error) {
       if (typeof this.context.notifyError !== "function") {
         throw error;

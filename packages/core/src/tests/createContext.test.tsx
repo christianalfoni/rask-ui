@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { createContext } from "../createContext";
-import { jsx } from "../jsx-runtime";
 import { render } from "../";
 
 describe("createContext", () => {
@@ -15,18 +14,18 @@ describe("createContext", () => {
 
     function Parent() {
       ThemeContext.inject({ theme: "dark" });
-      return () => jsx(Child, {});
+      return () => <Child />;
     }
 
     function Child() {
       const theme = ThemeContext.get();
-      return () => jsx("div", { children: theme.theme });
+      return () => <div>{theme.theme}</div>;
     }
 
     const container = document.createElement("div");
     document.body.appendChild(container);
 
-    render(jsx(Parent, {}), container);
+    render(<Parent />, container);
 
     expect(container.textContent).toContain("dark");
 
@@ -38,22 +37,22 @@ describe("createContext", () => {
 
     function GrandParent() {
       ThemeContext.inject({ theme: "light" });
-      return () => jsx(Parent, {});
+      return () => <Parent />;
     }
 
     function Parent() {
-      return () => jsx(Child, {});
+      return () => <Child />;
     }
 
     function Child() {
       const theme = ThemeContext.get();
-      return () => jsx("div", { children: theme.theme });
+      return () => <div>{theme.theme}</div>;
     }
 
     const container = document.createElement("div");
     document.body.appendChild(container);
 
-    render(jsx(GrandParent, {}), container);
+    render(<GrandParent />, container);
 
     expect(container.textContent).toContain("light");
 
@@ -67,13 +66,13 @@ describe("createContext", () => {
       expect(() => {
         ThemeContext.get();
       }).toThrow("There is no parent context");
-      return () => jsx("div", { children: "Child" });
+      return () => <div>Child</div>;
     }
 
     const container = document.createElement("div");
     document.body.appendChild(container);
 
-    render(jsx(Child, {}), container);
+    render(<Child />, container);
 
     document.body.removeChild(container);
   });
@@ -99,33 +98,33 @@ describe("createContext", () => {
 
     function GrandParent() {
       ThemeContext.inject({ theme: "light" });
-      return () =>
-        jsx("div", {
-          children: [jsx(Parent, {}), jsx(ChildOfGrandParent, {})],
-        });
+      return () => (
+        <div>
+          <Parent />
+          <ChildOfGrandParent />
+        </div>
+      );
     }
 
     function Parent() {
       ThemeContext.inject({ theme: "dark" });
-      return () => jsx(ChildOfParent, {});
+      return () => <ChildOfParent />;
     }
 
     function ChildOfParent() {
       const theme = ThemeContext.get();
-      return () =>
-        jsx("div", { class: "child-of-parent", children: theme.theme });
+      return () => <div class="child-of-parent">{theme.theme}</div>;
     }
 
     function ChildOfGrandParent() {
       const theme = ThemeContext.get();
-      return () =>
-        jsx("div", { class: "child-of-grandparent", children: theme.theme });
+      return () => <div class="child-of-grandparent">{theme.theme}</div>;
     }
 
     const container = document.createElement("div");
     document.body.appendChild(container);
 
-    render(jsx(GrandParent, {}), container);
+    render(<GrandParent />, container);
 
     const childOfParent = document.querySelector(".child-of-parent");
     const childOfGrandParent = document.querySelector(".child-of-grandparent");
@@ -143,22 +142,19 @@ describe("createContext", () => {
     function Parent() {
       ThemeContext.inject({ theme: "dark" });
       UserContext.inject({ name: "Alice" });
-      return () => jsx(Child, {});
+      return () => <Child />;
     }
 
     function Child() {
       const theme = ThemeContext.get();
       const user = UserContext.get();
-      return () =>
-        jsx("div", {
-          children: `${theme.theme} - ${user.name}`,
-        });
+      return () => <div>{`${theme.theme} - ${user.name}`}</div>;
     }
 
     const container = document.createElement("div");
     document.body.appendChild(container);
 
-    render(jsx(Parent, {}), container);
+    render(<Parent />, container);
 
     expect(container.textContent).toContain("dark - Alice");
 
@@ -172,22 +168,19 @@ describe("createContext", () => {
     function Parent() {
       NumberContext.inject(42);
       ArrayContext.inject(["a", "b", "c"]);
-      return () => jsx(Child, {});
+      return () => <Child />;
     }
 
     function Child() {
       const num = NumberContext.get();
       const arr = ArrayContext.get();
-      return () =>
-        jsx("div", {
-          children: `${num} - ${arr.join(",")}`,
-        });
+      return () => <div>{`${num} - ${arr.join(",")}`}</div>;
     }
 
     const container = document.createElement("div");
     document.body.appendChild(container);
 
-    render(jsx(Parent, {}), container);
+    render(<Parent />, container);
 
     expect(container.textContent).toContain("42 - a,b,c");
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { createEffect } from "../createEffect";
 import { createState } from "../createState";
+import { render } from "../index";
 
 describe("createEffect", () => {
   it("should run immediately on creation", () => {
@@ -476,7 +477,9 @@ describe("createEffect", () => {
   it("should handle dispose function that throws error", async () => {
     const state = createState({ count: 0 });
     const effectCalls: number[] = [];
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     createEffect(() => {
       effectCalls.push(state.count);
@@ -551,5 +554,76 @@ describe("createEffect", () => {
     // Effect and dispose should each be called once more
     expect(effectFn).toHaveBeenCalledTimes(2);
     expect(disposeFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("should run effects synchronously before render when props change", async () => {
+    const renderLog: string[] = [];
+
+    function Child(props: { value: number }) {
+      const state = createState({ internalValue: 0 });
+
+      createEffect(() => {
+        // Update internal state based on prop
+        state.internalValue = props.value * 2;
+      });
+
+      return () => {
+        renderLog.push(`render:${state.internalValue}`);
+        return <div class="child-component">{state.internalValue}</div>;
+      };
+    }
+
+    function Parent() {
+      const state = createState({ count: 1 });
+
+      return () => {
+        renderLog.push(`parent-render:${state.count}`);
+        return (
+          <div>
+            <Child value={state.count} />
+            <button
+              onClick={() => {
+                state.count = 2;
+              }}
+            >
+              Increment
+            </button>
+          </div>
+        );
+      };
+    }
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+
+    render(<Parent />, container);
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    // Initial render: parent renders, then child renders with effect-updated state
+    expect(renderLog).toEqual(["parent-render:1", "render:2"]);
+
+    const childDiv = container.querySelector(
+      ".child-component"
+    ) as HTMLDivElement;
+    expect(childDiv?.textContent).toBe("2");
+
+    // Clear log and trigger update
+    renderLog.length = 0;
+
+    const button = container.querySelector("button")!;
+    button.click();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    console.log(renderLog);
+
+    // After prop update: parent renders, child's effect runs synchronously updating state,
+    // then child renders once with the updated state
+    expect(renderLog).toEqual(["parent-render:2", "render:4"]);
+
+    expect(childDiv?.textContent).toBe("4");
+
+    document.body.removeChild(container);
   });
 });

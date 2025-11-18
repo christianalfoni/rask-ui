@@ -59,6 +59,23 @@ export function createContext<T>() {
 
       return contextValue;
     },
+    hasValue() {
+      let currentComponent = getCurrentComponent();
+
+      if (!currentComponent) {
+        throw new Error("You can not get context outside component setup");
+      }
+
+      if (typeof (currentComponent.context as any).getContext !== "function") {
+        return false;
+      }
+
+      const contextValue = (currentComponent.context as any).getContext(
+        context
+      );
+
+      return Boolean(contextValue);
+    },
   };
 
   return context;

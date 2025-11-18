@@ -138,14 +138,8 @@ impl RaskComponentTransform {
                                     }
                                 }
                                 BlockStmtOrExpr::BlockStmt(block) => {
-                                    for stmt in &block.stmts {
-                                        if let Stmt::Return(inner_ret) = stmt {
-                                            if let Some(inner_arg) = &inner_ret.arg {
-                                                if self.has_vnode_call(inner_arg) {
-                                                    return true;
-                                                }
-                                            }
-                                        }
+                                    if self.block_has_vnode_return(block) {
+                                        return true;
                                     }
                                 }
                             }
@@ -153,6 +147,93 @@ impl RaskComponentTransform {
                     }
                 }
             }
+        }
+        false
+    }
+
+    /// Recursively check if a block statement contains any return with VNode calls
+    fn block_has_vnode_return(&self, block: &BlockStmt) -> bool {
+        for stmt in &block.stmts {
+            if self.stmt_has_vnode_return(stmt) {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Check if a statement (or nested statements) contains a return with VNode calls
+    fn stmt_has_vnode_return(&self, stmt: &Stmt) -> bool {
+        match stmt {
+            // Direct return statement
+            Stmt::Return(ret) => {
+                if let Some(arg) = &ret.arg {
+                    return self.has_vnode_call(arg);
+                }
+            }
+            // If statement - check both branches
+            Stmt::If(if_stmt) => {
+                // Check consequent block
+                if self.stmt_has_vnode_return(&if_stmt.cons) {
+                    return true;
+                }
+                // Check alternate (else/else if) branch
+                if let Some(alt) = &if_stmt.alt {
+                    if self.stmt_has_vnode_return(alt) {
+                        return true;
+                    }
+                }
+            }
+            // Block statement - recursively check all statements
+            Stmt::Block(block) => {
+                return self.block_has_vnode_return(block);
+            }
+            // Switch statement - check all cases
+            Stmt::Switch(switch) => {
+                for case in &switch.cases {
+                    for cons_stmt in &case.cons {
+                        if self.stmt_has_vnode_return(cons_stmt) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            // Try-catch-finally - check all blocks
+            Stmt::Try(try_stmt) => {
+                if self.block_has_vnode_return(&try_stmt.block) {
+                    return true;
+                }
+                if let Some(handler) = &try_stmt.handler {
+                    if self.block_has_vnode_return(&handler.body) {
+                        return true;
+                    }
+                }
+                if let Some(finalizer) = &try_stmt.finalizer {
+                    if self.block_has_vnode_return(finalizer) {
+                        return true;
+                    }
+                }
+            }
+            // For/while/do-while loops - check body
+            Stmt::For(for_stmt) => {
+                return self.stmt_has_vnode_return(&for_stmt.body);
+            }
+            Stmt::ForIn(for_in) => {
+                return self.stmt_has_vnode_return(&for_in.body);
+            }
+            Stmt::ForOf(for_of) => {
+                return self.stmt_has_vnode_return(&for_of.body);
+            }
+            Stmt::While(while_stmt) => {
+                return self.stmt_has_vnode_return(&while_stmt.body);
+            }
+            Stmt::DoWhile(do_while) => {
+                return self.stmt_has_vnode_return(&do_while.body);
+            }
+            // Labeled statement - check the nested statement
+            Stmt::Labeled(labeled) => {
+                return self.stmt_has_vnode_return(&labeled.body);
+            }
+            _ => {}
         }
         false
     }
@@ -247,6 +328,91 @@ impl RaskComponentTransform {
                 implements: vec![],
             }),
         })
+    }
+
+    /// Create a class expression for variable assignments
+    fn create_component_class_expr(&mut self, name: Ident, func: Function, is_stateful: bool) -> ClassExpr {
+        let super_class_ident = if is_stateful {
+            if self.import_rask_stateful_component.is_none() {
+                self.import_rask_stateful_component = Some(private_ident!("RaskStatefulComponent"));
+            }
+            self.import_rask_stateful_component.as_ref().unwrap().clone()
+        } else {
+            if self.import_rask_stateless_component.is_none() {
+                self.import_rask_stateless_component = Some(private_ident!("RaskStatelessComponent"));
+            }
+            self.import_rask_stateless_component.as_ref().unwrap().clone()
+        };
+
+        let prop_key = if is_stateful { "setup" } else { "renderFn" };
+
+        ClassExpr {
+            ident: Some(name.clone()),
+            class: Box::new(Class {
+                span: Default::default(),
+                ctxt: Default::default(),
+                decorators: vec![],
+                body: vec![ClassMember::ClassProp(ClassProp {
+                    span: Default::default(),
+                    key: PropName::Ident(quote_ident!(prop_key).into()),
+                    value: Some(Box::new(Expr::Fn(FnExpr {
+                        ident: Some(name),
+                        function: Box::new(func),
+                    }))),
+                    type_ann: None,
+                    is_static: false,
+                    decorators: vec![],
+                    accessibility: None,
+                    is_abstract: false,
+                    is_optional: false,
+                    is_override: false,
+                    readonly: false,
+                    declare: false,
+                    definite: false,
+                })],
+                super_class: Some(Box::new(Expr::Ident(super_class_ident))),
+                is_abstract: false,
+                type_params: None,
+                super_type_params: None,
+                implements: vec![],
+            }),
+        }
+    }
+
+    /// Convert arrow function to regular function for analysis
+    fn arrow_to_function(&self, arrow: &ArrowExpr) -> Function {
+        // Convert arrow params (Vec<Pat>) to function params (Vec<Param>)
+        let params = arrow
+            .params
+            .iter()
+            .map(|pat| Param {
+                span: Default::default(),
+                decorators: vec![],
+                pat: pat.clone(),
+            })
+            .collect();
+
+        Function {
+            params,
+            decorators: vec![],
+            span: arrow.span,
+            ctxt: Default::default(),
+            body: Some(match &*arrow.body {
+                BlockStmtOrExpr::BlockStmt(block) => block.clone(),
+                BlockStmtOrExpr::Expr(expr) => BlockStmt {
+                    span: Default::default(),
+                    ctxt: Default::default(),
+                    stmts: vec![Stmt::Return(ReturnStmt {
+                        span: Default::default(),
+                        arg: Some(expr.clone()),
+                    })],
+                },
+            }),
+            is_generator: arrow.is_generator,
+            is_async: arrow.is_async,
+            type_params: arrow.type_params.clone(),
+            return_type: arrow.return_type.clone(),
+        }
     }
 
     /// Rewrite imports from "inferno" to the configured import source
@@ -383,6 +549,64 @@ impl VisitMut for RaskComponentTransform {
 
         // Then inject imports if needed
         self.inject_runtime(module);
+    }
+
+    fn visit_mut_function(&mut self, func: &mut Function) {
+        // Visit the function body to find nested components
+        if let Some(body) = &mut func.body {
+            for stmt in &mut body.stmts {
+                self.visit_mut_stmt(stmt);
+            }
+        }
+        func.visit_mut_children_with(self);
+    }
+
+    fn visit_mut_stmt(&mut self, stmt: &mut Stmt) {
+        match stmt {
+            // Handle: function MyComponent() { return () => <div /> }
+            Stmt::Decl(Decl::Fn(fn_decl)) => {
+                if self.is_rask_component(&fn_decl.function) {
+                    let name = fn_decl.ident.clone();
+                    let func = (*fn_decl.function).clone();
+                    let class_decl = self.transform_to_stateful_class(name, func);
+                    *stmt = Stmt::Decl(class_decl);
+                    return;
+                } else if self.is_stateless_component(&fn_decl.function) {
+                    let name = fn_decl.ident.clone();
+                    let func = (*fn_decl.function).clone();
+                    let class_decl = self.transform_to_stateless_class(name, func);
+                    *stmt = Stmt::Decl(class_decl);
+                    return;
+                }
+            }
+
+            // Handle: const MyComponent = () => { return () => <div /> }
+            Stmt::Decl(Decl::Var(var_decl)) => {
+                for decl in &mut var_decl.decls {
+                    if let Some(init) = &mut decl.init {
+                        // Check if it's an arrow function
+                        if let Expr::Arrow(arrow) = &**init {
+                            let func = self.arrow_to_function(arrow);
+                            let is_stateful = self.is_rask_component(&func);
+                            let is_stateless = self.is_stateless_component(&func);
+
+                            if is_stateful || is_stateless {
+                                // Get the variable name
+                                if let Pat::Ident(ident_pat) = &decl.name {
+                                    let name = ident_pat.id.clone();
+                                    let class_expr = self.create_component_class_expr(name, func, is_stateful);
+                                    *init = Box::new(Expr::Class(class_expr));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            _ => {}
+        }
+
+        stmt.visit_mut_children_with(self);
     }
 
     fn visit_mut_module_item(&mut self, item: &mut ModuleItem) {

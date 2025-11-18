@@ -522,9 +522,9 @@ function LiveData() {
 
 **Features:**
 
-- Runs immediately on creation
+- Runs immediately and synchronously on creation during setup
 - Automatically tracks reactive dependencies accessed during execution
-- Re-runs on microtask when dependencies change (prevents synchronous cascades)
+- Re-runs when dependencies change
 - Automatically cleaned up when component unmounts
 - Optional dispose function for cleaning up resources before re-execution
 - Can be used for side effects like logging, syncing to localStorage, managing subscriptions, or updating derived state
@@ -532,7 +532,7 @@ function LiveData() {
 **Notes:**
 
 - Only call during component setup phase (not in render function)
-- Effects are queued on microtask to avoid synchronous execution from prop changes
+- Effect runs synchronously during setup, making it predictable and easier to reason about
 - Be careful with effects that modify state - can cause infinite loops if not careful
 - Dispose functions run before the effect re-executes, not when the component unmounts
 - For component unmount cleanup, use `createCleanup()` instead
