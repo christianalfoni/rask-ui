@@ -616,8 +616,6 @@ describe("createEffect", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    console.log(renderLog);
-
     // After prop update: parent renders, child's effect runs synchronously updating state,
     // then child renders once with the updated state
     expect(renderLog).toEqual(["parent-render:2", "render:4"]);

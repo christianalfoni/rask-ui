@@ -66,7 +66,6 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
   private renderFn?: () => VNode;
   private reactiveProps?: Props<any>;
   private observer = new Observer(() => {
-    console.log("OBSERVER", this.willRender, this.setup.name);
     if (this.willRender) {
       return;
     }
@@ -163,7 +162,6 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
     this.willRender = true;
     this.nextProps = nextProps;
 
-    console.log("Props update", this.setup.name);
     syncBatch(() => {
       for (const prop in nextProps) {
         if (
@@ -177,7 +175,6 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
         this.reactiveProps[prop] = nextProps[prop];
       }
     });
-    console.log("Props update end");
   }
   shouldComponentUpdate(nextProps: Props<any>): boolean {
     // Shallow comparison of props, excluding internal props
@@ -216,7 +213,6 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
     let result: any = null;
 
     try {
-      console.log("RENDER", this.setup.name);
       this.isRendering = true;
       result = this.renderFn();
       this.isRendering = false;

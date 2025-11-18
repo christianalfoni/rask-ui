@@ -11,7 +11,6 @@ export function createEffect(cb: () => void | (() => void)) {
   }
   let disposer: (() => void) | void;
   const observer = new Observer(() => {
-    console.log("FIRED");
     syncBatch(runEffect);
   });
   const runEffect = () => {
