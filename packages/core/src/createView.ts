@@ -15,8 +15,15 @@ type MergeMany<T extends readonly object[]> = T extends [
   infer H extends object,
   ...infer R extends object[]
 ]
-  ? MergeTwo<H, MergeMany<R>>
+  ? MergeManyAcc<H, R>
   : {};
+
+type MergeManyAcc<Acc extends object, Rest extends object[]> = Rest extends [
+  infer H extends object,
+  ...infer R extends object[]
+]
+  ? MergeManyAcc<MergeTwo<Acc, H>, R>
+  : Acc;
 
 /**
  * Creates a view that merges multiple objects (reactive or not) into a single
