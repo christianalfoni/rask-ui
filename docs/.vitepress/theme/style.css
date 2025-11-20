@@ -1,0 +1,508 @@
+/**
+ * Custom styling based on commit-js example
+ * This applies the dark mode, typography, and color scheme from the commit-js site
+ */
+
+/* Import Inter font (matching commit-js) - must be at the top */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+/* ============================================
+   CSS VARIABLES - Color System
+   ============================================ */
+:root {
+  /* Typography Colors - Light Mode */
+  --vp-c-text-1: #4b5563; /* gray-600 */
+  --vp-c-text-2: #6b7280; /* gray-500 */
+  --vp-c-text-3: #9ca3af; /* gray-400 */
+
+  /* Background Colors - Light Mode */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-soft: #f9fafb; /* gray-50 */
+  --vp-c-bg-mute: #f3f4f6; /* gray-100 */
+  --vp-c-bg-alt: #f9fafb;
+
+  /* Border Colors */
+  --vp-c-border: #e5e7eb; /* gray-200 */
+  --vp-c-divider: rgba(17, 24, 39, 0.05); /* gray-900/0.05 */
+  --vp-c-gutter: rgba(17, 24, 39, 0.05);
+
+  /* Brand Colors (Sky) - Softer, less bright */
+  --vp-c-brand-1: #0284c7; /* sky-600 - less bright for buttons */
+  --vp-c-brand-2: #0369a1; /* sky-700 - hover state */
+  --vp-c-brand-3: #0ea5e9; /* sky-500 */
+  --vp-c-brand-soft: rgba(2, 132, 199, 0.14);
+
+  /* Warning/Tip Colors - Amber (warmer, more appealing than yellow) */
+  --vp-c-warning-1: #f59e0b; /* amber-500 */
+  --vp-c-warning-2: #d97706; /* amber-600 */
+  --vp-c-warning-3: #b45309; /* amber-700 */
+  --vp-c-warning-soft: rgba(245, 158, 11, 0.14);
+
+  /* Code Colors */
+  --vp-c-code-bg: #f3f4f6;
+  --vp-code-color: #1f2937; /* gray-800 */
+
+  /* Sidebar & Navigation */
+  --vp-sidebar-bg-color: #ffffff;
+  --vp-c-bg-elv: #ffffff;
+}
+
+.dark {
+  /* Typography Colors - Dark Mode */
+  --vp-c-text-1: #d1d5db; /* gray-300 */
+  --vp-c-text-2: #9ca3af; /* gray-400 */
+  --vp-c-text-3: #6b7280; /* gray-500 */
+
+  /* Background Colors - Dark Mode */
+  --vp-c-bg: #030712; /* gray-950 */
+  --vp-c-bg-soft: #111827; /* gray-900 */
+  --vp-c-bg-mute: #1f2937; /* gray-800 */
+  --vp-c-bg-alt: #030712;
+  --vp-c-bg-elv: #111827;
+
+  /* Border Colors - Dark Mode */
+  --vp-c-border: #374151; /* gray-700 */
+  --vp-c-divider: rgba(255, 255, 255, 0.1);
+  --vp-c-gutter: rgba(255, 255, 255, 0.1);
+
+  /* Brand Colors - Dark Mode - Slightly muted */
+  --vp-c-brand-1: #0ea5e9; /* sky-500 */
+  --vp-c-brand-2: #38bdf8; /* sky-400 */
+  --vp-c-brand-3: #7dd3fc; /* sky-300 */
+  --vp-c-brand-soft: rgba(14, 165, 233, 0.16);
+
+  /* Warning/Tip Colors - Dark Mode - Amber */
+  --vp-c-warning-1: #fbbf24; /* amber-400 */
+  --vp-c-warning-2: #f59e0b; /* amber-500 */
+  --vp-c-warning-3: #d97706; /* amber-600 */
+  --vp-c-warning-soft: rgba(251, 191, 36, 0.16);
+
+  /* Code Colors - Dark Mode */
+  --vp-c-code-bg: #1f2937;
+  --vp-code-color: #e5e7eb;
+
+  /* Sidebar & Navigation - Dark Mode */
+  --vp-sidebar-bg-color: #030712;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+:root {
+  /* Font families */
+  --vp-font-family-base: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  --vp-font-family-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Font sizes */
+  --vp-code-font-size: 0.8125rem; /* 13px - matches commit-js */
+  --vp-code-line-height: 1.5;
+}
+
+/* Body text styling */
+.vp-doc {
+  font-size: 0.875rem; /* 14px - matches commit-js */
+  line-height: 1.5rem; /* 24px */
+  color: var(--vp-c-text-1);
+}
+
+/* Heading styles - matching commit-js */
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3,
+.vp-doc h4 {
+  display: flex;
+  align-items: center;
+}
+
+.vp-doc h1 {
+  font-size: 2rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--vp-c-text-1);
+}
+
+.dark .vp-doc h1 {
+  color: #ffffff;
+}
+
+.vp-doc h2 {
+  font-size: 1.25rem; /* 20px - matches commit-js */
+  line-height: 2rem; /* 32px */
+  font-weight: 600;
+  letter-spacing: -0.0125em;
+  border-top: none;
+  margin-top: 2rem;
+  padding-top: 0;
+  color: var(--vp-c-text-1);
+}
+
+.dark .vp-doc h2 {
+  color: #ffffff;
+}
+
+.vp-doc h3 {
+  font-size: 1rem; /* 16px - matches commit-js */
+  line-height: 1.5rem; /* 24px */
+  font-weight: 600;
+  margin-top: 2rem;
+  color: var(--vp-c-text-1);
+}
+
+.dark .vp-doc h3 {
+  color: #ffffff;
+}
+
+.vp-doc h4 {
+  font-size: 0.875rem; /* 14px - matches commit-js */
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+}
+
+.dark .vp-doc h4 {
+  color: #ffffff;
+}
+
+/* Header anchor links */
+.vp-doc h1 .header-anchor,
+.vp-doc h2 .header-anchor,
+.vp-doc h3 .header-anchor,
+.vp-doc h4 .header-anchor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin-left: -1rem;
+  font-weight: 400;
+  font-size: 1rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.vp-doc h1:hover .header-anchor,
+.vp-doc h2:hover .header-anchor,
+.vp-doc h3:hover .header-anchor,
+.vp-doc h4:hover .header-anchor {
+  opacity: 1;
+}
+
+/* Strong/Bold text */
+.vp-doc strong {
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+}
+
+.dark .vp-doc strong {
+  color: #ffffff;
+}
+
+/* ============================================
+   LINKS
+   ============================================ */
+.vp-doc a {
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+  text-decoration: underline;
+  text-decoration-color: rgba(2, 132, 199, 0.4); /* sky-600 with opacity */
+  text-underline-offset: 0.125rem;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.dark .vp-doc a {
+  color: var(--vp-c-brand-1);
+  text-decoration-color: rgba(14, 165, 233, 0.4); /* sky-500 with opacity */
+}
+
+.vp-doc a:hover {
+  color: var(--vp-c-brand-2);
+  text-decoration-color: rgba(3, 105, 161, 0.4); /* sky-700 with opacity */
+}
+
+.dark .vp-doc a:hover {
+  color: var(--vp-c-brand-2);
+  text-decoration-color: rgba(56, 189, 248, 0.4); /* sky-400 with opacity */
+}
+
+/* ============================================
+   CODE BLOCKS & INLINE CODE
+   ============================================ */
+
+/* Inline code */
+.vp-doc :not(pre) > code {
+  font-size: calc(12 / 14 * 1em); /* matches commit-js */
+  line-height: 1;
+  font-weight: 600;
+  color: #0369a1; /* sky-700 - blue color */
+  background-color: #f3f4f6; /* gray-100 */
+  padding: 0.25rem 0.375rem;
+  border-radius: 0.25rem;
+}
+
+.dark .vp-doc :not(pre) > code {
+  color: #7dd3fc; /* sky-300 - lighter blue for dark mode */
+  background-color: #1f2937; /* gray-800 - more visible contrast */
+}
+
+/* Code blocks */
+.vp-doc div[class*="language-"] {
+  background-color: #f9fafb !important; /* gray-50 - light background for light mode */
+  border-radius: 0.5rem; /* 8px */
+  margin: 2rem 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px #e5e7eb; /* gray-200 border */
+}
+
+.dark .vp-doc div[class*="language-"] {
+  background-color: #111827 !important; /* gray-900 - dark background for dark mode */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.vp-doc div[class*="language-"] pre {
+  background-color: transparent !important;
+  padding: 1.5rem 0; /* 24px vertical, 0 horizontal */
+}
+
+.vp-doc div[class*="language-"] code {
+  font-size: 0.8125rem; /* 13px - matches commit-js */
+  line-height: 1.5rem; /* 24px */
+  color: #1f2937; /* gray-800 - dark text for light mode */
+}
+
+.dark .vp-doc div[class*="language-"] code {
+  color: #9ca3af; /* gray-400 - light text for dark mode */
+}
+
+/* Line numbers */
+.vp-doc div[class*="language-"] .line-numbers-wrapper {
+  display: none;
+}
+
+/* Code block language label */
+.vp-doc div[class*="language-"]::before {
+  color: #6b7280; /* gray-500 */
+  font-size: 0.75rem;
+}
+
+/* ============================================
+   BLOCKQUOTES
+   ============================================ */
+.vp-doc blockquote {
+  border-left: 3px solid var(--vp-c-border);
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  color: var(--vp-c-text-2);
+  font-style: normal;
+}
+
+.dark .vp-doc blockquote {
+  border-left-color: #374151; /* gray-700 */
+  color: #9ca3af; /* gray-400 */
+}
+
+/* ============================================
+   LISTS
+   ============================================ */
+.vp-doc ul,
+.vp-doc ol {
+  padding-left: 1.375rem;
+  margin: 1.5rem 0;
+}
+
+.vp-doc li {
+  padding-left: 0.625rem;
+  margin-top: 1rem;
+}
+
+.vp-doc li::marker {
+  color: #9ca3af; /* gray-400 */
+}
+
+.vp-doc ol > li::marker {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+.vp-doc table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+}
+
+.vp-doc thead {
+  border-bottom: 1px solid rgba(17, 24, 39, 0.2);
+}
+
+.dark .vp-doc thead {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vp-doc th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  color: var(--vp-c-text-1);
+}
+
+.dark .vp-doc th {
+  color: #ffffff;
+}
+
+.vp-doc tbody tr {
+  border-bottom: 1px solid rgba(17, 24, 39, 0.05);
+}
+
+.dark .vp-doc tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.vp-doc td {
+  padding: 0.5rem 0.5rem 0.5rem 0;
+}
+
+/* ============================================
+   HORIZONTAL RULE
+   ============================================ */
+.vp-doc hr {
+  border: none;
+  border-top: 1px solid var(--vp-c-divider);
+  margin: 4rem 0;
+}
+
+/* ============================================
+   KEYBOARD KEYS
+   ============================================ */
+.vp-doc kbd {
+  display: inline-block;
+  border-radius: 4px;
+  background-color: #f9fafb; /* gray-50 */
+  padding: 0 0.375rem;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.25rem;
+  color: #4b5563; /* gray-600 */
+  box-shadow: inset 0 0 0 1px #e5e7eb; /* gray-200 */
+}
+
+.dark .vp-doc kbd {
+  background-color: #111827; /* gray-900 */
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px #374151; /* gray-800 */
+}
+
+/* ============================================
+   SIDEBAR & NAVIGATION
+   ============================================ */
+.VPSidebar {
+  background-color: var(--vp-sidebar-bg-color);
+}
+
+.dark .VPSidebar {
+  background-color: #030712; /* gray-950 */
+}
+
+.VPNavBar {
+  background-color: var(--vp-c-bg);
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.dark .VPNavBar {
+  background-color: #030712;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   SPACING ADJUSTMENTS
+   ============================================ */
+.vp-doc > *:first-child {
+  margin-top: 0;
+}
+
+.vp-doc h2 + *,
+.vp-doc h3 + *,
+.vp-doc h4 + * {
+  margin-top: 1rem;
+}
+
+.vp-doc blockquote + *,
+.vp-doc pre + *,
+.vp-doc table + * {
+  margin-top: 2rem;
+}
+
+.vp-doc hr + * {
+  margin-top: 4rem;
+}
+
+/* ============================================
+   LAYOUT ADJUSTMENTS
+   ============================================ */
+.VPDoc.has-sidebar .content-container {
+  max-width: 1152px; /* Wider content area */
+}
+
+.vp-doc .content {
+  max-width: 48rem; /* 768px - optimal reading width */
+}
+
+/* ============================================
+   CUSTOM BUTTON STYLES
+   ============================================ */
+.VPButton.brand {
+  background-color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+}
+
+.VPButton.brand:hover {
+  background-color: var(--vp-c-brand-2);
+  border-color: var(--vp-c-brand-2);
+}
+
+.dark .VPButton.brand {
+  background-color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+}
+
+.dark .VPButton.brand:hover {
+  background-color: var(--vp-c-brand-2);
+  border-color: var(--vp-c-brand-2);
+}
+
+/* ============================================
+   CUSTOM CONTAINERS (WARNING, TIP, etc.)
+   ============================================ */
+
+/* Warning/Tip containers with amber colors */
+.vp-doc .custom-block.warning {
+  border-color: var(--vp-c-warning-1);
+  background-color: var(--vp-c-warning-soft);
+}
+
+.vp-doc .custom-block.warning .custom-block-title {
+  color: var(--vp-c-warning-2);
+}
+
+.vp-doc .custom-block.tip {
+  border-color: var(--vp-c-warning-1);
+  background-color: var(--vp-c-warning-soft);
+}
+
+.vp-doc .custom-block.tip .custom-block-title {
+  color: var(--vp-c-warning-2);
+}
+
+/* VitePress native custom blocks */
+.vp-doc div[class*="warning"] {
+  border-color: var(--vp-c-warning-1);
+}
+
+.vp-doc div[class*="tip"] {
+  border-color: var(--vp-c-warning-1);
+}

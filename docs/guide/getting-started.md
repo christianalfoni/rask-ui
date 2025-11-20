@@ -36,9 +36,9 @@ bun run dev
 
 This scaffolds a complete Vite + RASK project with:
 
-- ✅ Vite configured with the RASK plugin
-- ✅ TypeScript or JavaScript (your choice)
-- ✅ Sample counter component
+- Vite configured with the RASK plugin
+- TypeScript or JavaScript (your choice)
+- Sample counter component
 
 Your app will be running at `http://localhost:5173`
 
