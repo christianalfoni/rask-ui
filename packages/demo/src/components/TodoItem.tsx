@@ -1,4 +1,4 @@
-import { createState } from "rask-ui";
+import { useState } from "rask-ui";
 
 interface TodoItemProps {
   todo: {
@@ -12,7 +12,7 @@ interface TodoItemProps {
 }
 
 export function TodoItem(props: TodoItemProps) {
-  const state = createState({
+  const state = useState({
     isEditing: false,
     editText: props.todo.text,
   });

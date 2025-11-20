@@ -1,4 +1,4 @@
-import { createState, createView } from "rask-ui";
+import { useState, useView } from "rask-ui";
 import { TodoInput } from "./TodoInput";
 import { TodoFilters, type FilterType } from "./TodoFilters";
 import { TodoList } from "./TodoList";
@@ -24,7 +24,7 @@ function Header() {
 }
 
 export function TodoApp() {
-  const state = createState<{
+  const state = useState<{
     todos: Todo[];
     filter: FilterType;
   }>({
@@ -103,7 +103,7 @@ export function TodoApp() {
     return { total, completed, active };
   };
 
-  const view = createView(state, {
+  const view = useView(state, {
     addTodo,
     toggleTodo,
     deleteTodo,

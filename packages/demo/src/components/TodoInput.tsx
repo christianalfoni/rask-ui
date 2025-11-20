@@ -1,11 +1,11 @@
-import { createState } from "rask-ui";
+import { useState } from "rask-ui";
 
 interface TodoInputProps {
   onAdd: (text: string) => void;
 }
 
 export function TodoInput(props: TodoInputProps) {
-  const state = createState({
+  const state = useState({
     inputValue: "",
   });
 
