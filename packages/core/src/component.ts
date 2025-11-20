@@ -210,7 +210,6 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
 
     try {
       this.isRendering = true;
-      console.log("WTF", this.setup.name);
       result = this.renderFn();
       this.isRendering = false;
       this.willRender = false;
