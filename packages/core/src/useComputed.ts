@@ -1,12 +1,14 @@
-import { getCurrentComponent, createCleanup } from "./component";
-import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorCallback, InspectorRef } from "./inspect";
+import { getCurrentComponent, useCleanup } from "./component";
+import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorRef } from "./inspect";
 import { getCurrentObserver, Observer, Signal } from "./observation";
 
-export function createComputed<T extends Record<string, () => any>>(
-  computed: T
-): {
+export type Computed<T extends Record<string, () => any>> = {
   [K in keyof T]: ReturnType<T[K]>;
-} {
+};
+
+export function useComputed<T extends Record<string, () => any>>(
+  computed: T
+): Computed<T> {
   const currentComponent = getCurrentComponent();
   const proxy = {};
   let notifyInspectorRef: InspectorRef = {};
@@ -28,7 +30,7 @@ export function createComputed<T extends Record<string, () => any>>(
       }
     });
 
-    createCleanup(() => computedObserver.dispose());
+    useCleanup(() => computedObserver.dispose());
 
     Object.defineProperty(proxy, prop, {
       enumerable: true,

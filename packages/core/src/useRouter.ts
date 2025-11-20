@@ -5,7 +5,7 @@ import {
   TRoutes,
 } from "typed-client-router";
 import { getCurrentObserver, Signal } from "./observation";
-import { createCleanup, getCurrentComponent } from "./component";
+import { useCleanup, getCurrentComponent } from "./component";
 
 export type Router<T extends RoutesConfig> = Omit<
   TRouter<T>,
@@ -14,7 +14,7 @@ export type Router<T extends RoutesConfig> = Omit<
   route?: TRoutes<T>;
 };
 
-export function createRouter<const T extends RoutesConfig>(
+export function useRouter<const T extends RoutesConfig>(
   config: T,
   options?: {
     base?: string;
@@ -27,7 +27,7 @@ export function createRouter<const T extends RoutesConfig>(
   const router = internalCreateRouter(config, options);
   const signal = new Signal();
 
-  createCleanup(router.listen(() => signal.notify()));
+  useCleanup(router.listen(() => signal.notify()));
 
   return {
     get route() {

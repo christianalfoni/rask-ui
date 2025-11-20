@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { syncBatch } from "../batch";
-import { createState } from "../createState";
+import { useState } from "../useState";
 import { Observer } from "../observation";
 
 describe("syncBatch", () => {
   it("should batch multiple state changes into a single notification", () => {
-    const state = createState({ count: 0, name: "Alice" });
+    const state = useState({ count: 0, name: "Alice" });
     let notifyCount = 0;
 
     const observer = new Observer(() => {
@@ -33,7 +33,7 @@ describe("syncBatch", () => {
   });
 
   it("should handle nested batches correctly", () => {
-    const state = createState({ count: 0 });
+    const state = useState({ count: 0 });
     let notifyCount = 0;
 
     const observer = new Observer(() => {
@@ -60,7 +60,7 @@ describe("syncBatch", () => {
   });
 
   it("should handle multiple observers with syncBatch", () => {
-    const state = createState({ count: 0 });
+    const state = useState({ count: 0 });
     let notifyCount1 = 0;
     let notifyCount2 = 0;
 
@@ -94,7 +94,7 @@ describe("syncBatch", () => {
   });
 
   it("should maintain correct state values after syncBatch", () => {
-    const state = createState({
+    const state = useState({
       count: 0,
       name: "Alice",
       items: [1, 2, 3],
@@ -113,7 +113,7 @@ describe("syncBatch", () => {
   });
 
   it("should not flush if exception thrown within syncBatch", () => {
-    const state = createState({ count: 0 });
+    const state = useState({ count: 0 });
     let notifyCount = 0;
 
     const observer = new Observer(() => {
@@ -142,7 +142,7 @@ describe("syncBatch", () => {
   });
 
   it("should deduplicate notifications for the same observer", () => {
-    const state = createState({ count: 0, name: "Alice" });
+    const state = useState({ count: 0, name: "Alice" });
     let notifyCount = 0;
 
     const observer = new Observer(() => {
@@ -169,7 +169,7 @@ describe("syncBatch", () => {
 
 describe("queue (async batching)", () => {
   it("should queue updates and flush on microtask", async () => {
-    const state = createState({ count: 0 });
+    const state = useState({ count: 0 });
     let notifyCount = 0;
 
     const observer = new Observer(() => {
@@ -199,7 +199,7 @@ describe("queue (async batching)", () => {
   });
 
   it("should batch multiple async updates into one notification", async () => {
-    const state = createState({ count: 0, name: "Alice" });
+    const state = useState({ count: 0, name: "Alice" });
     let notifyCount = 0;
 
     const observer = new Observer(() => {
@@ -224,7 +224,7 @@ describe("queue (async batching)", () => {
   });
 
   it("should handle separate async batches", async () => {
-    const state = createState({ count: 0 });
+    const state = useState({ count: 0 });
     let notifyCount = 0;
 
     const observer = new Observer(() => {
@@ -252,7 +252,7 @@ describe("queue (async batching)", () => {
 
 describe("syncBatch with nested async updates", () => {
   it("should handle syncBatch inside async context", async () => {
-    const state = createState({ count: 0 });
+    const state = useState({ count: 0 });
     let notifyCount = 0;
 
     const observer = new Observer(() => {
@@ -279,7 +279,7 @@ describe("syncBatch with nested async updates", () => {
   });
 
   it("should handle async updates inside syncBatch callback", async () => {
-    const state = createState({ count: 0 });
+    const state = useState({ count: 0 });
     let notifyCount = 0;
 
     const observer = new Observer(() => {

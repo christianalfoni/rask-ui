@@ -25,10 +25,10 @@ npm run dev
 ## Quick Example
 
 ```tsx
-import { createState, render } from "rask-ui";
+import { useState, render } from "rask-ui";
 
 function Counter() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   return () => (
     <div>
@@ -41,17 +41,17 @@ function Counter() {
 render(<Counter />, document.getElementById("app"));
 ```
 
-## Reactive Primitives
+## Reactive Hooks
 
-RASK provides a set of reactive primitives for building interactive UIs:
+RASK provides a set of reactive hooks for building interactive UIs. These hooks are bound to components like in React, but they are reactive:
 
-- **`createState`** - Create reactive state objects
-- **`createEffect`** - Run side effects when dependencies change
-- **`createComputed`** - Derive values from state with automatic caching
-- **`createTask`** - Manage async operations (fetch, mutations, etc.)
-- **`createRouter`** - Type-safe client-side routing
-- **`createContext`** - Share data through the component tree
-- **`createView`** - Compose state and methods into reusable objects
+- **`useState`** - Create reactive state objects
+- **`useEffect`** - Run side effects when dependencies change
+- **`useComputed`** - Derive values from state with automatic caching
+- **`useAsync`** - Manage async operations (fetch, mutations, polling, etc.)
+- **`useRouter`** - Type-safe client-side routing
+- **`createContext`** / **`useContext`** - Share data through the component tree
+- **`useView`** - Compose state and methods into reusable objects
 
 Visit [rask-ui.io](https://rask-ui.io) for complete API documentation and guides.
 

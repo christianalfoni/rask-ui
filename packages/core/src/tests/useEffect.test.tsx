@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { createEffect } from "../createEffect";
-import { createState } from "../createState";
+import { useEffect } from "../useEffect";
+import { useState } from "../useState";
 import { render } from "../index";
 
 describe("createEffect", () => {
@@ -8,7 +8,7 @@ describe("createEffect", () => {
     const effectFn = vi.fn();
 
     function Component() {
-      createEffect(effectFn);
+      useEffect(effectFn);
       return () => <div>test</div>;
     }
 
@@ -20,11 +20,11 @@ describe("createEffect", () => {
 
   it("should track reactive dependencies", async () => {
     const effectFn = vi.fn();
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
-      createEffect(() => {
+      state = useState({ count: 0 });
+      useEffect(() => {
         effectFn();
         state.count; // Access to track
       });
@@ -44,11 +44,11 @@ describe("createEffect", () => {
 
   it("should re-run when dependencies change", async () => {
     const results: number[] = [];
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
-      createEffect(() => {
+      state = useState({ count: 0 });
+      useEffect(() => {
         results.push(state.count);
       });
       return () => <div>test</div>;
@@ -72,11 +72,11 @@ describe("createEffect", () => {
 
   it("should run on microtask, not synchronously", () => {
     const results: number[] = [];
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
-      createEffect(() => {
+      state = useState({ count: 0 });
+      useEffect(() => {
         results.push(state.count);
       });
       return () => <div>test</div>;
@@ -96,15 +96,15 @@ describe("createEffect", () => {
   it("should handle multiple effects on same state", async () => {
     const results1: number[] = [];
     const results2: number[] = [];
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
-      createEffect(() => {
+      state = useState({ count: 0 });
+      useEffect(() => {
         results1.push(state.count);
       });
 
-      createEffect(() => {
+      useEffect(() => {
         results2.push(state.count * 2);
       });
       return () => <div>test</div>;
@@ -125,11 +125,11 @@ describe("createEffect", () => {
 
   it("should only track dependencies accessed during execution", async () => {
     const effectFn = vi.fn();
-    let state: ReturnType<typeof createState<{ a: number; b: number }>>;
+    let state!: { a: number; b: number };
 
     function Component() {
-      state = createState({ a: 1, b: 2 });
-      createEffect(() => {
+      state = useState({ a: 1, b: 2 });
+      useEffect(() => {
         effectFn();
         state.a; // Only track 'a'
       });
@@ -156,13 +156,11 @@ describe("createEffect", () => {
 
   it("should re-track dependencies on each run", async () => {
     const effectFn = vi.fn();
-    let state: ReturnType<
-      typeof createState<{ useA: boolean; a: number; b: number }>
-    >;
+    let state!: { useA: boolean; a: number; b: number };
 
     function Component() {
-      state = createState({ useA: true, a: 1, b: 2 });
-      createEffect(() => {
+      state = useState({ useA: true, a: 1, b: 2 });
+      useEffect(() => {
         effectFn();
         if (state.useA) {
           state.a;
@@ -205,12 +203,12 @@ describe("createEffect", () => {
   });
 
   it("should handle effects that modify state", async () => {
-    let state: ReturnType<typeof createState<{ input: number; output: number }>>;
+    let state!: { input: number; output: number };
 
     function Component() {
-      state = createState({ input: 1, output: 0 });
+      state = useState({ input: 1, output: 0 });
 
-      createEffect(() => {
+      useEffect(() => {
         state.output = state.input * 2;
       });
       return () => <div>test</div>;
@@ -229,18 +227,16 @@ describe("createEffect", () => {
 
   it("should handle nested state access", async () => {
     const results: string[] = [];
-    let state: ReturnType<
-      typeof createState<{
-        user: {
-          profile: {
-            name: string;
-          };
+    let state!: {
+      user: {
+        profile: {
+          name: string;
         };
-      }>
-    >;
+      };
+    };
 
     function Component() {
-      state = createState({
+      state = useState({
         user: {
           profile: {
             name: "Alice",
@@ -248,7 +244,7 @@ describe("createEffect", () => {
         },
       });
 
-      createEffect(() => {
+      useEffect(() => {
         results.push(state.user.profile.name);
       });
       return () => <div>test</div>;
@@ -267,12 +263,12 @@ describe("createEffect", () => {
 
   it("should handle array access", async () => {
     const results: number[] = [];
-    let state: ReturnType<typeof createState<{ items: number[] }>>;
+    let state!: { items: number[] };
 
     function Component() {
-      state = createState({ items: [1, 2, 3] });
+      state = useState({ items: [1, 2, 3] });
 
-      createEffect(() => {
+      useEffect(() => {
         results.push(state.items.length);
       });
       return () => <div>test</div>;
@@ -296,12 +292,12 @@ describe("createEffect", () => {
 
   it("should handle effects accessing array elements", async () => {
     const results: number[] = [];
-    let state: ReturnType<typeof createState<{ items: number[] }>>;
+    let state!: { items: number[] };
 
     function Component() {
-      state = createState({ items: [1, 2, 3] });
+      state = useState({ items: [1, 2, 3] });
 
-      createEffect(() => {
+      useEffect(() => {
         const sum = state.items.reduce((acc, val) => acc + val, 0);
         results.push(sum);
       });
@@ -326,11 +322,11 @@ describe("createEffect", () => {
 
   it("should batch multiple state changes before re-running", async () => {
     const effectFn = vi.fn();
-    let state: ReturnType<typeof createState<{ a: number; b: number }>>;
+    let state!: { a: number; b: number };
 
     function Component() {
-      state = createState({ a: 1, b: 2 });
-      createEffect(() => {
+      state = useState({ a: 1, b: 2 });
+      useEffect(() => {
         effectFn();
         state.a;
         state.b;
@@ -358,7 +354,7 @@ describe("createEffect", () => {
     let runCount = 0;
 
     function Component() {
-      createEffect(() => {
+      useEffect(() => {
         runCount++;
         // No reactive state accessed
       });
@@ -378,13 +374,11 @@ describe("createEffect", () => {
 
   it("should handle effects that conditionally access state", async () => {
     const effectFn = vi.fn();
-    let state: ReturnType<
-      typeof createState<{ enabled: boolean; value: number }>
-    >;
+    let state!: { enabled: boolean; value: number };
 
     function Component() {
-      state = createState({ enabled: true, value: 5 });
-      createEffect(() => {
+      state = useState({ enabled: true, value: 5 });
+      useEffect(() => {
         effectFn();
         if (state.enabled) {
           state.value;
@@ -416,17 +410,15 @@ describe("createEffect", () => {
 
   it("should handle complex dependency graphs", async () => {
     const results: number[] = [];
-    let state: ReturnType<
-      typeof createState<{ multiplier: number; values: number[] }>
-    >;
+    let state!: { multiplier: number; values: number[] };
 
     function Component() {
-      state = createState({
+      state = useState({
         multiplier: 2,
         values: [1, 2, 3],
       });
 
-      createEffect(() => {
+      useEffect(() => {
         const sum = state.values.reduce((acc, val) => acc + val, 0);
         results.push(sum * state.multiplier);
       });
@@ -449,12 +441,12 @@ describe("createEffect", () => {
 
   it("should handle effects that run other synchronous code", async () => {
     const sideEffects: string[] = [];
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
+      state = useState({ count: 0 });
 
-      createEffect(() => {
+      useEffect(() => {
         sideEffects.push("effect-start");
         const value = state.count;
         sideEffects.push(`value-${value}`);
@@ -483,11 +475,11 @@ describe("createEffect", () => {
 
   it("should handle rapid state changes", async () => {
     const effectFn = vi.fn();
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
-      createEffect(() => {
+      state = useState({ count: 0 });
+      useEffect(() => {
         effectFn();
         state.count;
       });
@@ -512,12 +504,12 @@ describe("createEffect", () => {
 
   it("should access latest state values when effect runs", async () => {
     const results: number[] = [];
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
+      state = useState({ count: 0 });
 
-      createEffect(() => {
+      useEffect(() => {
         results.push(state.count);
       });
       return () => <div>test</div>;
@@ -539,12 +531,12 @@ describe("createEffect", () => {
   it("should call dispose function before re-executing", async () => {
     const disposeCalls: number[] = [];
     const effectCalls: number[] = [];
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
+      state = useState({ count: 0 });
 
-      createEffect(() => {
+      useEffect(() => {
         effectCalls.push(state.count);
 
         return () => {
@@ -577,12 +569,12 @@ describe("createEffect", () => {
 
   it("should handle dispose function with cleanup logic", async () => {
     const subscriptions: string[] = [];
-    let state: ReturnType<typeof createState<{ url: string }>>;
+    let state!: { url: string };
 
     function Component() {
-      state = createState({ url: "/api/data" });
+      state = useState({ url: "/api/data" });
 
-      createEffect(() => {
+      useEffect(() => {
         const currentUrl = state.url;
         subscriptions.push(`subscribe:${currentUrl}`);
 
@@ -621,12 +613,12 @@ describe("createEffect", () => {
 
   it("should handle effects without dispose function", async () => {
     const effectCalls: number[] = [];
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
+      state = useState({ count: 0 });
 
-      createEffect(() => {
+      useEffect(() => {
         effectCalls.push(state.count);
         // No dispose function returned
       });
@@ -654,12 +646,12 @@ describe("createEffect", () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
+      state = useState({ count: 0 });
 
-      createEffect(() => {
+      useEffect(() => {
         effectCalls.push(state.count);
 
         return () => {
@@ -689,12 +681,12 @@ describe("createEffect", () => {
 
   it("should call dispose with latest closure values", async () => {
     const disposeValues: number[] = [];
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
+      state = useState({ count: 0 });
 
-      createEffect(() => {
+      useEffect(() => {
         const capturedCount = state.count;
 
         return () => {
@@ -723,12 +715,12 @@ describe("createEffect", () => {
   it("should handle rapid state changes with dispose", async () => {
     const effectFn = vi.fn();
     const disposeFn = vi.fn();
-    let state: ReturnType<typeof createState<{ count: number }>>;
+    let state!: { count: number };
 
     function Component() {
-      state = createState({ count: 0 });
+      state = useState({ count: 0 });
 
-      createEffect(() => {
+      useEffect(() => {
         effectFn();
         state.count;
         return disposeFn;
@@ -758,9 +750,9 @@ describe("createEffect", () => {
     const renderLog: string[] = [];
 
     function Child(props: { value: number }) {
-      const state = createState({ internalValue: 0 });
+      const state = useState({ internalValue: 0 });
 
-      createEffect(() => {
+      useEffect(() => {
         // Update internal state based on prop
         state.internalValue = props.value * 2;
       });
@@ -772,7 +764,7 @@ describe("createEffect", () => {
     }
 
     function Parent() {
-      const state = createState({ count: 1 });
+      const state = useState({ count: 1 });
 
       return () => {
         renderLog.push(`parent-render:${state.count}`);

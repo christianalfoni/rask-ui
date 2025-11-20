@@ -1,19 +1,19 @@
 import { describe, it, expect, vi } from "vitest";
-import { createComputed } from "../createComputed";
-import { createState } from "../createState";
+import { useComputed, Computed } from "../useComputed";
+import { useState } from "../useState";
 import { Observer } from "../observation";
 import { render } from "../index";
 
 describe("createComputed", () => {
   it("should compute values lazily", () => {
     const computeFn = vi.fn();
-    let computed: ReturnType<typeof createComputed<{ doubled: number }>>;
+    let computed!: { doubled: number };
 
     function Component() {
-      const state = createState({ count: 5 });
+      const state = useState({ count: 5 });
       computeFn.mockImplementation(() => state.count * 2);
 
-      computed = createComputed({
+      computed = useComputed({
         doubled: computeFn,
       });
 
@@ -34,13 +34,13 @@ describe("createComputed", () => {
 
   it("should cache computed values", () => {
     const computeFn = vi.fn();
-    let computed: ReturnType<typeof createComputed<{ doubled: number }>>;
+    let computed!: { doubled: number };
 
     function Component() {
-      const state = createState({ count: 5 });
+      const state = useState({ count: 5 });
       computeFn.mockImplementation(() => state.count * 2);
 
-      computed = createComputed({
+      computed = useComputed({
         doubled: computeFn,
       });
 
@@ -61,14 +61,14 @@ describe("createComputed", () => {
 
   it("should invalidate cache when dependencies change", async () => {
     const computeFn = vi.fn();
-    let state: ReturnType<typeof createState<{ count: number }>>;
-    let computed: ReturnType<typeof createComputed<{ doubled: number }>>;
+    let state!: { count: number };
+    let computed!: { doubled: number };
 
     function Component() {
-      state = createState({ count: 5 });
+      state = useState({ count: 5 });
       computeFn.mockImplementation(() => state.count * 2);
 
-      computed = createComputed({
+      computed = useComputed({
         doubled: computeFn,
       });
 
@@ -91,15 +91,13 @@ describe("createComputed", () => {
   });
 
   it("should handle multiple computed properties", async () => {
-    let state: ReturnType<typeof createState<{ width: number; height: number }>>;
-    let computed: ReturnType<
-      typeof createComputed<{ area: number; perimeter: number }>
-    >;
+    let state!: { width: number; height: number };
+    let computed!: { area: number; perimeter: number };
 
     function Component() {
-      state = createState({ width: 10, height: 5 });
+      state = useState({ width: 10, height: 5 });
 
-      computed = createComputed({
+      computed = useComputed({
         area: () => state.width * state.height,
         perimeter: () => 2 * (state.width + state.height),
       });
@@ -121,15 +119,13 @@ describe("createComputed", () => {
   });
 
   it("should support computed properties depending on other computed properties", async () => {
-    let state: ReturnType<typeof createState<{ count: number }>>;
-    let computed: ReturnType<
-      typeof createComputed<{ doubled: number; quadrupled: number }>
-    >;
+    let state!: { count: number };
+    let computed!: { doubled: number; quadrupled: number };
 
     function Component() {
-      state = createState({ count: 5 });
+      state = useState({ count: 5 });
 
-      computed = createComputed({
+      computed = useComputed({
         doubled: () => state.count * 2,
         quadrupled: () => computed.doubled * 2,
       });
@@ -151,12 +147,12 @@ describe("createComputed", () => {
   });
 
   it("should be reactive when observed", async () => {
-    let state: ReturnType<typeof createState<{ count: number }>>;
-    let computed: ReturnType<typeof createComputed<{ doubled: number }>>;
+    let state!: { count: number };
+    let computed!: { doubled: number };
 
     function Component() {
-      state = createState({ count: 5 });
-      computed = createComputed({
+      state = useState({ count: 5 });
+      computed = useComputed({
         doubled: () => state.count * 2,
       });
 
@@ -189,14 +185,14 @@ describe("createComputed", () => {
 
   it("should only recompute when actual dependencies change", () => {
     const computeFn = vi.fn();
-    let state: ReturnType<typeof createState<{ a: number; b: number }>>;
-    let computed: ReturnType<typeof createComputed<{ result: number }>>;
+    let state!: { a: number; b: number };
+    let computed!: { result: number };
 
     function Component() {
-      state = createState({ a: 1, b: 2 });
+      state = useState({ a: 1, b: 2 });
       computeFn.mockImplementation(() => state.a * 2);
 
-      computed = createComputed({
+      computed = useComputed({
         result: computeFn,
       });
 
@@ -218,22 +214,20 @@ describe("createComputed", () => {
   });
 
   it("should handle complex dependency chains", async () => {
-    let state: ReturnType<
-      typeof createState<{ items: number[]; multiplier: number }>
-    >;
-    let computed: {
+    let state!: { items: number[]; multiplier: number };
+    let computed!: {
       total: number;
       multipliedTotal: number;
       average: number;
     };
 
     function Component() {
-      state = createState({
+      state = useState({
         items: [1, 2, 3, 4, 5],
         multiplier: 2,
       });
 
-      computed = createComputed({
+      computed = useComputed({
         total: () => state.items.reduce((sum, item) => sum + item, 0),
         multipliedTotal: () => computed.total * state.multiplier,
         average: () => computed.total / state.items.length,
@@ -263,15 +257,13 @@ describe("createComputed", () => {
   });
 
   it("should handle array operations", async () => {
-    let state: ReturnType<typeof createState<{ items: number[] }>>;
-    let computed: ReturnType<
-      typeof createComputed<{ sum: number; count: number }>
-    >;
+    let state!: { items: number[] };
+    let computed!: { sum: number; count: number };
 
     function Component() {
-      state = createState({ items: [1, 2, 3] });
+      state = useState({ items: [1, 2, 3] });
 
-      computed = createComputed({
+      computed = useComputed({
         sum: () => state.items.reduce((sum, item) => sum + item, 0),
         count: () => state.items.length,
       });
@@ -299,13 +291,11 @@ describe("createComputed", () => {
   });
 
   it("should handle deeply nested state", async () => {
-    let state: ReturnType<
-      typeof createState<{ user: { profile: { name: string; age: number } } }>
-    >;
-    let computed: ReturnType<typeof createComputed<{ displayName: string }>>;
+    let state!: { user: { profile: { name: string; age: number } } };
+    let computed!: { displayName: string };
 
     function Component() {
-      state = createState({
+      state = useState({
         user: {
           profile: {
             name: "Alice",
@@ -314,7 +304,7 @@ describe("createComputed", () => {
         },
       });
 
-      computed = createComputed({
+      computed = useComputed({
         displayName: () =>
           `${state.user.profile.name} (${state.user.profile.age})`,
       });
@@ -341,17 +331,15 @@ describe("createComputed", () => {
   it("should not recompute unnecessarily with nested computed", async () => {
     const innerFn = vi.fn();
     const outerFn = vi.fn();
-    let state: ReturnType<typeof createState<{ count: number }>>;
-    let computed: ReturnType<
-      typeof createComputed<{ inner: number; outer: number }>
-    >;
+    let state!: { count: number };
+    let computed!: { inner: number; outer: number };
 
     function Component() {
-      state = createState({ count: 5 });
+      state = useState({ count: 5 });
       innerFn.mockImplementation(() => state.count * 2);
       outerFn.mockImplementation(() => computed.inner + 10);
 
-      computed = createComputed({
+      computed = useComputed({
         inner: innerFn,
         outer: outerFn,
       });
@@ -384,16 +372,14 @@ describe("createComputed", () => {
 
   it("should handle conditional dependencies", async () => {
     const computeFn = vi.fn();
-    let state: ReturnType<
-      typeof createState<{ useA: boolean; a: number; b: number }>
-    >;
-    let computed: ReturnType<typeof createComputed<{ value: number }>>;
+    let state!: { useA: boolean; a: number; b: number };
+    let computed!: { value: number };
 
     function Component() {
-      state = createState({ useA: true, a: 10, b: 20 });
+      state = useState({ useA: true, a: 10, b: 20 });
       computeFn.mockImplementation(() => (state.useA ? state.a : state.b));
 
-      computed = createComputed({
+      computed = useComputed({
         value: computeFn,
       });
 
@@ -438,13 +424,13 @@ describe("createComputed", () => {
   });
 
   it("should return consistent values during same synchronous execution", () => {
-    let state: ReturnType<typeof createState<{ count: number }>>;
-    let computed: ReturnType<typeof createComputed<{ doubled: number }>>;
+    let state!: { count: number };
+    let computed!: { doubled: number };
 
     function Component() {
-      state = createState({ count: 5 });
+      state = useState({ count: 5 });
 
-      computed = createComputed({
+      computed = useComputed({
         doubled: () => state.count * 2,
       });
 
@@ -464,10 +450,10 @@ describe("createComputed", () => {
   });
 
   it("should handle empty computed object", () => {
-    let computed: ReturnType<typeof createComputed<{}>>;
+    let computed!: {};
 
     function Component() {
-      computed = createComputed({});
+      computed = useComputed({});
 
       return () => <div>test</div>;
     }
@@ -479,12 +465,12 @@ describe("createComputed", () => {
   });
 
   it("should properly track changes in computed used by observers", async () => {
-    let state: ReturnType<typeof createState<{ x: number; y: number }>>;
-    let computed: ReturnType<typeof createComputed<{ sum: number }>>;
+    let state!: { x: number; y: number };
+    let computed!: { sum: number };
 
     function Component() {
-      state = createState({ x: 1, y: 2 });
-      computed = createComputed({
+      state = useState({ x: 1, y: 2 });
+      computed = useComputed({
         sum: () => state.x + state.y,
       });
 

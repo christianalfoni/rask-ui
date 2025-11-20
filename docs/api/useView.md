@@ -1,14 +1,14 @@
-# createView()
+# useView()
 
 Creates a view that merges multiple objects (reactive or plain) into a single object while maintaining reactivity through getters.
 
 ```tsx
-createView<T>(...objects: object[]): T
+const view = useView(obj1, obj2, ...)
 ```
 
 ## Parameters
 
-- `...objects: object[]` - Objects to merge (reactive or plain). Later arguments override earlier ones.
+- `...objects` - Objects to merge (reactive or plain). Later arguments override earlier ones.
 
 ## Returns
 
@@ -17,15 +17,15 @@ A view object with getters for all properties, maintaining reactivity
 ## Example
 
 ```tsx
-import { createView, createState } from "rask-ui";
+import { useView, useState } from "rask-ui";
 
 function createCounter() {
-  const state = createState({ count: 0, name: "Counter" });
+  const state = useState({ count: 0, name: "Counter" });
   const increment = () => state.count++;
   const decrement = () => state.count--;
   const reset = () => (state.count = 0);
 
-  return createView(state, { increment, decrement, reset });
+  return useView(state, { increment, decrement, reset });
 }
 
 function Counter() {

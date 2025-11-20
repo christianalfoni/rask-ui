@@ -3,14 +3,12 @@
 Creates a ref object for accessing DOM elements or component instances directly.
 
 ```tsx
-createRef<T>(): Ref<T>
+const ref = createRef()
 ```
 
 ## Returns
 
-Ref object with:
-- `current: T | null` - Reference to the DOM element or component instance
-- Function signature for use as ref callback
+Ref object with a `current` property that references the DOM element or component instance
 
 ## Example
 

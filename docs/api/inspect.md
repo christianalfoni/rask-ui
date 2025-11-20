@@ -3,47 +3,33 @@
 Enables inspection of reactive state, computed values, and actions for building devtools. This API is **development-only** and has zero overhead in production builds.
 
 ```tsx
-inspect(root: any, callback: (event: InspectEvent) => void): void
+inspect(root, (event) => {
+  // handle inspection event
+})
 ```
 
 ## Parameters
 
-- `root: any` - The reactive object to inspect (state, view, computed, etc.)
-- `callback: (event: InspectEvent) => void` - Callback receiving inspection events
+- `root` - The reactive object to inspect (state, view, computed, etc.)
+- `callback` - Callback receiving inspection events
 
 ## Event Types
 
-The callback receives events of three types:
+The callback receives events with the following properties:
 
-```tsx
-type InspectEvent =
-  | {
-      type: "mutation";
-      path: string[];      // Property path, e.g., ["user", "name"]
-      value: any;          // New value
-    }
-  | {
-      type: "action";
-      path: string[];      // Function name path, e.g., ["increment"]
-      params: any[];       // Function parameters
-    }
-  | {
-      type: "computed";
-      path: string[];      // Computed property path
-      isDirty: boolean;    // true when invalidated, false when recomputed
-      value: any;          // Current or recomputed value
-    };
-```
+- **Mutation events**: `type: "mutation"`, `path`, `value`
+- **Action events**: `type: "action"`, `path`, `params`
+- **Computed events**: `type: "computed"`, `path`, `isDirty`, `value`
 
 ## Basic Example
 
 ```tsx
-import { inspect, createState, createComputed, createView } from "rask-ui";
+import { inspect, useState, useComputed, useView } from "rask-ui";
 
 function Counter() {
-  const state = createState({ count: 0, name: "Counter" });
+  const state = useState({ count: 0, name: "Counter" });
 
-  const computed = createComputed({
+  const computed = useComputed({
     double: () => state.count * 2,
   });
 
@@ -53,7 +39,7 @@ function Counter() {
     reset: () => state.count = 0,
   };
 
-  const view = createView(state, computed, actions);
+  const view = useView(state, computed, actions);
 
   // Enable inspection
   inspect(view, (event) => {
@@ -126,13 +112,13 @@ The inspector tracks nested property paths automatically:
 
 ```tsx
 function App() {
-  const userState = createState({
+  const userState = useState({
     profile: { name: "Alice", email: "alice@example.com" },
     preferences: { theme: "dark", notifications: true },
   });
 
-  const appState = createView({
-    user: createView(userState),
+  const appState = useView({
+    user: useView(userState),
   });
 
   inspect(appState, (event) => {
@@ -157,12 +143,12 @@ Views and state objects can be serialized to JSON:
 
 ```tsx
 function App() {
-  const state = createState({
+  const state = useState({
     user: { id: 1, name: "Alice" },
     todos: [{ id: 1, text: "Learn RASK", done: false }],
   });
 
-  const view = createView(state);
+  const view = useView(state);
 
   // Serialize to JSON
   const snapshot = JSON.stringify(view);

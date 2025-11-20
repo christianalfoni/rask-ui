@@ -38,7 +38,7 @@ function App() {
 
 ```tsx
 function MyComponent() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   return () => {
     if (state.count > 5) {
@@ -98,7 +98,7 @@ function App() {
 
 ```tsx
 function App() {
-  const state = createState({ hasError: false });
+  const state = useState({ hasError: false });
 
   return () => {
     if (state.hasError) {

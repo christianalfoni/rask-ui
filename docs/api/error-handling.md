@@ -42,7 +42,7 @@ function App() {
 
 ```tsx
 function MyComponent() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   return () => {
     if (state.count > 5) {
@@ -102,7 +102,7 @@ function App() {
 
 ```tsx
 function App() {
-  const state = createState({ hasError: false });
+  const state = useState({ hasError: false });
 
   return () => {
     if (state.hasError) {
@@ -200,7 +200,7 @@ function Posts() {
 
 ```tsx
 function CreatePost() {
-  const state = createState({ title: "", body: "" });
+  const state = useState({ title: "", body: "" });
 
   const create = createMutation((data) =>
     fetch("/api/posts", {
@@ -250,13 +250,13 @@ const ErrorContext = createContext<{
 }>();
 
 function ErrorProvider(props) {
-  const state = createState({ error: null });
+  const state = useState({ error: null });
 
   const setError = (error: string | null) => {
     state.error = error;
   };
 
-  ErrorContext.inject(createView(state, { setError }));
+  ErrorContext.inject(useView(state, { setError }));
 
   return () => props.children;
 }
@@ -287,13 +287,13 @@ function App() {
 
 ```tsx
 function DataFetcher() {
-  const state = createState({
+  const state = useState({
     data: null,
     error: null,
     loading: false,
   });
 
-  createMountEffect(() => {
+  useMountEffect(() => {
     const fetchData = async () => {
       state.loading = true;
       state.error = null;
@@ -328,7 +328,7 @@ function DataFetcher() {
 
 ```tsx
 function SignupForm() {
-  const state = createState({
+  const state = useState({
     email: "",
     password: "",
     errors: {} as Record<string, string>,

@@ -1,14 +1,18 @@
-# createComputed()
+# useComputed()
 
-Creates an object with computed properties that automatically track dependencies and cache results until dependencies change.
+Creates an object bound to the component with computed properties that automatically track dependencies and cache results until dependencies change.
 
 ```tsx
-createComputed<T>(computed: T): T
+const computed = useComputed({
+  propertyName: () => {
+    // compute value
+  }
+})
 ```
 
 ## Parameters
 
-- `computed: T` - Object where each property is a function returning a computed value
+- `computed` - Object where each property is a function returning a computed value
 
 ## Returns
 
@@ -17,10 +21,10 @@ Reactive object with cached computed properties
 ## Example
 
 ```tsx
-import { createComputed, createState } from "rask-ui";
+import { useComputed, useState } from "rask-ui";
 
 function ShoppingCart() {
-  const state = createState({
+  const state = useState({
     items: [
       { id: 1, name: "Apple", price: 1.5, quantity: 3 },
       { id: 2, name: "Banana", price: 0.8, quantity: 5 },
@@ -28,7 +32,7 @@ function ShoppingCart() {
     taxRate: 0.2,
   });
 
-  const computed = createComputed({
+  const computed = useComputed({
     subtotal: () =>
       state.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     tax: () => computed.subtotal * state.taxRate,

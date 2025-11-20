@@ -1,27 +1,32 @@
-# createEffect()
+# useEffect()
 
-Creates an effect that automatically tracks reactive dependencies and re-runs whenever they change. The effect runs immediately on creation.
+Creates an effect bound to the component that automatically tracks reactive dependencies and re-runs whenever they change. The effect runs immediately on creation.
 
 ```tsx
-createEffect(callback: () => void | (() => void)): void
+useEffect(() => {
+  // effect code
+  return () => {
+    // optional cleanup
+  }
+})
 ```
 
 ## Parameters
 
-- `callback: () => void | (() => void)` - Function to run when dependencies change. Can optionally return a dispose function that runs before the effect executes again
+- `callback` - Function to run when dependencies change. Can optionally return a cleanup function that runs before the effect executes again
 
 ## Examples
 
 ### Basic Effect
 
 ```tsx
-import { createEffect, createState } from "rask-ui";
+import { useEffect, useState } from "rask-ui";
 
 function Timer() {
-  const state = createState({ count: 0, log: [] });
+  const state = useState({ count: 0, log: [] });
 
   // Effect runs immediately and whenever state.count changes
-  createEffect(() => {
+  useEffect(() => {
     console.log("Count changed:", state.count);
     state.log.push(`Count: ${state.count}`);
   });
@@ -45,13 +50,13 @@ function Timer() {
 The callback can return a dispose function that runs before the effect executes again. This is useful for cleaning up subscriptions, timers, or other resources:
 
 ```tsx
-import { createEffect, createState } from "rask-ui";
+import { useEffect, useState } from "rask-ui";
 
 function LiveData() {
-  const state = createState({ url: "/api/data", data: null });
+  const state = useState({ url: "/api/data", data: null });
 
   // Subscribe to data source, cleanup on re-run
-  createEffect(() => {
+  useEffect(() => {
     const eventSource = new EventSource(state.url);
 
     eventSource.onmessage = (event) => {
@@ -101,5 +106,5 @@ function LiveData() {
 - Effect runs synchronously during setup, making it predictable and easier to reason about
 - Be careful with effects that modify state - can cause infinite loops
 - Dispose functions run before the effect re-executes, not when the component unmounts
-- For component unmount cleanup, use `createCleanup()` instead
+- For component unmount cleanup, use `useCleanup()` instead
 :::

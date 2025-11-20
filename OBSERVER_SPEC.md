@@ -63,8 +63,8 @@ When nested reactive primitives emit events:
 
 Example:
 ```typescript
-const view = createView({
-  nested: createState({ count: 0 })
+const view = useView({
+  nested: useState({ count: 0 })
 })
 
 observe(view, (event) => {
@@ -214,7 +214,7 @@ Each reactive primitive must:
 Example implementation pattern:
 
 ```typescript
-function createState(initialState) {
+function useState(initialState) {
   const listeners = new Set()
 
   const proxy = new Proxy(initialState, {
@@ -275,7 +275,7 @@ Consumers using `observe()` should:
 ### Basic Observation
 
 ```typescript
-const state = createState({ count: 0 })
+const state = useState({ count: 0 })
 
 const unsubscribe = observe(state, (event) => {
   console.log('Event:', event.type, 'at path:', event.path)
@@ -289,9 +289,9 @@ unsubscribe()
 ### Nested Observation
 
 ```typescript
-const view = createView({
-  user: createState({ name: 'Alice' }),
-  counter: createState({ count: 0 }),
+const view = useView({
+  user: useState({ name: 'Alice' }),
+  counter: useState({ count: 0 }),
   increment() {
     this.counter.count++
   }

@@ -25,7 +25,12 @@
 
 import { getCurrentComponent } from "./component";
 
-export function createContext<T>() {
+export type Context<T> = {
+  inject(value: T): void;
+  get(): T;
+};
+
+export function createContext<T>(): Context<T> {
   const context = {
     inject(value: T) {
       const currentComponent = getCurrentComponent();
@@ -59,24 +64,18 @@ export function createContext<T>() {
 
       return contextValue;
     },
-    hasValue() {
-      let currentComponent = getCurrentComponent();
-
-      if (!currentComponent) {
-        throw new Error("You can not get context outside component setup");
-      }
-
-      if (typeof (currentComponent.context as any).getContext !== "function") {
-        return false;
-      }
-
-      const contextValue = (currentComponent.context as any).getContext(
-        context
-      );
-
-      return Boolean(contextValue);
-    },
   };
 
   return context;
+}
+
+export function useContext<T>(context: Context<T>, value: T): void;
+export function useContext<T>(context: Context<T>): T;
+export function useContext<T>(context: Context<T>, value?: T) {
+  if (value) {
+    context.inject(value);
+    return;
+  }
+
+  return context.get();
 }

@@ -2,22 +2,8 @@
 
 Creates a reactive router for client-side navigation with full TypeScript support.
 
-## Type Signature
-
 ```tsx
-function createRouter<T extends RoutesConfig>(
-  config: T,
-  options?: { base?: string }
-): Router<T>
-
-type Router<T> = {
-  route?: Route;
-  queries: Record<string, string>;
-  push(name: string, params?: object, query?: object): void;
-  replace(name: string, params?: object, query?: object): void;
-  setQuery(query: object): void;
-  url(name: string, params?: object, query?: object): string;
-}
+const router = createRouter(routes, options?)
 ```
 
 ## Basic Usage
@@ -33,7 +19,7 @@ const routes = {
 } as const;
 
 function App() {
-  const router = createRouter(routes);
+  const router = Router(routes);
 
   return () => {
     if (router.route?.name === "home") {
@@ -77,7 +63,7 @@ Optional configuration object:
 - `base?: string` - Base path for all routes (e.g., `/app`)
 
 ```tsx
-const router = createRouter(routes, { base: "/app" });
+const router = Router(routes, { base: "/app" });
 ```
 
 ## Return Value
@@ -159,11 +145,11 @@ The router integrates with RASK's reactivity system. Route changes automatically
 
 ```tsx
 function UserProfile() {
-  const router = createRouter(routes);
-  const state = createState({ user: null });
+  const router = Router(routes);
+  const state = useState({ user: null });
 
   // Effect runs when route changes
-  createEffect(() => {
+  useEffect(() => {
     if (router.route?.name === "user") {
       fetch(`/api/users/${router.route.params.id}`)
         .then((r) => r.json())
@@ -189,7 +175,7 @@ const routes = {
   post: "/posts/:postId/:commentId",
 } as const;
 
-const router = createRouter(routes);
+const router = Router(routes);
 
 // ✅ Type-safe
 router.push("user", { id: "123" });
@@ -210,7 +196,7 @@ Built-in support for query string management.
 
 ```tsx
 function SearchPage() {
-  const router = createRouter(routes);
+  const router = Router(routes);
 
   return () => (
     <div>
@@ -241,7 +227,7 @@ const routes = {
 const RouterContext = createContext<Router<typeof routes>>();
 
 function App() {
-  const router = createRouter(routes);
+  const router = Router(routes);
   RouterContext.inject(router);
 
   return () => <Content />;
@@ -276,7 +262,7 @@ const routes = {
 } as const;
 
 function Settings() {
-  const router = createRouter(routes);
+  const router = Router(routes);
 
   return () => (
     <div>
@@ -300,10 +286,10 @@ Implement route guards using effects:
 
 ```tsx
 function ProtectedApp() {
-  const router = createRouter(routes);
-  const auth = createState({ isAuthenticated: false });
+  const router = Router(routes);
+  const auth = useState({ isAuthenticated: false });
 
-  createEffect(() => {
+  useEffect(() => {
     // Redirect to login if not authenticated
     if (router.route?.name !== "login" && !auth.isAuthenticated) {
       router.replace("login");
@@ -324,21 +310,21 @@ Load data based on route parameters:
 
 ```tsx
 function Posts() {
-  const router = createRouter(routes);
+  const router = Router(routes);
 
-  const postsTask = createTask((page: string) =>
-    fetch(`/api/posts?page=${page}`).then((r) => r.json())
+  const [postsState, fetchPosts] = useAsync((page: string, signal) =>
+    fetch(`/api/posts?page=${page}`, { signal }).then((r) => r.json())
   );
 
-  createEffect(() => {
+  useEffect(() => {
     const page = router.queries.page || "1";
-    postsTask.run(page);
+    fetchPosts(page);
   });
 
   return () => (
     <div>
-      {postsTask.isRunning && <p>Loading...</p>}
-      {postsTask.result?.map((post) => (
+      {postsState.isPending && <p>Loading...</p>}
+      {postsState.value?.map((post) => (
         <article key={post.id}>{post.title}</article>
       ))}
       <button onClick={() => router.setQuery({ page: "2" })}>
@@ -362,5 +348,5 @@ function Posts() {
 ## Related
 
 - [createContext](/api/createContext) - Share router across components
-- [createEffect](/api/createEffect) - React to route changes
-- [createTask](/api/createTask) - Load data based on routes
+- [useEffect](/api/useEffect) - React to route changes
+- [useAsync](/api/useAsync) - Load data based on routes

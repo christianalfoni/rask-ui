@@ -1,16 +1,27 @@
 # API Reference
 
+## Reactive Hooks
+
+These are component-bound reactive primitives, similar to React hooks but reactive:
+
+- [**useState**](/api/useState) - Create reactive state bound to the component
+- [**useEffect**](/api/useEffect) - Create a reactive effect bound to the component
+- [**useComputed**](/api/useComputed) - Create computed properties bound to the component
+- [**useAsync**](/api/useAsync) - Manage async operations bound to the component
+- [**useView**](/api/useView) - Merge objects while maintaining reactivity
+- [**useRouter**](/api/useRouter) - Access router state and navigation
+
+## Context
+
+- [**createContext**](/api/createContext) - Create a context for sharing values
+- [**useContext**](/api/createContext#useContext) - Access context values in a component
+
+## Other APIs
+
 - [**Components**](/api/components) - Stateful and stateless components
 - [**render**](/api/render) - Mount a component to the DOM
-- [**createState**](/api/createState) - Create reactive state
-- [**createView**](/api/createView) - Merge objects while maintaining reactivity
 - [**createRef**](/api/createRef) - Create a reference to a DOM element
-- [**createEffect**](/api/createEffect) - Create a reactive effect
-- [**createComputed**](/api/createComputed) - Create computed properties
-- [**createMountEffect**](/api/createMountEffect) - Run effect after mount
-- [**createCleanup**](/api/createCleanup) - Register cleanup function
-- [**createContext**](/api/createContext) - Create a context for sharing values
-- [**createTask**](/api/createTask) - Manage async operations
-- [**createRouter**](/api/createRouter) - Client-side routing with type-safe navigation
+- [**useMountEffect**](/api/useMountEffect) - Run effect after mount
+- [**useCleanup**](/api/useCleanup) - Register cleanup function
 - [**ErrorBoundary**](/api/ErrorBoundary) - Catch and handle errors
 - [**inspect**](/api/inspect) - Inspect reactive state changes

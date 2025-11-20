@@ -8,7 +8,7 @@ State objects are automatically reactive. Any property access during render is t
 
 ```tsx
 function TodoList() {
-  const state = createState({
+  const state = useState({
     todos: [],
     filter: "all",
   });
@@ -54,7 +54,7 @@ function Header(props) {
 }
 
 function Parent() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   return () => (
     <div>
@@ -67,21 +67,21 @@ function Parent() {
 
 ## Props reconcile and are reactive
 
-Props also behaves as you would expect in the render scope, but they are also reactive, meaning they can be used with `createEffect` or `createComputed`.
+Props also behaves as you would expect in the render scope, but they are also reactive, meaning they can be used with `useEffect` or `useComputed`.
 
 ```tsx
 function Header(props) {
-  const computed = createComputed({
+  const computed = useComputed({
     double: () => props.count * 2,
   });
 
-  createEffect(() => console.log(props.count));
+  useEffect(() => console.log(props.count));
 
   return () => <h1>Count is {props.count}</h1>;
 }
 
 function Parent() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   return () => (
     <div>
@@ -102,12 +102,12 @@ Reactive objects are implemented using JavaScript Proxies. When you access a pro
 
 **This applies to:**
 
-- `createState()` - Never destructure state objects
+- `useState()` - Never destructure state objects
 - Props - Never destructure component props
-- `createContext().get()` - Never destructure context values
-- `createTask()` - Never destructure task objects
-- `createView()` - Never destructure view objects
-- `createComputed()` - Never destructure computed objects
+- `useContext()` - Never destructure context values
+- `useAsync()` - Never destructure async state objects
+- `useView()` - Never destructure view objects
+- `useComputed()` - Never destructure computed objects
 
 ## Automatic Batching
 
@@ -120,7 +120,7 @@ RASK automatically batches state updates to minimize re-renders.
 
 ```tsx
 function BatchingExample() {
-  const state = createState({ count: 0, clicks: 0 });
+  const state = useState({ count: 0, clicks: 0 });
 
   const handleClick = () => {
     // All three updates are batched into a single render
@@ -157,10 +157,10 @@ Create side effects that automatically track dependencies:
 
 ```tsx
 function Timer() {
-  const state = createState({ count: 0, log: [] });
+  const state = useState({ count: 0, log: [] });
 
   // Effect runs immediately and whenever state.count changes
-  createEffect(() => {
+  useEffect(() => {
     console.log("Count changed:", state.count);
     state.log.push(`Count: ${state.count}`);
   });
@@ -192,7 +192,7 @@ Create derived values that cache results:
 
 ```tsx
 function ShoppingCart() {
-  const state = createState({
+  const state = useState({
     items: [
       { id: 1, name: "Apple", price: 1.5, quantity: 3 },
       { id: 2, name: "Banana", price: 0.8, quantity: 5 },
@@ -200,7 +200,7 @@ function ShoppingCart() {
     taxRate: 0.2,
   });
 
-  const computed = createComputed({
+  const computed = useComputed({
     subtotal: () =>
       state.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     tax: () => computed.subtotal * state.taxRate,
@@ -240,10 +240,10 @@ Manage component lifecycle:
 
 ```tsx
 function Example() {
-  const state = createState({ time: Date.now() });
+  const state = useState({ time: Date.now() });
 
   // Runs after component mounts
-  createMountEffect(() => {
+  useMountEffect(() => {
     console.log("Component mounted!");
   });
 
@@ -253,7 +253,7 @@ function Example() {
   }, 1000);
 
   // Clean up when component unmounts
-  createCleanup(() => {
+  useCleanup(() => {
     clearInterval(interval);
   });
 
@@ -275,7 +275,7 @@ function App() {
 }
 
 function Child() {
-  const theme = ThemeContext.get();
+  const theme = useContext(ThemeContext);
 
   return () => <div style={{ color: theme.color }}>Themed text</div>;
 }
@@ -287,7 +287,7 @@ Use keys to maintain component identity:
 
 ```tsx
 function TodoList() {
-  const state = createState({
+  const state = useState({
     todos: [
       { id: 1, text: "Learn RASK" },
       { id: 2, text: "Build app" },
@@ -308,11 +308,11 @@ Keys prevent component recreation when list order changes.
 
 ## Composition with Views
 
-Compose complex logic using `createView`:
+Compose complex logic using `useView`:
 
 ```tsx
 function createAuthStore() {
-  const state = createState({
+  const state = useState({
     user: null,
     isAuthenticated: false,
     isLoading: false,
@@ -337,7 +337,7 @@ function createAuthStore() {
     state.isAuthenticated = false;
   };
 
-  return createView(state, { login, logout });
+  return useView(state, { login, logout });
 }
 
 function App() {

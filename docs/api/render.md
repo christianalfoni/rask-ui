@@ -8,8 +8,8 @@ render(component, container)
 
 ## Parameters
 
-- `component: ChildNode` - The JSX component to render
-- `container: HTMLElement` - The DOM element to mount into
+- `component` - The JSX component to render
+- `container` - The DOM element to mount into
 
 ## Example
 

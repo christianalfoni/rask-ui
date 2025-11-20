@@ -1,28 +1,30 @@
-# createCleanup()
+# useCleanup()
 
 Registers a callback to run when the component is unmounted.
 
 ```tsx
-createCleanup(callback: () => void): void
+useCleanup(() => {
+  // cleanup code
+})
 ```
 
 ## Parameters
 
-- `callback: () => void` - Function to call on cleanup
+- `callback` - Function to call on cleanup
 
 ## Example
 
 ```tsx
-import { createCleanup, createState } from "rask-ui";
+import { useCleanup, useState } from "rask-ui";
 
 function Example() {
-  const state = createState({ time: Date.now() });
+  const state = useState({ time: Date.now() });
 
   const interval = setInterval(() => {
     state.time = Date.now();
   }, 1000);
 
-  createCleanup(() => {
+  useCleanup(() => {
     clearInterval(interval);
   });
 
@@ -34,24 +36,24 @@ function Example() {
 
 ```tsx
 function Example() {
-  const state = createState({ data: null });
+  const state = useState({ data: null });
 
   // Subscription
   const unsubscribe = subscribe((data) => {
     state.data = data;
   });
-  createCleanup(unsubscribe);
+  useCleanup(unsubscribe);
 
   // Event listener
   const handleResize = () => console.log("resize");
   window.addEventListener("resize", handleResize);
-  createCleanup(() => {
+  useCleanup(() => {
     window.removeEventListener("resize", handleResize);
   });
 
   // Timer
   const interval = setInterval(() => {}, 1000);
-  createCleanup(() => clearInterval(interval));
+  useCleanup(() => clearInterval(interval));
 
   return () => <div>{state.data}</div>;
 }

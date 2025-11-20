@@ -25,12 +25,12 @@ render(<App />, document.getElementById("app")!);
 
 ---
 
-## createState()
+## useState()
 
 Creates a reactive state object. Any property access during render is tracked, and changes trigger re-renders.
 
 ```tsx
-createState<T>(initialState: T): T
+useState<T>(initialState: T): T
 ```
 
 ### Parameters
@@ -44,10 +44,10 @@ Reactive proxy of the state object
 ### Example
 
 ```tsx
-import { createState } from "rask-ui";
+import { useState } from "rask-ui";
 
 function Example() {
-  const state = createState({
+  const state = useState({
     count: 0,
     items: ["a", "b", "c"],
     nested: { value: 42 },
@@ -85,12 +85,12 @@ state.count
 
 ---
 
-## createView()
+## useView()
 
 Creates a view that merges multiple objects (reactive or plain) into a single object while maintaining reactivity through getters.
 
 ```tsx
-createView<T>(...objects: object[]): T
+useView<T>(...objects: object[]): T
 ```
 
 ### Parameters
@@ -104,15 +104,15 @@ A view object with getters for all properties, maintaining reactivity
 ### Example
 
 ```tsx
-import { createView, createState } from "rask-ui";
+import { useView, useState } from "rask-ui";
 
 function createCounter() {
-  const state = createState({ count: 0, name: "Counter" });
+  const state = useState({ count: 0, name: "Counter" });
   const increment = () => state.count++;
   const decrement = () => state.count--;
   const reset = () => (state.count = 0);
 
-  return createView(state, { increment, decrement, reset });
+  return useView(state, { increment, decrement, reset });
 }
 
 function Counter() {

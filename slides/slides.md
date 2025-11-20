@@ -121,7 +121,7 @@ function Counter() {
 
 ```tsx {all}
 function Counter() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
   const increment = () => state.count++;
 
   // createMountEffect
@@ -150,7 +150,7 @@ function Counter() {
 ```tsx {all}
 function CounterState() {
   // Setup phase
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
   const increment = () => state.count++;
 
   return () => {
@@ -184,17 +184,17 @@ function CounterState() {
   MyContext.inject({});
   const context = MyContext.get();
 
-  const state = createState({});
-  const computed = createComputed({});
-  const view = createView(state, computed);
+  const state = useState({});
+  const computed = useComputed({});
+  const view = useView(state, computed);
   const async = createAsync(promise);
   const query = createQuery(() => fetchSomething());
   const mutation = createMutation(() => changeSomething());
   const ref = createRef();
 
-  createEffect(() => {});
-  createMountEffect(() => {});
-  createCleanup(() => {});
+  useEffect(() => {});
+  useMountEffect(() => {});
+  useCleanup(() => {});
 
   return () => <div />;
 }
@@ -206,13 +206,13 @@ function CounterState() {
 
 ```tsx {all}
 function createCounter() {
-  const state = createState({ count: 0 });
-  const computed = createComputed({
+  const state = useState({ count: 0 });
+  const computed = useComputed({
     double: () => state.count * 2,
   });
   const increment = () => state.count++;
 
-  return createView(state, computed, { increment });
+  return useView(state, computed, { increment });
 }
 
 export const CounterContext = createContext();

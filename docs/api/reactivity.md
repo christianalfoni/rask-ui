@@ -2,12 +2,12 @@
 
 Functions for creating reactive effects and computed values.
 
-## createEffect()
+## useEffect()
 
 Creates an effect that automatically tracks reactive dependencies and re-runs whenever they change. The effect runs immediately on creation.
 
 ```tsx
-createEffect(callback: () => void): void
+useEffect(callback: () => void): void
 ```
 
 ### Parameters
@@ -17,13 +17,13 @@ createEffect(callback: () => void): void
 ### Example
 
 ```tsx
-import { createEffect, createState } from "rask-ui";
+import { useEffect, useState } from "rask-ui";
 
 function Timer() {
-  const state = createState({ count: 0, log: [] });
+  const state = useState({ count: 0, log: [] });
 
   // Effect runs immediately and whenever state.count changes
-  createEffect(() => {
+  useEffect(() => {
     console.log("Count changed:", state.count);
     state.log.push(`Count: ${state.count}`);
   });
@@ -66,12 +66,12 @@ function Timer() {
 
 ---
 
-## createComputed()
+## useComputed()
 
 Creates an object with computed properties that automatically track dependencies and cache results until dependencies change.
 
 ```tsx
-createComputed<T>(computed: T): T
+useComputed<T>(computed: T): T
 ```
 
 ### Parameters
@@ -85,10 +85,10 @@ Reactive object with cached computed properties
 ### Example
 
 ```tsx
-import { createComputed, createState } from "rask-ui";
+import { useComputed, useState } from "rask-ui";
 
 function ShoppingCart() {
-  const state = createState({
+  const state = useState({
     items: [
       { id: 1, name: "Apple", price: 1.5, quantity: 3 },
       { id: 2, name: "Banana", price: 0.8, quantity: 5 },
@@ -96,7 +96,7 @@ function ShoppingCart() {
     taxRate: 0.2,
   });
 
-  const computed = createComputed({
+  const computed = useComputed({
     subtotal: () =>
       state.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     tax: () => computed.subtotal * state.taxRate,
@@ -167,7 +167,7 @@ RASK automatically batches state updates to minimize re-renders. This happens tr
 
 ```tsx
 function BatchingExample() {
-  const state = createState({ count: 0, clicks: 0 });
+  const state = useState({ count: 0, clicks: 0 });
 
   const handleClick = () => {
     // All three updates are batched into a single render

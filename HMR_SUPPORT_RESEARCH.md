@@ -212,14 +212,14 @@ export class Observer {
 ```typescript
 // Original code
 export function App() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
   return () => <div>{state.count}</div>;
 }
 
 // After editing and HMR reload
 export function App() {
-  const state = createState({ count: 0 });
-  const doubled = createComputed(() => state.count * 2);  // ❌ NEW - NEVER RUNS!
+  const state = useState({ count: 0 });
+  const doubled = useComputed(() => state.count * 2);  // ❌ NEW - NEVER RUNS!
   return () => <div>{doubled}</div>;  // ❌ THIS NEVER SHOWS!
 }
 ```
@@ -243,7 +243,7 @@ export function App() {
 ### 4. Effect Duplication
 
 ```typescript
-createEffect(() => {
+useEffect(() => {
   console.log("Effect running");  // Runs twice - old + new instance
 });
 ```
@@ -501,13 +501,13 @@ Start with a **proof-of-concept** that:
 ```typescript
 // Before HMR
 function Counter() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
   return () => <button onClick={() => state.count++}>{state.count}</button>;
 }
 
 // After HMR (add text)
 function Counter() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
   return () => <button onClick={() => state.count++}>Count: {state.count}</button>;
 }
 // Expected: Button text updates without losing count value
@@ -516,9 +516,9 @@ function Counter() {
 ### Effect Cleanup
 ```typescript
 function Timer() {
-  createEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => console.log("tick"), 1000);
-    createCleanup(() => clearInterval(interval));
+    useCleanup(() => clearInterval(interval));
   });
   return () => <div>Timer Running</div>;
 }
@@ -532,7 +532,7 @@ function Parent() {
 }
 
 function Child() {
-  const state = createState({ value: "child" });
+  const state = useState({ value: "child" });
   return () => <div>{state.value}</div>;
 }
 // After HMR on Child: Parent should update to show new Child version

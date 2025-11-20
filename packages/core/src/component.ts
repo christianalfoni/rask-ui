@@ -2,7 +2,7 @@ import { createComponentVNode, VNode, Component, Props } from "inferno";
 import { VNodeFlags } from "inferno-vnode-flags";
 import { getCurrentObserver, Observer, Signal } from "./observation";
 import { syncBatch } from "./batch";
-import { PROXY_MARKER } from "./createState";
+import { PROXY_MARKER } from "./useState";
 
 export type RaskStatelessFunctionComponent<P extends Props<any>> =
   | (() => VNode)
@@ -38,7 +38,7 @@ export function getCurrentComponent() {
   return currentComponent;
 }
 
-export function createMountEffect(cb: () => void) {
+export function useMountEffect(cb: () => void) {
   if (!currentComponent) {
     throw new Error("Only use createMountEffect in component setup");
   }
@@ -46,7 +46,7 @@ export function createMountEffect(cb: () => void) {
   currentComponent.onMounts.push(cb);
 }
 
-export function createCleanup(cb: () => void) {
+export function useCleanup(cb: () => void) {
   if (!currentComponent || currentComponent.isRendering) {
     throw new Error("Only use createCleanup in component setup");
   }
@@ -210,7 +210,6 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
 
     try {
       this.isRendering = true;
-      console.log("WTF", this.setup.name);
       result = this.renderFn();
       this.isRendering = false;
       this.willRender = false;

@@ -19,7 +19,7 @@ A stateful component is a function that has a **setup phase** and a **render pha
 ```tsx
 function Counter(props) {
   // SETUP PHASE - Runs once
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   // RENDER PHASE - Runs on updates
   return () => (
@@ -55,7 +55,7 @@ function Todo(props) {
 
 function TodoList(props) {
   // Setup phase
-  const state = createState({
+  const state = useState({
     todos: [],
     newTodo: "",
   });

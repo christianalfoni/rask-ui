@@ -36,11 +36,11 @@ RASK has concluded its core implementation including the **Inferno-based reconci
 ## Quick Example
 
 ```tsx
-import { createState, render } from "rask-ui";
+import { useState, render } from "rask-ui";
 
 function Counter() {
   // Setup scope (runs once)
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   // Returns render scope (runs on reactive changes)
   return () => (
@@ -57,11 +57,10 @@ render(<Counter />, document.getElementById("app")!);
 
 ## Key Features
 
-- **Observable State**: Create reactive state with `createState()`
-- **Computed Values**: Derive state with `createComputed()`
-- **Lifecycle Hooks**: `createMountEffect()`, `createCleanup()`
-- **Context API**: Share state without prop drilling
-- **Async Operations**: Built-in `createTask()` for optimal UI consumption
+- **Reactive Hooks**: Component-bound reactive primitives like `useState()`, `useEffect()`, `useComputed()`
+- **Lifecycle Hooks**: `useMountEffect()`, `useCleanup()`
+- **Context API**: Share state without prop drilling with `createContext()` and `useContext()`
+- **Async Operations**: Built-in `useAsync()` for managing async operations
 - **Error Boundaries**: Catch and handle errors gracefully
 - **Automatic Batching**: State updates batched automatically
 - **TypeScript Support**: Full type inference and safety

@@ -122,7 +122,7 @@ interface AuthContext {
 const AuthContext = createContext<AuthContext>();
 
 function AuthProvider(props) {
-  const state = createState({
+  const state = useState({
     user: null,
     isAuthenticated: false,
   });
@@ -142,7 +142,7 @@ function AuthProvider(props) {
     state.isAuthenticated = false;
   };
 
-  const auth = createView(state, { login, logout });
+  const auth = useView(state, { login, logout });
 
   AuthContext.inject(auth);
 

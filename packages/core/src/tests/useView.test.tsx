@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { createView } from "../createView";
-import { createState } from "../createState";
+import { useView } from "../useView";
+import { useState } from "../useState";
 import { Observer } from "../observation";
 import { render } from "../";
 
@@ -11,7 +11,7 @@ describe("createView", () => {
     function Component() {
       const a = { x: 1, y: 2 };
       const b = { z: 3 };
-      view = createView(a, b);
+      view = useView(a, b);
       return () => <div>test</div>;
     }
 
@@ -29,7 +29,7 @@ describe("createView", () => {
     function Component() {
       const a = { x: 1, y: 2 };
       const b = { y: 3, z: 4 };
-      view = createView(a, b);
+      view = useView(a, b);
       return () => <div>test</div>;
     }
 
@@ -46,8 +46,8 @@ describe("createView", () => {
     let state: any;
 
     function Component() {
-      state = createState({ count: 0 });
-      view = createView(state);
+      state = useState({ count: 0 });
+      view = useView(state);
       return () => <div>test</div>;
     }
 
@@ -85,7 +85,7 @@ describe("createView", () => {
     let state: any;
 
     function Component() {
-      state = createState({ count: 0 });
+      state = useState({ count: 0 });
       const helpers = {
         increment() {
           state.count++;
@@ -94,7 +94,7 @@ describe("createView", () => {
           state.count--;
         },
       };
-      view = createView(state, helpers);
+      view = useView(state, helpers);
       return () => <div>test</div>;
     }
 
@@ -119,10 +119,10 @@ describe("createView", () => {
     let state3: any;
 
     function Component() {
-      state1 = createState({ count: 0 });
-      state2 = createState({ name: "Alice" });
-      state3 = createState({ age: 25 });
-      view = createView(state1, state2, state3);
+      state1 = useState({ count: 0 });
+      state2 = useState({ name: "Alice" });
+      state3 = useState({ age: 25 });
+      view = useView(state1, state2, state3);
       return () => <div>test</div>;
     }
 
@@ -148,7 +148,7 @@ describe("createView", () => {
 
     function Component() {
       source = { x: 1 };
-      view = createView(source);
+      view = useView(source);
       return () => <div>test</div>;
     }
 
@@ -168,7 +168,7 @@ describe("createView", () => {
       const a = { x: 1, y: 2, z: 3 };
       const b = { y: 20 };
       const c = { z: 30 };
-      view = createView(a, b, c);
+      view = useView(a, b, c);
       return () => <div>test</div>;
     }
 
@@ -189,7 +189,7 @@ describe("createView", () => {
         value: 42,
         enumerable: false,
       });
-      view = createView(obj);
+      view = useView(obj);
       return () => <div>test</div>;
     }
 
@@ -207,7 +207,7 @@ describe("createView", () => {
     function Component() {
       sym = Symbol("test");
       const obj = { x: 1, [sym]: "symbol value" };
-      view = createView(obj);
+      view = useView(obj);
       return () => <div>test</div>;
     }
 
@@ -223,8 +223,8 @@ describe("createView", () => {
     let state: any;
 
     function Component() {
-      state = createState({ count: 0, name: "Alice" });
-      view = createView(state);
+      state = useState({ count: 0, name: "Alice" });
+      view = useView(state);
       return () => <div>test</div>;
     }
 
@@ -292,7 +292,7 @@ describe("createView", () => {
 
     function Component() {
       const obj = { nums: [1, 2, 3], nested: { x: 1 } };
-      view = createView(obj);
+      view = useView(obj);
       return () => <div>test</div>;
     }
 
@@ -309,7 +309,7 @@ describe("createView", () => {
     let view: any;
 
     function Component() {
-      view = createView({});
+      view = useView({});
       return () => <div>test</div>;
     }
 
@@ -324,7 +324,7 @@ describe("createView", () => {
 
     function Component() {
       const obj = { x: 1, y: 2 };
-      view = createView(obj);
+      view = useView(obj);
       return () => <div>test</div>;
     }
 
@@ -340,13 +340,13 @@ describe("createView", () => {
     let state: any;
 
     function Component() {
-      state = createState({ count: 0 });
+      state = useState({ count: 0 });
       const methods = {
         increment() {
           state.count++;
         },
       };
-      view = createView(state, methods);
+      view = useView(state, methods);
       return () => <div>test</div>;
     }
 
@@ -364,13 +364,13 @@ describe("createView", () => {
     let state: any;
 
     function Component() {
-      state = createState({ firstName: "John", lastName: "Doe" });
+      state = useState({ firstName: "John", lastName: "Doe" });
       const computed = {
         get fullName() {
           return `${state.firstName} ${state.lastName}`;
         },
       };
-      view = createView(state, computed);
+      view = useView(state, computed);
       return () => <div>test</div>;
     }
 

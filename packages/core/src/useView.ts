@@ -33,15 +33,13 @@ type MergeManyAcc<Acc extends object, Rest extends object[]> = Rest extends [
  * ⚠️ Do not destructure the returned view object; always read properties
  * directly from the view to preserve reactivity.
  */
-export function createView<A extends object>(a: A): A;
-export function createView<A extends object, B extends object>(
+export function useView<A extends object>(a: A): A;
+export function useView<A extends object, B extends object>(
   a: A,
   b: B
 ): MergeTwo<A, B>;
-export function createView<T extends readonly object[]>(
-  ...args: T
-): MergeMany<T>;
-export function createView(...args: readonly object[]): any {
+export function useView<T extends readonly object[]>(...args: T): MergeMany<T>;
+export function useView(...args: readonly object[]): any {
   if (!getCurrentComponent()) {
     throw new Error("Only use createView in component setup");
   }

@@ -29,18 +29,34 @@ export default defineConfig({
       {
         text: "API Reference",
         items: [
+          { text: "Overview", link: "/api/" },
           { text: "Components", link: "/api/components" },
           { text: "render", link: "/api/render" },
-          { text: "createState", link: "/api/createState" },
-          { text: "createView", link: "/api/createView" },
-          { text: "createRef", link: "/api/createRef" },
-          { text: "createEffect", link: "/api/createEffect" },
-          { text: "createComputed", link: "/api/createComputed" },
-          { text: "createMountEffect", link: "/api/createMountEffect" },
-          { text: "createCleanup", link: "/api/createCleanup" },
+        ],
+      },
+      {
+        text: "Reactive Hooks",
+        items: [
+          { text: "useState", link: "/api/useState" },
+          { text: "useEffect", link: "/api/useEffect" },
+          { text: "useComputed", link: "/api/useComputed" },
+          { text: "useAsync", link: "/api/useAsync" },
+          { text: "useView", link: "/api/useView" },
+          { text: "useRouter", link: "/api/useRouter" },
+        ],
+      },
+      {
+        text: "Context & Lifecycle",
+        items: [
           { text: "createContext", link: "/api/createContext" },
-          { text: "createTask", link: "/api/createTask" },
-          { text: "createRouter", link: "/api/createRouter" },
+          { text: "useMountEffect", link: "/api/useMountEffect" },
+          { text: "useCleanup", link: "/api/useCleanup" },
+          { text: "createRef", link: "/api/createRef" },
+        ],
+      },
+      {
+        text: "Other APIs",
+        items: [
           { text: "ErrorBoundary", link: "/api/ErrorBoundary" },
           { text: "inspect", link: "/api/inspect" },
         ],

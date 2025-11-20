@@ -21,7 +21,7 @@ Modern UI frameworks force you to choose between simple state management and pow
 
 ```tsx
 function MyApp() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   return () => <h1 onClick={() => state.count++}>Count is {state.count}</h1>;
 }

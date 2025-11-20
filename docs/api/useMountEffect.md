@@ -1,22 +1,27 @@
-# createMountEffect()
+# useMountEffect()
 
 Registers a callback to run after the component is mounted to the DOM.
 
 ```tsx
-createMountEffect(callback: () => void | (() => void)): void
+useMountEffect(() => {
+  // run after mount
+  return () => {
+    // optional cleanup
+  }
+})
 ```
 
 ## Parameters
 
-- `callback: () => void | (() => void)` - Function to call on mount. Can optionally return a cleanup function.
+- `callback` - Function to call on mount. Can optionally return a cleanup function.
 
 ## Example
 
 ```tsx
-import { createMountEffect } from "rask-ui";
+import { useMountEffect } from "rask-ui";
 
 function Example() {
-  createMountEffect(() => {
+  useMountEffect(() => {
     console.log("Component mounted!");
   });
 
@@ -28,9 +33,9 @@ function Example() {
 
 ```tsx
 function Timer() {
-  const state = createState({ time: Date.now() });
+  const state = useState({ time: Date.now() });
 
-  createMountEffect(() => {
+  useMountEffect(() => {
     const interval = setInterval(() => {
       state.time = Date.now();
     }, 1000);

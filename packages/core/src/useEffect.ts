@@ -1,8 +1,8 @@
 import { syncBatch } from "./batch";
-import { createCleanup, getCurrentComponent } from "./component";
+import { useCleanup, getCurrentComponent } from "./component";
 import { Observer } from "./observation";
 
-export function createEffect(cb: () => void | (() => void)) {
+export function useEffect(cb: () => void | (() => void)) {
   const component = getCurrentComponent();
   if (!component || component.isRendering) {
     throw new Error("Only use createEffect in component setup");
@@ -23,7 +23,7 @@ export function createEffect(cb: () => void | (() => void)) {
     stopObserving();
   };
 
-  createCleanup(() => {
+  useCleanup(() => {
     observer.dispose();
     disposer?.();
   });

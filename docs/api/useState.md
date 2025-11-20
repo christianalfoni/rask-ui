@@ -1,14 +1,14 @@
-# createState()
+# useState()
 
-Creates a reactive state object. Any property access during render is tracked, and changes trigger re-renders.
+Creates a reactive state object bound to the component. Any property access during render is tracked, and changes trigger re-renders.
 
 ```tsx
-createState<T>(initialState: T): T
+const state = useState(initialState)
 ```
 
 ## Parameters
 
-- `initialState: T` - Initial state object
+- `initialState` - Initial state object
 
 ## Returns
 
@@ -17,10 +17,10 @@ Reactive proxy of the state object
 ## Example
 
 ```tsx
-import { createState } from "rask-ui";
+import { useState } from "rask-ui";
 
 function Example() {
-  const state = createState({
+  const state = useState({
     count: 0,
     items: ["a", "b", "c"],
     nested: { value: 42 },
@@ -76,10 +76,10 @@ assignState<T>(state: T, newState: T): T
 **Example:**
 
 ```tsx
-import { assignState, createState } from "rask-ui";
+import { assignState, useState } from "rask-ui";
 
 function UserProfile() {
-  const state = createState({
+  const state = useState({
     name: "Alice",
     age: 30,
     email: "alice@example.com",

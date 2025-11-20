@@ -112,10 +112,10 @@ Update your `tsconfig.json`:
 Create a simple counter component:
 
 ```tsx
-import { createState, render } from "rask-ui";
+import { useState, render } from "rask-ui";
 
 function Counter() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   return () => (
     <div>
@@ -131,7 +131,7 @@ render(<Counter />, document.getElementById("app")!);
 
 ### What's Happening Here?
 
-1. **`createState({ count: 0 })`** - Creates a reactive state object
+1. **`useState({ count: 0 })`** - Creates a reactive state object bound to the component
 2. **`return () => (...)`** - Returns a render function that runs when dependencies change
 3. **`state.count++`** - Direct mutations trigger re-renders automatically
 4. **`render(<Counter />, ...)`** - Mounts the component to the DOM
@@ -143,9 +143,9 @@ Stateful components in RASK have two distinct phases:
 ```tsx
 function MyComponent(props) {
   // SETUP PHASE - Runs once when component is created
-  const state = createState({ value: props.initial });
+  const state = useState({ value: props.initial });
 
-  createMountEffect(() => {
+  useMountEffect(() => {
     console.log("Component mounted!");
   });
 

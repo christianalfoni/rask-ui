@@ -1,174 +1,141 @@
 import { describe, it, expect, vi } from "vitest";
-import { createTask } from "../createTask";
+import { useAsync } from "../useAsync";
 import { render } from "../index";
 
-describe("createTask", () => {
+describe("useAsync", () => {
   describe("without parameters", () => {
-    it("should auto-run on creation and start in idle state", () => {
-      let task: any;
+    it("should start in idle state", () => {
+      let state: any, run: any;
       function Component() {
         const promise = new Promise(() => {});
-        task = createTask(() => promise);
+        [state, run] = useAsync(() => promise);
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      // Initial fetch() doesn't set isRunning, only run()/rerun() do
-      expect(task.isRunning).toBe(false);
-      expect(task.result).toBeNull();
-      expect(task.error).toBeNull();
-      expect(task.params).toBeNull();
+      expect(state.isPending).toBe(false);
+      expect(state.value).toBeNull();
+      expect(state.error).toBeNull();
+      expect(state.params).toBeNull();
     });
 
     it("should resolve to result state on success", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.resolve("success"));
+        [state, run] = useAsync(() => Promise.resolve("success"));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      // Task doesn't auto-run anymore
-      expect(task.isRunning).toBe(false);
+      expect(state.isPending).toBe(false);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.isRunning).toBe(false);
-      expect(task.result).toBe("success");
-      expect(task.error).toBeNull();
-      expect(task.params).toBeNull();
+      expect(state.isPending).toBe(false);
+      expect(state.value).toBe("success");
+      expect(state.error).toBeNull();
+      expect(state.params).toBeNull();
     });
 
     it("should resolve to error state on rejection", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.reject(new Error("failed")));
+        [state, run] = useAsync(() => Promise.reject(new Error("failed")));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.isRunning).toBe(false);
-      expect(task.result).toBeNull();
-      expect(task.error).toContain("failed");
-      expect(task.params).toBeNull();
+      expect(state.isPending).toBe(false);
+      expect(state.value).toBeNull();
+      expect(state.error).toContain("failed");
+      expect(state.params).toBeNull();
     });
 
     it("should handle run() method", async () => {
       const fetcher = vi.fn(() => Promise.resolve("data"));
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(fetcher);
+        [state, run] = useAsync(fetcher);
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      // Tasks no longer auto-run, so fetcher hasn't been called yet
       expect(fetcher).toHaveBeenCalledTimes(0);
 
-      task.run();
-      expect(task.isRunning).toBe(true);
-      expect(task.result).toBeNull(); // Cleared on run
+      run();
+      expect(state.isPending).toBe(true);
+      expect(state.value).toBeNull();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(fetcher).toHaveBeenCalledTimes(1);
-      expect(task.result).toBe("data");
-    });
-
-    it("should handle rerun() method", async () => {
-      const fetcher = vi
-        .fn()
-        .mockResolvedValueOnce("data1")
-        .mockResolvedValueOnce("data2");
-
-      let task: any;
-      function Component() {
-        task = createTask(fetcher);
-        return () => <div>test</div>;
-      }
-
-      const container = document.createElement("div");
-      render(<Component />, container);
-
-      // First run
-      task.run();
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      expect(task.result).toBe("data1");
-
-      task.rerun();
-      expect(task.isRunning).toBe(true);
-      expect(task.result).toBe("data1"); // Kept during rerun
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(task.result).toBe("data2");
+      expect(state.value).toBe("data");
     });
   });
 
   describe("with parameters", () => {
     it("should not auto-run on creation", () => {
       const fetcher = vi.fn((page: number) => Promise.resolve(`page-${page}`));
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(fetcher);
+        [state, run] = useAsync(fetcher);
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      // Tasks no longer auto-run
-      expect(task.isRunning).toBe(false);
-      expect(task.result).toBeNull();
-      expect(task.error).toBeNull();
-      expect(task.params).toBeNull();
+      expect(state.isPending).toBe(false);
+      expect(state.value).toBeNull();
+      expect(state.error).toBeNull();
+      expect(state.params).toBeNull();
       expect(fetcher).toHaveBeenCalledTimes(0);
     });
 
     it("should run when run() is called with params", async () => {
       const fetcher = vi.fn((page: number) => Promise.resolve(`page-${page}`));
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(fetcher);
+        [state, run] = useAsync(fetcher);
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run(1);
+      run(1);
 
-      expect(task.isRunning).toBe(true);
-      expect(task.params).toBe(1);
-      expect(task.result).toBeNull();
+      expect(state.isPending).toBe(true);
+      expect(state.params).toBe(1);
+      expect(state.value).toBeNull();
       expect(fetcher).toHaveBeenCalledTimes(1);
       expect(fetcher.mock.calls[0][0]).toBe(1);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.isRunning).toBe(false);
-      expect(task.result).toBe("page-1");
-      expect(task.params).toBeNull();
+      expect(state.isPending).toBe(false);
+      expect(state.value).toBe("page-1");
+      expect(state.params).toBeNull();
     });
 
     it("should handle error state with params", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask<number, any>((id: number) =>
+        [state, run] = useAsync<number, any>((id: number) =>
           Promise.reject(new Error(`failed-${id}`))
         );
         return () => <div>test</div>;
@@ -177,52 +144,23 @@ describe("createTask", () => {
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run(42);
+      run(42);
 
-      expect(task.isRunning).toBe(true);
-      expect(task.params).toBe(42);
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(task.isRunning).toBe(false);
-      expect(task.result).toBeNull();
-      expect(task.error).toContain("failed-42");
-      expect(task.params).toBeNull();
-    });
-
-    it("should handle rerun with params", async () => {
-      const fetcher = vi
-        .fn()
-        .mockResolvedValueOnce("data1")
-        .mockResolvedValueOnce("data2");
-
-      let task: any;
-      function Component() {
-        task = createTask((page: number) => fetcher());
-        return () => <div>test</div>;
-      }
-
-      const container = document.createElement("div");
-      render(<Component />, container);
-
-      // First run
-      task.run(1);
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      expect(task.result).toBe("data1");
-
-      task.rerun(1);
-      expect(task.isRunning).toBe(true);
-      expect(task.result).toBe("data1"); // Kept during rerun
-      expect(task.params).toBe(1);
+      expect(state.isPending).toBe(true);
+      expect(state.params).toBe(42);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
-      expect(task.result).toBe("data2");
+
+      expect(state.isPending).toBe(false);
+      expect(state.value).toBeNull();
+      expect(state.error).toContain("failed-42");
+      expect(state.params).toBeNull();
     });
 
     it("should update params when running with different values", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask((page: number) =>
+        [state, run] = useAsync((page: number) =>
           Promise.resolve(`page-${page}`)
         );
         return () => <div>test</div>;
@@ -231,17 +169,17 @@ describe("createTask", () => {
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run(1);
-      expect(task.params).toBe(1);
+      run(1);
+      expect(state.params).toBe(1);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      task.run(2);
-      expect(task.params).toBe(2);
+      run(2);
+      expect(state.params).toBe(2);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.result).toBe("page-2");
+      expect(state.value).toBe("page-2");
     });
   });
 
@@ -262,9 +200,9 @@ describe("createTask", () => {
         .mockReturnValueOnce(firstPromise)
         .mockReturnValueOnce(secondPromise);
 
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(fetcher);
+        [state, run] = useAsync(fetcher);
         return () => <div>test</div>;
       }
 
@@ -272,24 +210,24 @@ describe("createTask", () => {
       render(<Component />, container);
 
       // First run
-      task.run();
-      expect(task.isRunning).toBe(true);
+      run();
+      expect(state.isPending).toBe(true);
 
       // Trigger second run before first completes - this cancels the first run
-      task.run();
-      expect(task.isRunning).toBe(true);
+      run();
+      expect(state.isPending).toBe(true);
 
       // Resolve first (should be ignored due to cancellation)
       resolveFirst!("first");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.result).toBeNull(); // First result ignored
+      expect(state.value).toBeNull(); // First result ignored
 
       // Resolve second
       resolveSecond!("second");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.result).toBe("second");
+      expect(state.value).toBe("second");
     });
 
     it("should cancel previous request with params", async () => {
@@ -308,41 +246,41 @@ describe("createTask", () => {
         .mockReturnValueOnce(firstPromise)
         .mockReturnValueOnce(secondPromise);
 
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask((page: number) => fetcher());
+        [state, run] = useAsync((page: number) => fetcher());
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run(1);
-      expect(task.params).toBe(1);
+      run(1);
+      expect(state.params).toBe(1);
 
       // Trigger second run before first completes
-      task.run(2);
-      expect(task.params).toBe(2);
+      run(2);
+      expect(state.params).toBe(2);
 
       // Resolve first (should be ignored due to cancellation)
       resolveFirst!("first");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.result).toBeNull(); // First result ignored
+      expect(state.value).toBeNull(); // First result ignored
 
       // Resolve second
       resolveSecond!("second");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.result).toBe("second");
+      expect(state.value).toBe("second");
     });
 
     it("should handle rapid successive runs", async () => {
       let counter = 0;
       const fetcher = vi.fn(() => Promise.resolve(`data-${++counter}`));
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(fetcher);
+        [state, run] = useAsync(fetcher);
         return () => <div>test</div>;
       }
 
@@ -350,197 +288,197 @@ describe("createTask", () => {
       render(<Component />, container);
 
       // Rapid runs
-      task.run();
-      task.run();
-      task.run();
+      run();
+      run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 20));
 
       // Only the last run should complete
       expect(fetcher).toHaveBeenCalledTimes(3); // 3 runs
-      expect(task.result).toBe("data-3");
+      expect(state.value).toBe("data-3");
     });
   });
 
   describe("type handling", () => {
     it("should handle numeric values", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.resolve(42));
+        [state, run] = useAsync(() => Promise.resolve(42));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.result).toBe(42);
+      expect(state.value).toBe(42);
     });
 
     it("should handle object values", async () => {
       const data = { id: 1, name: "Test" };
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.resolve(data));
+        [state, run] = useAsync(() => Promise.resolve(data));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.result).toEqual(data);
+      expect(state.value).toEqual(data);
     });
 
     it("should handle array values", async () => {
       const data = [1, 2, 3, 4, 5];
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.resolve(data));
+        [state, run] = useAsync(() => Promise.resolve(data));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.result).toEqual(data);
+      expect(state.value).toEqual(data);
     });
 
     it("should convert error to string", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.reject("string error"));
+        [state, run] = useAsync(() => Promise.reject("string error"));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(typeof task.error).toBe("string");
-      expect(task.error).toBe("string error");
+      expect(typeof state.error).toBe("string");
+      expect(state.error).toBe("string error");
     });
 
     it("should handle error objects", async () => {
       const error = new Error("Something went wrong");
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.reject(error));
+        [state, run] = useAsync(() => Promise.reject(error));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.error).toContain("Something went wrong");
+      expect(state.error).toContain("Something went wrong");
     });
 
     it("should handle different parameter types", async () => {
       const fetcher = vi.fn((params) => Promise.resolve(params));
 
       // Object params
-      let task1: any;
+      let state1: any, run1: any;
       function Component1() {
-        task1 = createTask(fetcher);
+        [state1, run1] = useAsync(fetcher);
         return () => <div>test</div>;
       }
 
       const container1 = document.createElement("div");
       render(<Component1 />, container1);
 
-      task1.run({ id: 1, name: "test" } as any);
-      expect(task1.params).toEqual({ id: 1, name: "test" });
+      run1({ id: 1, name: "test" } as any);
+      expect(state1.params).toEqual({ id: 1, name: "test" });
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Array params
-      let task2: any;
+      let state2: any, run2: any;
       function Component2() {
-        task2 = createTask(fetcher);
+        [state2, run2] = useAsync(fetcher);
         return () => <div>test</div>;
       }
 
       const container2 = document.createElement("div");
       render(<Component2 />, container2);
 
-      task2.run([1, 2, 3] as any);
-      expect(task2.params).toEqual([1, 2, 3]);
+      run2([1, 2, 3] as any);
+      expect(state2.params).toEqual([1, 2, 3]);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // String params
-      let task3: any;
+      let state3: any, run3: any;
       function Component3() {
-        task3 = createTask((str: string) => Promise.resolve(str));
+        [state3, run3] = useAsync((str: string) => Promise.resolve(str));
         return () => <div>test</div>;
       }
 
       const container3 = document.createElement("div");
       render(<Component3 />, container3);
 
-      task3.run("test");
-      expect(task3.params).toBe("test");
+      run3("test");
+      expect(state3.params).toBe("test");
     });
   });
 
   describe("edge cases", () => {
     it("should handle immediate resolution", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.resolve("immediate"));
+        [state, run] = useAsync(() => Promise.resolve("immediate"));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.isRunning).toBe(false);
-      expect(task.result).toBe("immediate");
+      expect(state.isPending).toBe(false);
+      expect(state.value).toBe("immediate");
     });
 
     it("should handle immediate rejection", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.reject("immediate error"));
+        [state, run] = useAsync(() => Promise.reject("immediate error"));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.isRunning).toBe(false);
-      expect(task.error).toBe("immediate error");
+      expect(state.isPending).toBe(false);
+      expect(state.error).toBe("immediate error");
     });
 
     it("should handle delayed resolution", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(
+        [state, run] = useAsync(
           () =>
             new Promise((resolve) => {
               setTimeout(() => resolve("delayed"), 10);
@@ -552,13 +490,13 @@ describe("createTask", () => {
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
-      expect(task.isRunning).toBe(true);
+      run();
+      expect(state.isPending).toBe(true);
 
       await new Promise((resolve) => setTimeout(resolve, 20));
 
-      expect(task.isRunning).toBe(false);
-      expect(task.result).toBe("delayed");
+      expect(state.isPending).toBe(false);
+      expect(state.value).toBe("delayed");
     });
 
     it("should clear error on successful retry", async () => {
@@ -567,49 +505,49 @@ describe("createTask", () => {
         .mockRejectedValueOnce(new Error("First error"))
         .mockResolvedValueOnce("success");
 
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(fetcher);
+        [state, run] = useAsync(fetcher);
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.error).toContain("First error");
-      expect(task.result).toBeNull();
+      expect(state.error).toContain("First error");
+      expect(state.value).toBeNull();
 
-      task.run();
+      run();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(task.error).toBeNull();
-      expect(task.result).toBe("success");
+      expect(state.error).toBeNull();
+      expect(state.value).toBe("success");
     });
   });
 
   describe("reactive getters", () => {
     it("should expose reactive getters", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(() => Promise.resolve("data"));
+        [state, run] = useAsync(() => Promise.resolve("data"));
         return () => <div>test</div>;
       }
 
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run();
+      run();
 
       // Access getters before completion
-      const running1 = task.isRunning;
-      const result1 = task.result;
-      const error1 = task.error;
-      const params1 = task.params;
+      const running1 = state.isPending;
+      const result1 = state.value;
+      const error1 = state.error;
+      const params1 = state.params;
 
       expect(running1).toBe(true);
       expect(result1).toBeNull();
@@ -619,16 +557,16 @@ describe("createTask", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Access getters after completion
-      expect(task.isRunning).toBe(false);
-      expect(task.result).toBe("data");
-      expect(task.error).toBeNull();
-      expect(task.params).toBeNull();
+      expect(state.isPending).toBe(false);
+      expect(state.value).toBe("data");
+      expect(state.error).toBeNull();
+      expect(state.params).toBeNull();
     });
 
     it("should track params during execution", async () => {
-      let task: any;
+      let state: any, run: any;
       function Component() {
-        task = createTask(
+        [state, run] = useAsync(
           (id: number) =>
             new Promise((resolve) =>
               setTimeout(() => resolve(`result-${id}`), 20)
@@ -640,15 +578,15 @@ describe("createTask", () => {
       const container = document.createElement("div");
       render(<Component />, container);
 
-      task.run(123);
+      run(123);
 
-      expect(task.isRunning).toBe(true);
-      expect(task.params).toBe(123);
+      expect(state.isPending).toBe(true);
+      expect(state.params).toBe(123);
 
       await new Promise((resolve) => setTimeout(resolve, 30));
 
-      expect(task.isRunning).toBe(false);
-      expect(task.params).toBeNull();
+      expect(state.isPending).toBe(false);
+      expect(state.params).toBeNull();
     });
   });
 });

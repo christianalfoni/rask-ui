@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createContext } from "../createContext";
+import { createContext, useContext } from "../createContext";
 import { render } from "../";
 
 describe("createContext", () => {
@@ -13,12 +13,12 @@ describe("createContext", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     function Parent() {
-      ThemeContext.inject({ theme: "dark" });
+      useContext(ThemeContext, { theme: "dark" });
       return () => <Child />;
     }
 
     function Child() {
-      const theme = ThemeContext.get();
+      const theme = useContext(ThemeContext);
       return () => <div>{theme.theme}</div>;
     }
 
@@ -36,7 +36,7 @@ describe("createContext", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     function GrandParent() {
-      ThemeContext.inject({ theme: "light" });
+      useContext(ThemeContext, { theme: "light" });
       return () => <Parent />;
     }
 
@@ -45,7 +45,7 @@ describe("createContext", () => {
     }
 
     function Child() {
-      const theme = ThemeContext.get();
+      const theme = useContext(ThemeContext);
       return () => <div>{theme.theme}</div>;
     }
 
@@ -64,7 +64,7 @@ describe("createContext", () => {
 
     function Child() {
       expect(() => {
-        ThemeContext.get();
+        useContext(ThemeContext);
       }).toThrow("There is no parent context");
       return () => <div>Child</div>;
     }
@@ -81,7 +81,7 @@ describe("createContext", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     expect(() => {
-      ThemeContext.inject({ theme: "dark" });
+      useContext(ThemeContext, { theme: "dark" });
     }).toThrow("You can not inject context outside component setup");
   });
 
@@ -89,7 +89,7 @@ describe("createContext", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     expect(() => {
-      ThemeContext.get();
+      useContext(ThemeContext);
     }).toThrow("You can not get context outside component setup");
   });
 
@@ -97,7 +97,7 @@ describe("createContext", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     function GrandParent() {
-      ThemeContext.inject({ theme: "light" });
+      useContext(ThemeContext, { theme: "light" });
       return () => (
         <div>
           <Parent />
@@ -107,17 +107,17 @@ describe("createContext", () => {
     }
 
     function Parent() {
-      ThemeContext.inject({ theme: "dark" });
+      useContext(ThemeContext, { theme: "dark" });
       return () => <ChildOfParent />;
     }
 
     function ChildOfParent() {
-      const theme = ThemeContext.get();
+      const theme = useContext(ThemeContext);
       return () => <div class="child-of-parent">{theme.theme}</div>;
     }
 
     function ChildOfGrandParent() {
-      const theme = ThemeContext.get();
+      const theme = useContext(ThemeContext);
       return () => <div class="child-of-grandparent">{theme.theme}</div>;
     }
 
@@ -140,14 +140,14 @@ describe("createContext", () => {
     const UserContext = createContext<{ name: string }>();
 
     function Parent() {
-      ThemeContext.inject({ theme: "dark" });
-      UserContext.inject({ name: "Alice" });
+      useContext(ThemeContext, { theme: "dark" });
+      useContext(UserContext, { name: "Alice" });
       return () => <Child />;
     }
 
     function Child() {
-      const theme = ThemeContext.get();
-      const user = UserContext.get();
+      const theme = useContext(ThemeContext);
+      const user = useContext(UserContext);
       return () => <div>{`${theme.theme} - ${user.name}`}</div>;
     }
 
@@ -166,14 +166,14 @@ describe("createContext", () => {
     const ArrayContext = createContext<string[]>();
 
     function Parent() {
-      NumberContext.inject(42);
-      ArrayContext.inject(["a", "b", "c"]);
+      useContext(NumberContext, 42);
+      useContext(ArrayContext, ["a", "b", "c"]);
       return () => <Child />;
     }
 
     function Child() {
-      const num = NumberContext.get();
-      const arr = ArrayContext.get();
+      const num = useContext(NumberContext);
+      const arr = useContext(ArrayContext);
       return () => <div>{`${num} - ${arr.join(",")}`}</div>;
     }
 

@@ -1,20 +1,59 @@
-# createContext()
+# createContext() and useContext()
 
 Creates a context object for passing data through the component tree without prop drilling.
 
+## createContext()
+
 ```tsx
-createContext<T>(defaultValue?: T): Context<T>
+const Context = createContext()
 ```
 
-## Parameters
+Returns a context object with `inject` and `get` methods.
 
-- `defaultValue?: T` - Optional default value if context is not found in parent chain
+## useContext()
 
-## Returns
+A utility function that can both inject and get context values. Provides a simpler API than calling `context.inject()` or `context.get()` directly.
 
-Context object with `inject` and `get` methods
+```tsx
+// Inject mode
+useContext(Context, value)
 
-## Example
+// Get mode
+const value = useContext(Context)
+```
+
+### Parameters
+
+- `context` - The context object created by `createContext()`
+- `value` (optional) - Value to inject. If provided, acts as inject; if omitted, acts as get
+
+### Returns
+
+When called without a value (get mode), returns the context value from the nearest parent
+
+## Examples
+
+### Using useContext (Recommended)
+
+```tsx
+import { createContext, useContext } from "rask-ui";
+
+const ThemeContext = createContext<{ color: string }>();
+
+function App() {
+  useContext(ThemeContext, { color: "blue" });
+
+  return () => <Child />;
+}
+
+function Child() {
+  const theme = useContext(ThemeContext);
+
+  return () => <div style={{ color: theme.color }}>Themed text</div>;
+}
+```
+
+### Using inject/get (Alternative)
 
 ```tsx
 import { createContext } from "rask-ui";
@@ -100,7 +139,7 @@ function Child() {
 ## Complete Example
 
 ```tsx
-import { createContext, createState, createView } from "rask-ui";
+import { createContext, useContext, useState, useView } from "rask-ui";
 
 interface AuthContext {
   user: { name: string; email: string } | null;
@@ -112,7 +151,7 @@ interface AuthContext {
 const AuthContext = createContext<AuthContext>();
 
 function AuthProvider(props) {
-  const state = createState({
+  const state = useState({
     user: null,
     isAuthenticated: false,
   });
@@ -132,15 +171,15 @@ function AuthProvider(props) {
     state.isAuthenticated = false;
   };
 
-  const auth = createView(state, { login, logout });
+  const auth = useView(state, { login, logout });
 
-  AuthContext.inject(auth);
+  useContext(AuthContext, auth);
 
   return () => props.children;
 }
 
 function LoginButton() {
-  const auth = AuthContext.get();
+  const auth = useContext(AuthContext);
 
   return () => (
     <div>

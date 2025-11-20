@@ -2,12 +2,12 @@
 
 Functions for managing component lifecycle.
 
-## createMountEffect()
+## useMountEffect()
 
 Registers a callback to run after the component is mounted to the DOM.
 
 ```tsx
-createMountEffect(callback: () => void | (() => void)): void
+useMountEffect(callback: () => void | (() => void)): void
 ```
 
 ### Parameters
@@ -17,10 +17,10 @@ createMountEffect(callback: () => void | (() => void)): void
 ### Example
 
 ```tsx
-import { createMountEffect } from "rask-ui";
+import { useMountEffect } from "rask-ui";
 
 function Example() {
-  createMountEffect(() => {
+  useMountEffect(() => {
     console.log("Component mounted!");
   });
 
@@ -32,9 +32,9 @@ function Example() {
 
 ```tsx
 function Timer() {
-  const state = createState({ time: Date.now() });
+  const state = useState({ time: Date.now() });
 
-  createMountEffect(() => {
+  useMountEffect(() => {
     const interval = setInterval(() => {
       state.time = Date.now();
     }, 1000);
@@ -74,12 +74,12 @@ function Timer() {
 
 ---
 
-## createCleanup()
+## useCleanup()
 
 Registers a callback to run when the component is unmounted.
 
 ```tsx
-createCleanup(callback: () => void): void
+useCleanup(callback: () => void): void
 ```
 
 ### Parameters
@@ -89,16 +89,16 @@ createCleanup(callback: () => void): void
 ### Example
 
 ```tsx
-import { createCleanup, createState } from "rask-ui";
+import { useCleanup, useState } from "rask-ui";
 
 function Example() {
-  const state = createState({ time: Date.now() });
+  const state = useState({ time: Date.now() });
 
   const interval = setInterval(() => {
     state.time = Date.now();
   }, 1000);
 
-  createCleanup(() => {
+  useCleanup(() => {
     clearInterval(interval);
   });
 
@@ -110,24 +110,24 @@ function Example() {
 
 ```tsx
 function Example() {
-  const state = createState({ data: null });
+  const state = useState({ data: null });
 
   // Subscription
   const unsubscribe = subscribe((data) => {
     state.data = data;
   });
-  createCleanup(unsubscribe);
+  useCleanup(unsubscribe);
 
   // Event listener
   const handleResize = () => console.log("resize");
   window.addEventListener("resize", handleResize);
-  createCleanup(() => {
+  useCleanup(() => {
     window.removeEventListener("resize", handleResize);
   });
 
   // Timer
   const interval = setInterval(() => {}, 1000);
-  createCleanup(() => clearInterval(interval));
+  useCleanup(() => clearInterval(interval));
 
   return () => <div>{state.data}</div>;
 }
@@ -164,7 +164,7 @@ Understanding the order of lifecycle events:
 function Component() {
   console.log("1. Setup phase runs");
 
-  createMountEffect(() => {
+  useMountEffect(() => {
     console.log("3. Mount effect runs");
 
     return () => {
@@ -172,7 +172,7 @@ function Component() {
     };
   });
 
-  createCleanup(() => {
+  useCleanup(() => {
     console.log("6. Cleanup runs");
   });
 
@@ -197,9 +197,9 @@ function Component() {
 
 ```tsx
 function Timer() {
-  const state = createState({ seconds: 0 });
+  const state = useState({ seconds: 0 });
 
-  createMountEffect(() => {
+  useMountEffect(() => {
     const interval = setInterval(() => {
       state.seconds++;
     }, 1000);
@@ -215,12 +215,12 @@ function Timer() {
 
 ```tsx
 function WindowSize() {
-  const state = createState({
+  const state = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
 
-  createMountEffect(() => {
+  useMountEffect(() => {
     const handleResize = () => {
       state.width = window.innerWidth;
       state.height = window.innerHeight;
@@ -242,9 +242,9 @@ function WindowSize() {
 
 ```tsx
 function DataSubscriber() {
-  const state = createState({ data: null });
+  const state = useState({ data: null });
 
-  createMountEffect(() => {
+  useMountEffect(() => {
     const unsubscribe = dataStore.subscribe((data) => {
       state.data = data;
     });

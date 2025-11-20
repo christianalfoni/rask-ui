@@ -42,12 +42,12 @@ type InspectEvent =
 ### Basic Example
 
 ```tsx
-import { inspect, createState, createComputed, createView } from "rask-ui";
+import { inspect, useState, useComputed, useView } from "rask-ui";
 
 function Counter() {
-  const state = createState({ count: 0, name: "Counter" });
+  const state = useState({ count: 0, name: "Counter" });
 
-  const computed = createComputed({
+  const computed = useComputed({
     double: () => state.count * 2,
   });
 
@@ -57,7 +57,7 @@ function Counter() {
     reset: () => state.count = 0,
   };
 
-  const view = createView(state, computed, actions);
+  const view = useView(state, computed, actions);
 
   // Enable inspection
   inspect(view, (event) => {
@@ -133,7 +133,7 @@ The inspector tracks **nested property paths** automatically. You can compose de
 ```tsx
 function App() {
   // Create nested state structure
-  const userState = createState({
+  const userState = useState({
     profile: {
       name: "Alice",
       email: "alice@example.com",
@@ -144,21 +144,21 @@ function App() {
     },
   });
 
-  const cartState = createState({
+  const cartState = useState({
     items: [],
     total: 0,
   });
 
-  const uiState = createState({
+  const uiState = useState({
     sidebarOpen: false,
     currentPage: "home",
   });
 
   // Compose into a state tree
-  const appState = createView({
-    user: createView(userState),
-    cart: createView(cartState),
-    ui: createView(uiState),
+  const appState = useView({
+    user: useView(userState),
+    cart: useView(cartState),
+    ui: useView(uiState),
   });
 
   // Inspect the entire state tree
@@ -211,7 +211,7 @@ Views and state objects can be **serialized to JSON** using `JSON.stringify()`. 
 
 ```tsx
 function App() {
-  const state = createState({
+  const state = useState({
     user: {
       id: 1,
       name: "Alice",
@@ -227,12 +227,12 @@ function App() {
     },
   });
 
-  const computed = createComputed({
+  const computed = useComputed({
     completedCount: () => state.todos.filter((t) => t.done).length,
     totalCount: () => state.todos.length,
   });
 
-  const view = createView(state, computed);
+  const view = useView(state, computed);
 
   // Serialize to JSON - extracts all plain values
   const snapshot = JSON.stringify(view);
@@ -316,13 +316,13 @@ Save and restore state from localStorage:
 
 ```tsx
 function App() {
-  const state = createState({
+  const state = useState({
     user: null,
     settings: { theme: "light" },
   });
 
   // Load from localStorage on mount
-  createMountEffect(() => {
+  useMountEffect(() => {
     const saved = localStorage.getItem("appState");
     if (saved) {
       const parsed = JSON.parse(saved);
@@ -388,7 +388,7 @@ Compare state snapshots to see what changed:
 
 ```tsx
 function App() {
-  const state = createState({ count: 0, name: "App" });
+  const state = useState({ count: 0, name: "App" });
   let previousSnapshot = JSON.parse(JSON.stringify(state));
 
   inspect(state, (event) => {
@@ -510,7 +510,7 @@ function createTimeTravelDebugger(initialState) {
 }
 
 function App() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
   const debugger = createTimeTravelDebugger(state);
 
   inspect(state, debugger.record);
@@ -537,7 +537,7 @@ function App() {
     navigate: (path) => {/* ... */},
   };
 
-  const view = createView(actions);
+  const view = useView(actions);
 
   inspect(view, (event) => {
     if (event.type === "action") {
@@ -561,7 +561,7 @@ Show toast notifications for important state changes:
 
 ```tsx
 function App() {
-  const state = createState({
+  const state = useState({
     user: null,
     notifications: [],
   });
@@ -586,7 +586,7 @@ Track computed value recalculations:
 
 ```tsx
 function App() {
-  const computed = createComputed({
+  const computed = useComputed({
     expensiveCalculation: () => {/* expensive work */},
   });
 
@@ -615,7 +615,7 @@ Only enable inspection in development or for specific users:
 
 ```tsx
 function App() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   // Only in development
   if (import.meta.env.DEV) {
@@ -639,7 +639,7 @@ You can attach multiple inspectors to the same object:
 
 ```tsx
 function App() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   // Logger
   inspect(state, (event) => {
@@ -668,9 +668,9 @@ Inspect specific parts of your application:
 
 ```tsx
 function App() {
-  const userState = createState({ name: '', email: '' });
-  const cartState = createState({ items: [] });
-  const uiState = createState({ theme: 'light' });
+  const userState = useState({ name: '', email: '' });
+  const cartState = useState({ items: [] });
+  const uiState = useState({ theme: 'light' });
 
   // Only inspect user and cart, not UI state
   inspect(userState, logToDevtools);
@@ -702,7 +702,7 @@ While RASK doesn't use Redux, you can integrate with the Redux DevTools Extensio
 
 ```tsx
 function App() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   if (import.meta.env.DEV && window.__REDUX_DEVTOOLS_EXTENSION__) {
     const devtools = window.__REDUX_DEVTOOLS_EXTENSION__.connect();

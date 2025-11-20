@@ -30,7 +30,7 @@ export function assignState<T extends object>(state: T, newState: T) {
  * @param state - The initial state object to make reactive
  * @returns A reactive proxy of the state object
  */
-export function createState<T extends object>(state: T): T {
+export function useState<T extends object>(state: T): T {
   if (getCurrentComponent()?.isRendering) {
     throw new Error(
       "createState cannot be called during render. Call it in component setup or globally."
