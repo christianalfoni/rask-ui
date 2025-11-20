@@ -8,26 +8,12 @@ drawings:
 transition: slide-left
 title: Reactive state - Reconciling UI
 mdc: true
+css: unocss
 ---
 
-<style>
-table {
-  border-collapse: collapse !important;
-  border: none !important;
-}
-table th, table, tr, td {
-  border: none !important;
-  border-top: none !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  border-right: none !important;
-}
-table thead th {
-  border-bottom: none !important;
-}
-</style>
+<style src="./styles.css"></style>
 
-<img src="/logo.png" alt="Logo" class="mx-auto mb-8 w-32 h-32" />
+<img src="/logo.png" alt="Logo" class="mx-auto mb-8 w-48 h-48" />
 
 # Reactive state - Reconciling UI
 
@@ -82,10 +68,10 @@ function Counter() {
 
 |                               |                       |
 | ----------------------------- | --------------------- |
-| ✅ Single functional paradgim | ❌ Stale closures     |
-| ✅ State Composition          | ❌ Dependency arrays  |
-|                               | ❌ No lifecycle hooks |
-|                               | ❌ Bandaid hooks      |
+| <span class="text-green-600">Single functional paradigm</span> | <span class="text-red-600">Stale closures</span>     |
+| <span class="text-green-600">State Composition</span>          | <span class="text-red-600">Dependency arrays</span>  |
+|                               | <span class="text-red-600">No lifecycle hooks</span> |
+|                               | <span class="text-red-600">Bandaid hooks</span>      |
 
 ---
 
@@ -110,10 +96,10 @@ function Counter() {
 
 |                               |                                              |
 | ----------------------------- | -------------------------------------------- |
-| ✅ Single functional paradgim | ❌ Reactive UIs are magical                  |
-| ✅ State Composition          | ❌ Special reactive components instead of JS |
-| ✅ Explicit lifecycle         | ❌ Unexpected runtime behavior               |
-| ✅ Insanely performant        |                                              |
+| <span class="text-green-600">Single functional paradigm</span> | <span class="text-red-600">Reactive UIs are magical</span>                  |
+| <span class="text-green-600">State Composition</span>          | <span class="text-red-600">Special reactive components instead of JS</span> |
+| <span class="text-green-600">Explicit lifecycle</span>         | <span class="text-red-600">Unexpected runtime behavior</span>               |
+| <span class="text-green-600">Insanely performant</span>        |                                              |
 
 ---
 
@@ -124,8 +110,8 @@ function Counter() {
   const state = useState({ count: 0 });
   const increment = () => state.count++;
 
-  // createMountEffect
-  // createCleanup
+  // useMountEffect
+  // useCleanup
 
   return () => (
     <div>
@@ -138,10 +124,10 @@ function Counter() {
 
 |                               |                                         |
 | ----------------------------- | --------------------------------------- |
-| ✅ Single functional paradgim | ❌ Can not destructure reactive objects |
-| ✅ State Composition          |                                         |
-| ✅ Explicit lifecycle         |                                         |
-| ✅ Insanely performant        |                                         |
+| <span class="text-green-600">Single functional paradigm</span> | <span class="text-red-600">Can not destructure reactive objects</span> |
+| <span class="text-green-600">State Composition</span>          |                                         |
+| <span class="text-green-600">Explicit lifecycle</span>         |                                         |
+| <span class="text-green-600">Insanely performant</span>        |                                         |
 
 ---
 
@@ -171,7 +157,7 @@ function Counter(props) {
 ```
 
 <br />
-<h4>🔥 Inferno JS for reconciliation</h4>
+<h4>Powered by Inferno JS for reconciliation</h4>
 
 ---
 
@@ -180,18 +166,19 @@ function Counter(props) {
 ```tsx {all}
 const MyContext = createContext();
 
-function CounterState() {
-  MyContext.inject({});
-  const context = MyContext.get();
+function Component() {
+  // Context
+  MyContext.inject(value); // inject
+  const context = useContext(MyContext); // get
 
+  // Reactivity
   const state = useState({});
   const computed = useComputed({});
   const view = useView(state, computed);
-  const async = createAsync(promise);
-  const query = createQuery(() => fetchSomething());
-  const mutation = createMutation(() => changeSomething());
+  const [asyncState, run] = useAsync(async (params, signal) => {});
   const ref = useRef();
 
+  // Lifecycle
   useEffect(() => {});
   useMountEffect(() => {});
   useCleanup(() => {});
@@ -228,7 +215,7 @@ function App() {
 
 ---
 
-<img src="/logo.png" alt="Logo" class="mx-auto mb-8 w-32 h-32" />
+<img src="/logo.png" alt="Logo" class="mx-auto mb-8 w-48 h-48" />
 
 <div text-align="center">
 <h1> RASK</h1>
