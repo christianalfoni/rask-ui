@@ -32,7 +32,7 @@ function App() {
 }
 
 function Child() {
-  const theme = ThemeContext.get();
+  const theme = useContext(ThemeContext);
 
   return () => <div style={{ color: theme.color }}>Themed text</div>;
 }
@@ -91,7 +91,7 @@ The context value from the nearest parent that called `inject()`
 
 ```tsx
 function Child() {
-  const theme = ThemeContext.get();
+  const theme = useContext(ThemeContext);
 
   return () => (
     <div style={{ color: theme.color }}>
@@ -150,7 +150,7 @@ function AuthProvider(props) {
 }
 
 function LoginButton() {
-  const auth = AuthContext.get();
+  const auth = useContext(AuthContext);
 
   return () => (
     <div>
@@ -201,7 +201,7 @@ function Provider() {
 }
 
 function Child() {
-  const theme = ThemeContext.get(); // Type is Theme
+  const theme = useContext(ThemeContext); // Type is Theme
 
   return () => (
     <div style={{
@@ -233,9 +233,9 @@ function App() {
 }
 
 function Content() {
-  const theme = ThemeContext.get();
-  const auth = AuthContext.get();
-  const i18n = I18nContext.get();
+  const theme = useContext(ThemeContext);
+  const auth = useContext(AuthContext);
+  const i18n = useContext(I18nContext);
 
   return () => (
     <div style={{ color: theme.color }}>

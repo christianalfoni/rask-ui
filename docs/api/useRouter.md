@@ -9,7 +9,7 @@ const router = createRouter(routes, options?)
 ## Basic Usage
 
 ```tsx
-import { createRouter } from "rask-ui";
+import { useRouter } from "rask-ui";
 
 const routes = {
   home: "/",
@@ -19,7 +19,7 @@ const routes = {
 } as const;
 
 function App() {
-  const router = Router(routes);
+  const router = useRouter(routes);
 
   return () => {
     if (router.route?.name === "home") {
@@ -63,7 +63,7 @@ Optional configuration object:
 - `base?: string` - Base path for all routes (e.g., `/app`)
 
 ```tsx
-const router = Router(routes, { base: "/app" });
+const router = useRouter(routes, { base: "/app" });
 ```
 
 ## Return Value
@@ -145,7 +145,7 @@ The router integrates with RASK's reactivity system. Route changes automatically
 
 ```tsx
 function UserProfile() {
-  const router = Router(routes);
+  const router = useRouter(routes);
   const state = useState({ user: null });
 
   // Effect runs when route changes
@@ -157,11 +157,7 @@ function UserProfile() {
     }
   });
 
-  return () => (
-    <div>
-      {state.user && <h1>{state.user.name}</h1>}
-    </div>
-  );
+  return () => <div>{state.user && <h1>{state.user.name}</h1>}</div>;
 }
 ```
 
@@ -196,7 +192,7 @@ Built-in support for query string management.
 
 ```tsx
 function SearchPage() {
-  const router = Router(routes);
+  const router = useRouter(routes);
 
   return () => (
     <div>
@@ -216,7 +212,7 @@ function SearchPage() {
 Share router across components using context.
 
 ```tsx
-import { createRouter, createContext } from "rask-ui";
+import { useRouter, createContext } from "rask-ui";
 
 const routes = {
   home: "/",
@@ -227,14 +223,14 @@ const routes = {
 const RouterContext = createContext<Router<typeof routes>>();
 
 function App() {
-  const router = Router(routes);
+  const router = useRouter(routes);
   RouterContext.inject(router);
 
   return () => <Content />;
 }
 
 function Navigation() {
-  const router = RouterContext.get();
+  const router = useContext(RouterContext);
 
   return () => (
     <nav>
@@ -262,7 +258,7 @@ const routes = {
 } as const;
 
 function Settings() {
-  const router = Router(routes);
+  const router = useRouter(routes);
 
   return () => (
     <div>
@@ -274,7 +270,9 @@ function Settings() {
       </nav>
 
       {router.route?.name === "settingsProfile" && <ProfileSettings />}
-      {router.route?.name === "settingsNotifications" && <NotificationSettings />}
+      {router.route?.name === "settingsNotifications" && (
+        <NotificationSettings />
+      )}
     </div>
   );
 }
@@ -286,7 +284,7 @@ Implement route guards using effects:
 
 ```tsx
 function ProtectedApp() {
-  const router = Router(routes);
+  const router = useRouter(routes);
   const auth = useState({ isAuthenticated: false });
 
   useEffect(() => {
@@ -296,11 +294,7 @@ function ProtectedApp() {
     }
   });
 
-  return () => (
-    <div>
-      {/* App content */}
-    </div>
-  );
+  return () => <div>{/* App content */}</div>;
 }
 ```
 
@@ -310,7 +304,7 @@ Load data based on route parameters:
 
 ```tsx
 function Posts() {
-  const router = Router(routes);
+  const router = useRouter(routes);
 
   const [postsState, fetchPosts] = useAsync((page: string, signal) =>
     fetch(`/api/posts?page=${page}`, { signal }).then((r) => r.json())
@@ -327,9 +321,7 @@ function Posts() {
       {postsState.value?.map((post) => (
         <article key={post.id}>{post.title}</article>
       ))}
-      <button onClick={() => router.setQuery({ page: "2" })}>
-        Next Page
-      </button>
+      <button onClick={() => router.setQuery({ page: "2" })}>Next Page</button>
     </div>
   );
 }

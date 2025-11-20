@@ -262,7 +262,7 @@ function ErrorProvider(props) {
 }
 
 function GlobalErrorDisplay() {
-  const errorState = ErrorContext.get();
+  const errorState = useContext(ErrorContext);
 
   return () =>
     errorState.error ? (

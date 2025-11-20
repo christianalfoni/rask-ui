@@ -67,7 +67,7 @@ function App() {
 }
 
 function Child() {
-  const theme = ThemeContext.get();
+  const theme = useContext(ThemeContext);
 
   return () => <div style={{ color: theme.color }}>Themed text</div>;
 }
@@ -121,7 +121,7 @@ The context value from the nearest parent that called `inject()`
 
 ```tsx
 function Child() {
-  const theme = ThemeContext.get();
+  const theme = useContext(ThemeContext);
 
   return () => (
     <div style={{ color: theme.color }}>
