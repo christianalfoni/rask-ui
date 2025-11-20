@@ -190,7 +190,7 @@ function CounterState() {
   const async = createAsync(promise);
   const query = createQuery(() => fetchSomething());
   const mutation = createMutation(() => changeSomething());
-  const ref = createRef();
+  const ref = useRef();
 
   useEffect(() => {});
   useMountEffect(() => {});

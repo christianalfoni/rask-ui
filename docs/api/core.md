@@ -146,12 +146,12 @@ Do not destructure view objects - breaks reactivity
 
 ---
 
-## createRef()
+## useRef()
 
 Creates a ref object for accessing DOM elements or component instances directly.
 
 ```tsx
-createRef<T>(): Ref<T>
+useRef<T>(): Ref<T>
 ```
 
 ### Returns
@@ -163,10 +163,10 @@ Ref object with:
 ### Example
 
 ```tsx
-import { createRef } from "rask-ui";
+import { useRef } from "rask-ui";
 
 function Example() {
-  const inputRef = createRef<HTMLInputElement>();
+  const inputRef = useRef<HTMLInputElement>();
 
   const focus = () => {
     inputRef.current?.focus();
@@ -189,7 +189,7 @@ Pass the ref to an element's `ref` prop. The `current` property will be set to t
 
 ```tsx
 // Generic type parameter for specific element types
-const inputRef = createRef<HTMLInputElement>();
-const divRef = createRef<HTMLDivElement>();
-const buttonRef = createRef<HTMLButtonElement>();
+const inputRef = useRef<HTMLInputElement>();
+const divRef = useRef<HTMLDivElement>();
+const buttonRef = useRef<HTMLButtonElement>();
 ```

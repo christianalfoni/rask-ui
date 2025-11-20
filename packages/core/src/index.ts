@@ -9,7 +9,7 @@ export { createContext, useContext } from "./createContext";
 export { useState, assignState } from "./useState";
 export { useAsync, Async } from "./useAsync";
 export { ErrorBoundary } from "./error";
-export { createRef } from "inferno";
+export { createRef as useRef } from "inferno";
 export { useView } from "./useView";
 export { useEffect } from "./useEffect";
 export { useComputed } from "./useComputed";

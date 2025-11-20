@@ -51,7 +51,7 @@ export default defineConfig({
           { text: "createContext", link: "/api/createContext" },
           { text: "useMountEffect", link: "/api/useMountEffect" },
           { text: "useCleanup", link: "/api/useCleanup" },
-          { text: "createRef", link: "/api/createRef" },
+          { text: "useRef", link: "/api/useRef" },
         ],
       },
       {

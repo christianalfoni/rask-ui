@@ -20,7 +20,7 @@ These are component-bound reactive primitives, similar to React hooks but reacti
 
 - [**Components**](/api/components) - Stateful and stateless components
 - [**render**](/api/render) - Mount a component to the DOM
-- [**createRef**](/api/createRef) - Create a reference to a DOM element
+- [**useRef**](/api/useRef) - Create a reference to a DOM element
 - [**useMountEffect**](/api/useMountEffect) - Run effect after mount
 - [**useCleanup**](/api/useCleanup) - Register cleanup function
 - [**ErrorBoundary**](/api/ErrorBoundary) - Catch and handle errors
