@@ -1,3 +1,4 @@
+import { syncBatch } from "./batch";
 import { getCurrentComponent, useCleanup } from "./component";
 import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorRef } from "./inspect";
 import { getCurrentObserver, Observer, Signal } from "./observation";
@@ -25,6 +26,7 @@ export function useDerived<T extends Record<string, () => any>>(
     const computedObserver = new Observer(() => {
       isDirty = true;
       signal.notify();
+
       if (INSPECTOR_ENABLED) {
         notifyInspectorRef.current?.notify({
           type: "computed",

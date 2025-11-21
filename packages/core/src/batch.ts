@@ -29,24 +29,8 @@ function flushAsyncQueue() {
   asyncQueue.length = 0;
 }
 
-function flushSyncQueue(queue: Array<QueuedCallback>) {
-  if (!queue.length) return;
-
-  // No snapshot, just iterate.
-  // New callbacks queued via nested syncBatch will create
-  // their own queue on the stack and flush independently.
-  for (let i = 0; i < queue.length; i++) {
-    const cb = queue[i];
-    queue[i] = undefined as any;
-    cb();
-    cb.__queued = false;
-  }
-  queue.length = 0;
-}
-
 export function queue(cb: QueuedCallback) {
-  // Optional: uncomment this if you want deduping:
-  // if (cb.__queued) return;
+  if (cb.__queued) return;
 
   cb.__queued = true;
 
@@ -76,7 +60,19 @@ export function syncBatch(cb: () => void) {
     throw e;
   }
 
-  // Pop the queue and flush it
+  // Keep flushing while queue has work.
+  // This handles cascading updates (e.g., derived signals notifying their observers).
+  // The queue stays on the stack so any new notifications get added to it.
+  while (queue.length > 0) {
+    for (let i = 0; i < queue.length; i++) {
+      const cb = queue[i];
+      queue[i] = undefined as any;
+      cb();
+      cb.__queued = false;
+    }
+    queue.length = 0;
+  }
+
+  // Pop the queue after everything is flushed
   syncQueueStack.pop();
-  flushSyncQueue(queue);
 }

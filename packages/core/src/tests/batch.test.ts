@@ -311,3 +311,225 @@ describe("syncBatch with nested async updates", () => {
     observer.dispose();
   });
 });
+
+describe("syncBatch with cascading updates", () => {
+  it("should handle cascading observer notifications within the same batch", () => {
+    const state = useState({ count: 0 });
+    const derived = useState({ doubled: 0 });
+    let stateNotifyCount = 0;
+    let derivedNotifyCount = 0;
+    let componentNotifyCount = 0;
+
+    // Observer 1: Watches state, updates derived (simulates useDerived)
+    const derivedObserver = new Observer(() => {
+      stateNotifyCount++;
+      // When state changes, update derived synchronously
+      derived.doubled = state.count * 2;
+    });
+
+    const dispose1 = derivedObserver.observe();
+    state.count; // Track state
+    dispose1();
+
+    // Observer 2: Watches derived (simulates component)
+    const componentObserver = new Observer(() => {
+      derivedNotifyCount++;
+    });
+
+    const dispose2 = componentObserver.observe();
+    derived.doubled; // Track derived
+    dispose2();
+
+    // Observer 3: Also watches derived (another component)
+    const component2Observer = new Observer(() => {
+      componentNotifyCount++;
+    });
+
+    const dispose3 = component2Observer.observe();
+    derived.doubled; // Track derived
+    dispose3();
+
+    // Make a change in a batch
+    syncBatch(() => {
+      state.count = 5;
+    });
+
+    // All observers should have been notified exactly once
+    expect(stateNotifyCount).toBe(1);
+    expect(derivedNotifyCount).toBe(1);
+    expect(componentNotifyCount).toBe(1);
+    expect(state.count).toBe(5);
+    expect(derived.doubled).toBe(10);
+
+    derivedObserver.dispose();
+    componentObserver.dispose();
+    component2Observer.dispose();
+  });
+
+  it("should handle multi-level cascading updates", () => {
+    const state = useState({ value: 0 });
+    const derived1 = useState({ level1: 0 });
+    const derived2 = useState({ level2: 0 });
+    const derived3 = useState({ level3: 0 });
+    const notifyCounts = [0, 0, 0, 0];
+
+    // Level 1: state -> derived1
+    const observer1 = new Observer(() => {
+      notifyCounts[0]++;
+      derived1.level1 = state.value + 1;
+    });
+    const dispose1 = observer1.observe();
+    state.value;
+    dispose1();
+
+    // Level 2: derived1 -> derived2
+    const observer2 = new Observer(() => {
+      notifyCounts[1]++;
+      derived2.level2 = derived1.level1 + 1;
+    });
+    const dispose2 = observer2.observe();
+    derived1.level1;
+    dispose2();
+
+    // Level 3: derived2 -> derived3
+    const observer3 = new Observer(() => {
+      notifyCounts[2]++;
+      derived3.level3 = derived2.level2 + 1;
+    });
+    const dispose3 = observer3.observe();
+    derived2.level2;
+    dispose3();
+
+    // Final observer: watches derived3
+    const observer4 = new Observer(() => {
+      notifyCounts[3]++;
+    });
+    const dispose4 = observer4.observe();
+    derived3.level3;
+    dispose4();
+
+    // Update state in a batch
+    syncBatch(() => {
+      state.value = 10;
+    });
+
+    // All levels should have cascaded and each observer notified exactly once
+    expect(notifyCounts).toEqual([1, 1, 1, 1]);
+    expect(state.value).toBe(10);
+    expect(derived1.level1).toBe(11);
+    expect(derived2.level2).toBe(12);
+    expect(derived3.level3).toBe(13);
+
+    observer1.dispose();
+    observer2.dispose();
+    observer3.dispose();
+    observer4.dispose();
+  });
+
+  it("should handle diamond dependency pattern", () => {
+    // Diamond: state -> [derived1, derived2] -> derived3
+    const state = useState({ value: 0 });
+    const derived1 = useState({ path1: 0 });
+    const derived2 = useState({ path2: 0 });
+    const derived3 = useState({ combined: 0 });
+    let derived3NotifyCount = 0;
+
+    // State -> derived1
+    const obs1 = new Observer(() => {
+      derived1.path1 = state.value * 2;
+    });
+    const d1 = obs1.observe();
+    state.value;
+    d1();
+
+    // State -> derived2
+    const obs2 = new Observer(() => {
+      derived2.path2 = state.value * 3;
+    });
+    const d2 = obs2.observe();
+    state.value;
+    d2();
+
+    // [derived1, derived2] -> derived3
+    const obs3 = new Observer(() => {
+      derived3.combined = derived1.path1 + derived2.path2;
+    });
+    const d3 = obs3.observe();
+    derived1.path1;
+    derived2.path2;
+    d3();
+
+    // Watch derived3
+    const obs4 = new Observer(() => {
+      derived3NotifyCount++;
+    });
+    const d4 = obs4.observe();
+    derived3.combined;
+    d4();
+
+    syncBatch(() => {
+      state.value = 5;
+    });
+
+    // derived3 should only be notified once despite two paths updating
+    expect(derived3NotifyCount).toBe(1);
+    expect(derived1.path1).toBe(10);
+    expect(derived2.path2).toBe(15);
+    expect(derived3.combined).toBe(25);
+
+    obs1.dispose();
+    obs2.dispose();
+    obs3.dispose();
+    obs4.dispose();
+  });
+
+  it("should not create infinite loops with circular dependencies", () => {
+    const state1 = useState({ value: 0 });
+    const state2 = useState({ value: 0 });
+    let notify1Count = 0;
+    let notify2Count = 0;
+
+    // Observer 1: watches state1, updates state2
+    const obs1 = new Observer(() => {
+      notify1Count++;
+      if (notify1Count > 10) {
+        throw new Error("Infinite loop detected");
+      }
+      // Only update if different to break the cycle
+      if (state2.value !== state1.value + 1) {
+        state2.value = state1.value + 1;
+      }
+    });
+    const d1 = obs1.observe();
+    state1.value;
+    d1();
+
+    // Observer 2: watches state2, updates state1
+    const obs2 = new Observer(() => {
+      notify2Count++;
+      if (notify2Count > 10) {
+        throw new Error("Infinite loop detected");
+      }
+      // Only update if different to break the cycle
+      if (state1.value !== state2.value - 1) {
+        state1.value = state2.value - 1;
+      }
+    });
+    const d2 = obs2.observe();
+    state2.value;
+    d2();
+
+    syncBatch(() => {
+      state1.value = 5;
+    });
+
+    // Should stabilize without infinite loop
+    expect(notify1Count).toBeLessThan(10);
+    expect(notify2Count).toBeLessThan(10);
+    expect(state1.value).toBe(5);
+    expect(state2.value).toBe(6);
+
+    obs1.dispose();
+    obs2.dispose();
+  });
+});

@@ -504,6 +504,7 @@ describe("useDerived", () => {
     let parentState!: { filter: string };
     let childComputed!: { currentFilter: string };
     let computeFn = vi.fn();
+    let renderCount = 0;
 
     function Child(props: { filter: string }) {
       computeFn.mockImplementation(() => props.filter || "all");
@@ -512,7 +513,10 @@ describe("useDerived", () => {
         currentFilter: computeFn,
       });
 
-      return () => <div>{childComputed.currentFilter}</div>;
+      return () => {
+        renderCount++;
+        return <div>{childComputed.currentFilter}</div>;
+      };
     }
 
     function Parent() {
@@ -524,7 +528,8 @@ describe("useDerived", () => {
     const container = document.createElement("div");
     render(<Parent />, container);
 
-    // Initial access
+    // Initial render
+    expect(renderCount).toBe(1);
     expect(childComputed.currentFilter).toBe("active");
     expect(computeFn).toHaveBeenCalledTimes(1);
 
@@ -532,7 +537,8 @@ describe("useDerived", () => {
     parentState.filter = "completed";
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // Should recompute with new prop value
+    // Should recompute with new prop value and child should only render once
+    expect(renderCount).toBe(2);
     expect(childComputed.currentFilter).toBe("completed");
     expect(computeFn).toHaveBeenCalledTimes(2);
 
@@ -540,6 +546,7 @@ describe("useDerived", () => {
     parentState.filter = "all";
     await new Promise((resolve) => setTimeout(resolve, 0));
 
+    expect(renderCount).toBe(3);
     expect(childComputed.currentFilter).toBe("all");
     expect(computeFn).toHaveBeenCalledTimes(3);
   });
