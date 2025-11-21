@@ -1,19 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { createContext, useContext } from "../createContext";
+import { createContext, useContext, useInjectContext } from "../createContext";
 import { render } from "../";
 
 describe("createContext", () => {
-  it("should create a context object", () => {
+  it("should create a context symbol", () => {
     const context = createContext<{ value: string }>();
-    expect(context).toHaveProperty("inject");
-    expect(context).toHaveProperty("get");
+    expect(typeof context).toBe("symbol");
   });
 
   it("should allow setting and getting context values", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     function Parent() {
-      useContext(ThemeContext, { theme: "dark" });
+      const inject = useInjectContext(ThemeContext);
+      inject({ theme: "dark" });
       return () => <Child />;
     }
 
@@ -36,7 +36,8 @@ describe("createContext", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     function GrandParent() {
-      useContext(ThemeContext, { theme: "light" });
+      const inject = useInjectContext(ThemeContext);
+      inject({ theme: "light" });
       return () => <Parent />;
     }
 
@@ -81,7 +82,8 @@ describe("createContext", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     expect(() => {
-      useContext(ThemeContext, { theme: "dark" });
+      const inject = useInjectContext(ThemeContext);
+      inject({ theme: "dark" });
     }).toThrow("You can not inject context outside component setup");
   });
 
@@ -97,7 +99,8 @@ describe("createContext", () => {
     const ThemeContext = createContext<{ theme: string }>();
 
     function GrandParent() {
-      useContext(ThemeContext, { theme: "light" });
+      const inject = useInjectContext(ThemeContext);
+      inject({ theme: "light" });
       return () => (
         <div>
           <Parent />
@@ -107,7 +110,8 @@ describe("createContext", () => {
     }
 
     function Parent() {
-      useContext(ThemeContext, { theme: "dark" });
+      const inject = useInjectContext(ThemeContext);
+      inject({ theme: "dark" });
       return () => <ChildOfParent />;
     }
 
@@ -140,8 +144,10 @@ describe("createContext", () => {
     const UserContext = createContext<{ name: string }>();
 
     function Parent() {
-      useContext(ThemeContext, { theme: "dark" });
-      useContext(UserContext, { name: "Alice" });
+      const injectTheme = useInjectContext(ThemeContext);
+      const injectUser = useInjectContext(UserContext);
+      injectTheme({ theme: "dark" });
+      injectUser({ name: "Alice" });
       return () => <Child />;
     }
 
@@ -166,8 +172,10 @@ describe("createContext", () => {
     const ArrayContext = createContext<string[]>();
 
     function Parent() {
-      useContext(NumberContext, 42);
-      useContext(ArrayContext, ["a", "b", "c"]);
+      const injectNumber = useInjectContext(NumberContext);
+      const injectArray = useInjectContext(ArrayContext);
+      injectNumber(42);
+      injectArray(["a", "b", "c"]);
       return () => <Child />;
     }
 

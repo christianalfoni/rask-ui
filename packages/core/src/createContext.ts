@@ -25,57 +25,44 @@
 
 import { getCurrentComponent } from "./component";
 
-export type Context<T> = {
-  inject(value: T): void;
-  get(): T;
+declare const Type: unique symbol;
+
+export type Context<T> = symbol & {
+  readonly [Type]: T;
 };
 
-export function createContext<T>(): Context<T> {
-  const context = {
-    inject(value: T) {
-      const currentComponent = getCurrentComponent();
-
-      if (!currentComponent) {
-        throw new Error("You can not inject context outside component setup");
-      }
-
-      currentComponent.contexts.set(context, value);
-    },
-    get(): T {
-      let currentComponent = getCurrentComponent();
-
-      if (!currentComponent) {
-        throw new Error("You can not get context outside component setup");
-      }
-
-      if (typeof (currentComponent.context as any).getContext !== "function") {
-        throw new Error("There is no parent context");
-      }
-
-      const contextValue = (currentComponent.context as any).getContext(
-        context
-      );
-
-      if (!contextValue) {
-        throw new Error(
-          "There is a parent context, but not the one you are using"
-        );
-      }
-
-      return contextValue;
-    },
-  };
-
-  return context;
+export function createContext<T>() {
+  return Symbol() as Context<T>;
 }
 
-export function useContext<T>(context: Context<T>, value: T): void;
-export function useContext<T>(context: Context<T>): T;
-export function useContext<T>(context: Context<T>, value?: T) {
-  if (value) {
-    context.inject(value);
-    return;
+export function useContext<T>(context: Context<T>): T {
+  let currentComponent = getCurrentComponent();
+
+  if (!currentComponent) {
+    throw new Error("You can not get context outside component setup");
   }
 
-  return context.get();
+  if (typeof (currentComponent.context as any).getContext !== "function") {
+    throw new Error("There is no parent context");
+  }
+
+  const contextValue = (currentComponent.context as any).getContext(context);
+
+  if (!contextValue) {
+    throw new Error("There is a parent context, but not the one you are using");
+  }
+
+  return contextValue;
+}
+
+export function useInjectContext<T>(context: Context<T>) {
+  return (value: T) => {
+    const currentComponent = getCurrentComponent();
+
+    if (!currentComponent) {
+      throw new Error("You can not inject context outside component setup");
+    }
+
+    currentComponent.contexts.set(context, value);
+  };
 }

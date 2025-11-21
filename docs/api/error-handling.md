@@ -256,7 +256,8 @@ function ErrorProvider(props) {
     state.error = error;
   };
 
-  ErrorContext.inject(useView(state, { setError }));
+  const inject = useInjectContext(ErrorContext);
+  inject(useView(state, { setError }));
 
   return () => props.children;
 }

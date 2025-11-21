@@ -168,8 +168,9 @@ const MyContext = createContext();
 
 function Component() {
   // Context
-  MyContext.inject(value); // inject
-  const context = useContext(MyContext); // get
+  const inject = useInjectContext(MyContext);
+  inject(value);
+  const context = useContext(MyContext);
 
   // Reactivity
   const state = useState({});
@@ -207,7 +208,8 @@ export const CounterContext = createContext();
 function App() {
   const counter = createCounter();
 
-  CounterContext.inject(counter);
+  const inject = useInjectContext(CounterContext);
+  inject(counter);
 
   return () => <div />;
 }

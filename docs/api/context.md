@@ -4,29 +4,30 @@ Functions for sharing data through the component tree without props.
 
 ## createContext()
 
-Creates a context object for passing data through the component tree without prop drilling.
+Creates a context symbol for passing data through the component tree without prop drilling.
 
 ```tsx
-createContext<T>(defaultValue?: T): Context<T>
+createContext<T>(): Context<T>
 ```
 
-### Parameters
+### Type Parameters
 
-- `defaultValue?: T` - Optional default value if context is not found in parent chain
+- `T` - The type of value this context will hold
 
 ### Returns
 
-Context object with `inject` and `get` methods
+A `Context<T>` symbol that can be used with `useContext()` and `useInjectContext()`
 
 ### Example
 
 ```tsx
-import { createContext } from "rask-ui";
+import { createContext, useContext, useInjectContext } from "rask-ui";
 
 const ThemeContext = createContext<{ color: string }>();
 
 function App() {
-  ThemeContext.inject({ color: "blue" });
+  const inject = useInjectContext(ThemeContext);
+  inject({ color: "blue" });
 
   return () => <Child />;
 }
@@ -38,27 +39,30 @@ function Child() {
 }
 ```
 
-## Context Methods
+## useInjectContext()
 
-### inject()
-
-Injects context value for child components.
+Returns a function to inject a context value that will be available to all child components.
 
 ```tsx
-context.inject(value: T): void
+useInjectContext<T>(context: Context<T>): (value: T) => void
 ```
 
-#### Parameters
+### Parameters
 
-- `value: T` - The value to provide to child components
+- `context: Context<T>` - The context symbol created by `createContext()`
 
-#### Example
+### Returns
+
+An inject function that takes a value and makes it available to child components
+
+### Example
 
 ```tsx
 function App() {
   const ThemeContext = createContext<Theme>();
+  const inject = useInjectContext(ThemeContext);
 
-  ThemeContext.inject({
+  inject({
     color: "blue",
     fontSize: 16,
   });
@@ -67,7 +71,7 @@ function App() {
 }
 ```
 
-#### Notes
+### Notes
 
 - Must be called during component setup phase
 - Value is available to all child components in the tree
@@ -75,19 +79,23 @@ function App() {
 
 ---
 
-### get()
+## useContext()
 
-Gets context value from nearest parent.
+Gets context value from nearest parent component that injected a value for this context.
 
 ```tsx
-context.get(): T
+useContext<T>(context: Context<T>): T
 ```
 
-#### Returns
+### Parameters
 
-The context value from the nearest parent that called `inject()`
+- `context: Context<T>` - The context symbol created by `createContext()`
 
-#### Example
+### Returns
+
+The context value from the nearest parent that called the inject function
+
+### Example
 
 ```tsx
 function Child() {
@@ -101,7 +109,7 @@ function Child() {
 }
 ```
 
-#### Notes
+### Notes
 
 - Must be called during component setup phase
 - Throws error if context not found in parent chain
@@ -110,7 +118,13 @@ function Child() {
 ## Complete Example
 
 ```tsx
-import { createContext, createState } from "rask-ui";
+import {
+  createContext,
+  useContext,
+  useInjectContext,
+  useState,
+  useView,
+} from "rask-ui";
 
 interface AuthContext {
   user: { name: string; email: string } | null;
@@ -144,7 +158,8 @@ function AuthProvider(props) {
 
   const auth = useView(state, { login, logout });
 
-  AuthContext.inject(auth);
+  const inject = useInjectContext(AuthContext);
+  inject(auth);
 
   return () => props.children;
 }
@@ -191,7 +206,8 @@ interface Theme {
 const ThemeContext = createContext<Theme>();
 
 function Provider() {
-  ThemeContext.inject({
+  const inject = useInjectContext(ThemeContext);
+  inject({
     color: "blue",
     fontSize: 16,
     spacing: 8,
@@ -225,9 +241,13 @@ const AuthContext = createContext<Auth>();
 const I18nContext = createContext<I18n>();
 
 function App() {
-  ThemeContext.inject({ color: "blue" });
-  AuthContext.inject({ user: null });
-  I18nContext.inject({ locale: "en" });
+  const injectTheme = useInjectContext(ThemeContext);
+  const injectAuth = useInjectContext(AuthContext);
+  const injectI18n = useInjectContext(I18nContext);
+
+  injectTheme({ color: "blue" });
+  injectAuth({ user: null });
+  injectI18n({ locale: "en" });
 
   return () => <Content />;
 }
@@ -251,7 +271,8 @@ Child contexts override parent contexts:
 
 ```tsx
 function App() {
-  ThemeContext.inject({ color: "blue" });
+  const inject = useInjectContext(ThemeContext);
+  inject({ color: "blue" });
 
   return () => (
     <div>
@@ -262,7 +283,8 @@ function App() {
 }
 
 function Sidebar() {
-  ThemeContext.inject({ color: "red" }); // Override
+  const inject = useInjectContext(ThemeContext);
+  inject({ color: "red" }); // Override
 
   return () => <Content />; {/* Uses red */}
 }

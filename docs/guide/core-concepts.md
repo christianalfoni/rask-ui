@@ -269,7 +269,8 @@ Share state without prop drilling:
 const ThemeContext = createContext<{ color: string }>();
 
 function App() {
-  ThemeContext.inject({ color: "blue" });
+  const inject = useInjectContext(ThemeContext);
+  inject({ color: "blue" });
 
   return () => <Child />;
 }

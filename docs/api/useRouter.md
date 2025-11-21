@@ -224,7 +224,8 @@ const RouterContext = createContext<Router<typeof routes>>();
 
 function App() {
   const router = useRouter(routes);
-  RouterContext.inject(router);
+  const inject = useInjectContext(RouterContext);
+  inject(router);
 
   return () => <Content />;
 }

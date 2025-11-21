@@ -5,11 +5,11 @@ export {
   RaskStatefulComponent,
   RaskStatelessComponent,
 } from "./component";
-export { createContext, useContext } from "./createContext";
+export { createContext, useContext, useInjectContext } from "./createContext";
 export { useState, assignState } from "./useState";
 export { useAsync, Async } from "./useAsync";
 export { ErrorBoundary } from "./error";
-export { createRef as useRef } from "inferno";
+export { useRef } from "./useRef";
 export { useView } from "./useView";
 export { useEffect } from "./useEffect";
 export { useComputed } from "./useComputed";

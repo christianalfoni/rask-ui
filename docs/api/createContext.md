@@ -1,47 +1,68 @@
-# createContext() and useContext()
+# createContext(), useContext(), and useInjectContext()
 
-Creates a context object for passing data through the component tree without prop drilling.
+Creates a context symbol for passing data through the component tree without prop drilling.
 
 ## createContext()
 
 ```tsx
-const Context = createContext()
+const Context = createContext<T>();
 ```
 
-Returns a context object with `inject` and `get` methods.
+Creates and returns a unique symbol that serves as a context identifier.
+
+### Type Parameters
+
+- `T` - The type of value this context will hold
+
+### Returns
+
+Returns a `Context<T>` symbol that can be used with `useContext()` and `useInjectContext()`
 
 ## useContext()
 
-A utility function that can both inject and get context values. Provides a simpler API than calling `context.inject()` or `context.get()` directly.
+Gets context value from the nearest parent component that injected a value for this context.
 
 ```tsx
-// Inject mode
-useContext(Context, value)
-
-// Get mode
-const value = useContext(Context)
+const value = useContext(Context);
 ```
 
 ### Parameters
 
-- `context` - The context object created by `createContext()`
-- `value` (optional) - Value to inject. If provided, acts as inject; if omitted, acts as get
+- `context` - The context symbol created by `createContext()`
 
 ### Returns
 
-When called without a value (get mode), returns the context value from the nearest parent
+Returns the context value from the nearest parent that called the inject function from `useInjectContext()`
+
+## useInjectContext()
+
+Returns a function to inject a context value that will be available to all child components.
+
+```tsx
+const inject = useInjectContext(Context);
+inject(value);
+```
+
+### Parameters
+
+- `context` - The context symbol created by `createContext()`
+
+### Returns
+
+Returns an inject function that takes a value and makes it available to child components
 
 ## Examples
 
-### Using useContext (Recommended)
+### Basic Usage
 
 ```tsx
-import { createContext, useContext } from "rask-ui";
+import { createContext, useContext, useInjectContext } from "rask-ui";
 
 const ThemeContext = createContext<{ color: string }>();
 
 function App() {
-  useContext(ThemeContext, { color: "blue" });
+  const inject = useInjectContext(ThemeContext);
+  inject({ color: "blue" });
 
   return () => <Child />;
 }
@@ -52,94 +73,17 @@ function Child() {
   return () => <div style={{ color: theme.color }}>Themed text</div>;
 }
 ```
-
-### Using inject/get (Alternative)
-
-```tsx
-import { createContext } from "rask-ui";
-
-const ThemeContext = createContext<{ color: string }>();
-
-function App() {
-  ThemeContext.inject({ color: "blue" });
-
-  return () => <Child />;
-}
-
-function Child() {
-  const theme = useContext(ThemeContext);
-
-  return () => <div style={{ color: theme.color }}>Themed text</div>;
-}
-```
-
-## Context Methods
-
-### inject()
-
-Injects context value for child components.
-
-```tsx
-context.inject(value: T): void
-```
-
-**Parameters:**
-- `value: T` - The value to provide to child components
-
-**Example:**
-
-```tsx
-function App() {
-  const ThemeContext = createContext<Theme>();
-
-  ThemeContext.inject({
-    color: "blue",
-    fontSize: 16,
-  });
-
-  return () => <Content />;
-}
-```
-
-**Notes:**
-- Must be called during component setup phase
-- Value is available to all child components in the tree
-- Child contexts can override parent contexts
-
-### get()
-
-Gets context value from nearest parent.
-
-```tsx
-context.get(): T
-```
-
-**Returns:**
-The context value from the nearest parent that called `inject()`
-
-**Example:**
-
-```tsx
-function Child() {
-  const theme = useContext(ThemeContext);
-
-  return () => (
-    <div style={{ color: theme.color }}>
-      Themed content
-    </div>
-  );
-}
-```
-
-**Notes:**
-- Must be called during component setup phase
-- Throws error if context not found in parent chain
-- Returns the value from the nearest parent context
 
 ## Complete Example
 
 ```tsx
-import { createContext, useContext, useState, useView } from "rask-ui";
+import {
+  createContext,
+  useContext,
+  useInjectContext,
+  useState,
+  useView,
+} from "rask-ui";
 
 interface AuthContext {
   user: { name: string; email: string } | null;
@@ -173,7 +117,8 @@ function AuthProvider(props) {
 
   const auth = useView(state, { login, logout });
 
-  useContext(AuthContext, auth);
+  const inject = useInjectContext(AuthContext);
+  inject(auth);
 
   return () => props.children;
 }
@@ -209,14 +154,16 @@ function App() {
 ## Notes
 
 ::: warning Important
+
 - Context traversal happens via component tree (parent-child relationships)
 - Must be called during component setup phase
 - Throws error if context not found
 - **Do not destructure** context values - breaks reactivity
-:::
+  :::
 
 ::: tip Best Practice
 Use context for:
+
 - Theme configuration
 - Authentication state
 - Localization
@@ -224,6 +171,7 @@ Use context for:
 - Feature flags
 
 Avoid context for:
+
 - Frequently changing data (use props instead)
 - Data that only a few components need (use props instead)
-:::
+  :::
