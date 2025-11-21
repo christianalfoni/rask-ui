@@ -59,7 +59,7 @@ render(<Counter />, document.getElementById("app")!);
 
 - **Reactive Hooks**: Component-bound reactive primitives like `useState()`, `useEffect()`, `useComputed()`
 - **Lifecycle Hooks**: `useMountEffect()`, `useCleanup()`
-- **Context API**: Share state without prop drilling with `createContext()` and `useContext()`
+- **Context API**: Share state without prop drilling with `createContext()` and related hooks
 - **Async Operations**: Built-in `useAsync()` for managing async operations
 - **Error Boundaries**: Catch and handle errors gracefully
 - **Automatic Batching**: State updates batched automatically
@@ -71,4 +71,4 @@ render(<Counter />, document.getElementById("app")!);
 npm create rask-ui
 ```
 
-Then configure your build tool with the RASK plugin. [Learn more →](/guide/getting-started)
+[Learn more →](/guide/getting-started)

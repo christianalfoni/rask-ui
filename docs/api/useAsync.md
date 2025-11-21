@@ -24,30 +24,6 @@ const [state, run] = useAsync(initialValue, async (params, signal) => {
 });
 ```
 
-## Parameters
-
-- `initialValue` (optional) - Initial value to use before first successful result
-- `fn` - Async function that receives:
-  - `params` - Parameters passed to the run function
-  - `signal` - AbortSignal for cancellation detection
-
-The `signal` parameter can be used to:
-
-- Pass to fetch requests to cancel network calls when the operation is aborted
-- Detect if the operation was cancelled/rerun after async operations complete
-- Implement custom state management by checking `signal.aborted`
-
-## Returns
-
-Returns a tuple `[state, run]`:
-
-- `state` - Reactive state object with:
-  - `isPending` - True while operation is executing
-  - `value` - Result value or initial value
-  - `error` - Error message from failed execution (null if no error)
-  - `params` - Current parameters while running (null when idle)
-- `run` - Function to execute the async operation
-
 ## Basic Example - Data Fetching
 
 ```tsx

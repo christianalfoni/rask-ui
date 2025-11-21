@@ -6,17 +6,9 @@ Creates an object bound to the component with computed properties that automatic
 const computed = useComputed({
   propertyName: () => {
     // compute value
-  }
-})
+  },
+});
 ```
-
-## Parameters
-
-- `computed` - Object where each property is a function returning a computed value
-
-## Returns
-
-Reactive object with cached computed properties
 
 ## Example
 
@@ -53,7 +45,9 @@ function ShoppingCart() {
       <div>
         <p>Subtotal: ${computed.subtotal.toFixed(2)}</p>
         <p>Tax: ${computed.tax.toFixed(2)}</p>
-        <p><strong>Total: ${computed.total.toFixed(2)}</strong></p>
+        <p>
+          <strong>Total: ${computed.total.toFixed(2)}</strong>
+        </p>
       </div>
     </div>
   );
@@ -84,8 +78,9 @@ Access computed properties directly (not as functions):
 ## Notes
 
 ::: warning Important
+
 - Access properties directly, don't call as functions
 - Computed properties are getters, not functions
 - **Do not destructure** - Breaks reactivity
 - Only call during component setup phase
-:::
+  :::

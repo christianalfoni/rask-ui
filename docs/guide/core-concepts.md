@@ -96,8 +96,6 @@ function Parent() {
 
 **RASK has observable primitives**: Never destructure reactive objects (state, props, context values, tasks). Destructuring extracts plain values and breaks reactivity.
 
-### Why This Happens
-
 Reactive objects are implemented using JavaScript Proxies. When you access a property during render (e.g., `state.count`), the proxy tracks that dependency. But when you destructure (`const { count } = state`), the destructuring happens during setup—before any tracking context exists. You get a plain value instead of a tracked property access.
 
 **This applies to:**
@@ -113,43 +111,8 @@ Reactive objects are implemented using JavaScript Proxies. When you access a pro
 
 RASK automatically batches state updates to minimize re-renders.
 
-### How It Works
-
 - **User interactions** (clicks, inputs, keyboard, etc.) - State changes are batched and flushed synchronously at the end of the event
 - **Other updates** (setTimeout, fetch callbacks, etc.) - State changes are batched and flushed on the next microtask
-
-```tsx
-function BatchingExample() {
-  const state = useState({ count: 0, clicks: 0 });
-
-  const handleClick = () => {
-    // All three updates are batched into a single render
-    state.count++;
-    state.clicks++;
-    state.count++;
-    // UI updates once with count=2, clicks=1
-  };
-
-  const handleAsync = () => {
-    setTimeout(() => {
-      // These updates are also batched (async batch)
-      state.count++;
-      state.clicks++;
-      // UI updates once on next microtask
-    }, 100);
-  };
-
-  return () => (
-    <div>
-      <p>
-        Count: {state.count}, Clicks: {state.clicks}
-      </p>
-      <button onClick={handleClick}>Sync Update</button>
-      <button onClick={handleAsync}>Async Update</button>
-    </div>
-  );
-}
-```
 
 ## Effects
 
@@ -269,8 +232,9 @@ Share state without prop drilling:
 const ThemeContext = createContext<{ color: string }>();
 
 function App() {
-  const inject = useInjectContext(ThemeContext);
-  inject({ color: "blue" });
+  const injectTheme = useInjectContext(ThemeContext);
+
+  injectTheme({ color: "blue" });
 
   return () => <Child />;
 }

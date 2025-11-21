@@ -499,4 +499,48 @@ describe("createComputed", () => {
 
     observer.dispose();
   });
+
+  it("should recompute when parent props change", async () => {
+    let parentState!: { filter: string };
+    let childComputed!: { currentFilter: string };
+    let computeFn = vi.fn();
+
+    function Child(props: { filter: string }) {
+      computeFn.mockImplementation(() => props.filter || "all");
+
+      childComputed = useComputed({
+        currentFilter: computeFn,
+      });
+
+      return () => <div>{childComputed.currentFilter}</div>;
+    }
+
+    function Parent() {
+      parentState = useState({ filter: "active" });
+
+      return () => <Child filter={parentState.filter} />;
+    }
+
+    const container = document.createElement("div");
+    render(<Parent />, container);
+
+    // Initial access
+    expect(childComputed.currentFilter).toBe("active");
+    expect(computeFn).toHaveBeenCalledTimes(1);
+
+    // Change parent prop
+    parentState.filter = "completed";
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Should recompute with new prop value
+    expect(childComputed.currentFilter).toBe("completed");
+    expect(computeFn).toHaveBeenCalledTimes(2);
+
+    // Change again
+    parentState.filter = "all";
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(childComputed.currentFilter).toBe("all");
+    expect(computeFn).toHaveBeenCalledTimes(3);
+  });
 });

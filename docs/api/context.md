@@ -7,16 +7,10 @@ Functions for sharing data through the component tree without props.
 Creates a context symbol for passing data through the component tree without prop drilling.
 
 ```tsx
-createContext<T>(): Context<T>
+const Context = createContext();
 ```
 
-### Type Parameters
-
-- `T` - The type of value this context will hold
-
-### Returns
-
-A `Context<T>` symbol that can be used with `useContext()` and `useInjectContext()`
+Return a symbol that can be used with `useContext()` and `useInjectContext()`
 
 ### Example
 
@@ -26,8 +20,9 @@ import { createContext, useContext, useInjectContext } from "rask-ui";
 const ThemeContext = createContext<{ color: string }>();
 
 function App() {
-  const inject = useInjectContext(ThemeContext);
-  inject({ color: "blue" });
+  const injectTheme = useInjectContext(ThemeContext);
+
+  injectTheme({ color: "blue" });
 
   return () => <Child />;
 }
@@ -41,19 +36,11 @@ function Child() {
 
 ## useInjectContext()
 
-Returns a function to inject a context value that will be available to all child components.
+Returns a function to inject a context value that will be available to current component and all child components.
 
 ```tsx
-useInjectContext<T>(context: Context<T>): (value: T) => void
+const inject = useInjectContext(Context);
 ```
-
-### Parameters
-
-- `context: Context<T>` - The context symbol created by `createContext()`
-
-### Returns
-
-An inject function that takes a value and makes it available to child components
 
 ### Example
 
@@ -84,16 +71,8 @@ function App() {
 Gets context value from nearest parent component that injected a value for this context.
 
 ```tsx
-useContext<T>(context: Context<T>): T
+const context = useContext(Context);
 ```
-
-### Parameters
-
-- `context: Context<T>` - The context symbol created by `createContext()`
-
-### Returns
-
-The context value from the nearest parent that called the inject function
 
 ### Example
 
@@ -101,11 +80,7 @@ The context value from the nearest parent that called the inject function
 function Child() {
   const theme = useContext(ThemeContext);
 
-  return () => (
-    <div style={{ color: theme.color }}>
-      Themed content
-    </div>
-  );
+  return () => <div style={{ color: theme.color }}>Themed content</div>;
 }
 ```
 
@@ -135,7 +110,27 @@ interface AuthContext {
 
 const AuthContext = createContext<AuthContext>();
 
-function AuthProvider(props) {
+function LoginButton() {
+  const auth = useContext(AuthContext);
+
+  return () => (
+    <div>
+      {auth.isAuthenticated ? (
+        <div>
+          <span>Welcome, {auth.user.name}!</span>
+          <button onClick={auth.logout}>Logout</button>
+        </div>
+      ) : (
+        <button onClick={() => auth.login("user@example.com", "password")}>
+          Login
+        </button>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const injectAuth = useInjectContext(AuthContext);
   const state = useState({
     user: null,
     isAuthenticated: false,
@@ -158,37 +153,9 @@ function AuthProvider(props) {
 
   const auth = useView(state, { login, logout });
 
-  const inject = useInjectContext(AuthContext);
-  inject(auth);
+  injectAuth(auth);
 
-  return () => props.children;
-}
-
-function LoginButton() {
-  const auth = useContext(AuthContext);
-
-  return () => (
-    <div>
-      {auth.isAuthenticated ? (
-        <div>
-          <span>Welcome, {auth.user.name}!</span>
-          <button onClick={auth.logout}>Logout</button>
-        </div>
-      ) : (
-        <button onClick={() => auth.login("user@example.com", "password")}>
-          Login
-        </button>
-      )}
-    </div>
-  );
-}
-
-function App() {
-  return () => (
-    <AuthProvider>
-      <LoginButton />
-    </AuthProvider>
-  );
+  return () => <LoginButton />;
 }
 ```
 
@@ -206,8 +173,9 @@ interface Theme {
 const ThemeContext = createContext<Theme>();
 
 function Provider() {
-  const inject = useInjectContext(ThemeContext);
-  inject({
+  const injectTheme = useInjectContext(ThemeContext);
+
+  injectTheme({
     color: "blue",
     fontSize: 16,
     spacing: 8,
@@ -220,11 +188,13 @@ function Child() {
   const theme = useContext(ThemeContext); // Type is Theme
 
   return () => (
-    <div style={{
-      color: theme.color,
-      fontSize: theme.fontSize,
-      padding: theme.spacing,
-    }}>
+    <div
+      style={{
+        color: theme.color,
+        fontSize: theme.fontSize,
+        padding: theme.spacing,
+      }}
+    >
       Content
     </div>
   );
@@ -271,8 +241,9 @@ Child contexts override parent contexts:
 
 ```tsx
 function App() {
-  const inject = useInjectContext(ThemeContext);
-  inject({ color: "blue" });
+  const injectTheme = useInjectContext(ThemeContext);
+
+  injectTheme({ color: "blue" });
 
   return () => (
     <div>
@@ -283,24 +254,30 @@ function App() {
 }
 
 function Sidebar() {
-  const inject = useInjectContext(ThemeContext);
-  inject({ color: "red" }); // Override
+  const injectTheme = useInjectContext(ThemeContext);
 
-  return () => <Content />; {/* Uses red */}
+  injectTheme({ color: "red" }); // Override
+
+  return () => <Content />;
+  {
+    /* Uses red */
+  }
 }
 ```
 
 ## Notes
 
 ::: warning Important
+
 - Context traversal happens via component tree (parent-child relationships)
 - Must be called during component setup phase
 - Throws error if context not found
 - **Do not destructure** context values - breaks reactivity
-:::
+  :::
 
 ::: tip Best Practice
 Use context for:
+
 - Theme configuration
 - Authentication state
 - Localization
@@ -308,6 +285,7 @@ Use context for:
 - Feature flags
 
 Avoid context for:
+
 - Frequently changing data (use props instead)
 - Data that only a few components need (use props instead)
-:::
+  :::

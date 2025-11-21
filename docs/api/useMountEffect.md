@@ -7,13 +7,9 @@ useMountEffect(() => {
   // run after mount
   return () => {
     // optional cleanup
-  }
-})
+  };
+});
 ```
-
-## Parameters
-
-- `callback` - Function to call on mount. Can optionally return a cleanup function.
 
 ## Example
 
@@ -68,7 +64,8 @@ function Timer() {
 ## Notes
 
 ::: warning Important
+
 - Only call during component setup phase (not in render function)
 - Can be called multiple times to register multiple callbacks
 - Cleanup function is optional
-:::
+  :::

@@ -32,11 +32,17 @@
   --vp-c-brand-3: #0ea5e9; /* sky-500 */
   --vp-c-brand-soft: rgba(2, 132, 199, 0.14);
 
-  /* Warning/Tip Colors - Amber (warmer, more appealing than yellow) */
-  --vp-c-warning-1: #f59e0b; /* amber-500 */
-  --vp-c-warning-2: #d97706; /* amber-600 */
-  --vp-c-warning-3: #b45309; /* amber-700 */
-  --vp-c-warning-soft: rgba(245, 158, 11, 0.14);
+  /* Warning Colors - Yellow */
+  --vp-c-warning-1: #eab308; /* yellow-500 */
+  --vp-c-warning-2: #ca8a04; /* yellow-600 */
+  --vp-c-warning-3: #a16207; /* yellow-700 */
+  --vp-c-warning-soft: rgba(234, 179, 8, 0.14);
+
+  /* Tip Colors - Blue */
+  --vp-c-tip-1: #3b82f6; /* blue-500 */
+  --vp-c-tip-2: #2563eb; /* blue-600 */
+  --vp-c-tip-3: #1d4ed8; /* blue-700 */
+  --vp-c-tip-soft: rgba(59, 130, 246, 0.14);
 
   /* Code Colors */
   --vp-c-code-bg: #f3f4f6;
@@ -71,11 +77,17 @@
   --vp-c-brand-3: #7dd3fc; /* sky-300 */
   --vp-c-brand-soft: rgba(14, 165, 233, 0.16);
 
-  /* Warning/Tip Colors - Dark Mode - Amber */
-  --vp-c-warning-1: #fbbf24; /* amber-400 */
-  --vp-c-warning-2: #f59e0b; /* amber-500 */
-  --vp-c-warning-3: #d97706; /* amber-600 */
-  --vp-c-warning-soft: rgba(251, 191, 36, 0.16);
+  /* Warning Colors - Dark Mode - Yellow */
+  --vp-c-warning-1: #facc15; /* yellow-400 */
+  --vp-c-warning-2: #eab308; /* yellow-500 */
+  --vp-c-warning-3: #ca8a04; /* yellow-600 */
+  --vp-c-warning-soft: rgba(250, 204, 21, 0.16);
+
+  /* Tip Colors - Dark Mode - Blue */
+  --vp-c-tip-1: #60a5fa; /* blue-400 */
+  --vp-c-tip-2: #3b82f6; /* blue-500 */
+  --vp-c-tip-3: #2563eb; /* blue-600 */
+  --vp-c-tip-soft: rgba(96, 165, 250, 0.16);
 
   /* Code Colors - Dark Mode */
   --vp-c-code-bg: #1f2937;
@@ -418,6 +430,31 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Remove border-bottom from navbar title link */
+.VPNavBar .title {
+  border-bottom: none !important;
+}
+
+/* Remove border-bottom from local nav */
+.VPLocalNav.has-sidebar {
+  border-bottom: none !important;
+}
+
+/* Hide navbar divider */
+.VPNavBar .divider {
+  display: none !important;
+}
+
+/* Remove border-bottom from navbar when it has sidebar */
+.VPNavBar.has-sidebar {
+  border-bottom: none !important;
+}
+
+/* Remove border-bottom from navbar on home page */
+.VPNavBar.home {
+  border-bottom: none !important;
+}
+
 /* ============================================
    SPACING ADJUSTMENTS
    ============================================ */
@@ -486,16 +523,16 @@
 }
 
 .vp-doc .custom-block.warning .custom-block-title {
-  color: var(--vp-c-warning-2);
+  /* Inherit default text color instead of warning color */
 }
 
 .vp-doc .custom-block.tip {
-  border-color: var(--vp-c-warning-1);
-  background-color: var(--vp-c-warning-soft);
+  border-color: var(--vp-c-tip-1);
+  background-color: var(--vp-c-tip-soft);
 }
 
 .vp-doc .custom-block.tip .custom-block-title {
-  color: var(--vp-c-warning-2);
+  /* Inherit default text color instead of tip color */
 }
 
 /* VitePress native custom blocks */
@@ -504,5 +541,5 @@
 }
 
 .vp-doc div[class*="tip"] {
-  border-color: var(--vp-c-warning-1);
+  border-color: var(--vp-c-tip-1);
 }

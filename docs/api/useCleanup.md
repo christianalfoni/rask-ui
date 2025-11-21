@@ -3,14 +3,8 @@
 Registers a callback to run when the component is unmounted.
 
 ```tsx
-useCleanup(() => {
-  // cleanup code
-})
+useCleanup(callback);
 ```
-
-## Parameters
-
-- `callback` - Function to call on cleanup
 
 ## Example
 
@@ -77,7 +71,8 @@ function Example() {
 ## Notes
 
 ::: warning Important
+
 - Only call during component setup phase
 - Can be called multiple times
 - All cleanups run when component unmounts
-:::
+  :::

@@ -7,13 +7,9 @@ useEffect(() => {
   // effect code
   return () => {
     // optional cleanup
-  }
-})
+  };
+});
 ```
-
-## Parameters
-
-- `callback` - Function to run when dependencies change. Can optionally return a cleanup function that runs before the effect executes again
 
 ## Examples
 
@@ -71,10 +67,7 @@ function LiveData() {
 
   return () => (
     <div>
-      <input
-        value={state.url}
-        onInput={(e) => state.url = e.target.value}
-      />
+      <input value={state.url} onInput={(e) => (state.url = e.target.value)} />
       <pre>{JSON.stringify(state.data, null, 2)}</pre>
     </div>
   );
@@ -102,9 +95,10 @@ function LiveData() {
 ## Notes
 
 ::: warning Important
+
 - Only call during component setup phase (not in render function)
 - Effect runs synchronously during setup, making it predictable and easier to reason about
 - Be careful with effects that modify state - can cause infinite loops
 - Dispose functions run before the effect re-executes, not when the component unmounts
 - For component unmount cleanup, use `useCleanup()` instead
-:::
+  :::

@@ -3,15 +3,8 @@
 Component that catches errors from child components during render.
 
 ```tsx
-<ErrorBoundary error={(error) => JSX}>
-  {children}
-</ErrorBoundary>
+<ErrorBoundary error={(error) => <div />}>{children}</ErrorBoundary>
 ```
-
-## Props
-
-- `error: (error: unknown) => ChildNode | ChildNode[]` - Render function for error state
-- `children: ChildNode` - Child components to protect
 
 ## Example
 

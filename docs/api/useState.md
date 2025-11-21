@@ -3,16 +3,8 @@
 Creates a reactive state object bound to the component. Any property access during render is tracked, and changes trigger re-renders.
 
 ```tsx
-const state = useState(initialState)
+const state = useState(initialState);
 ```
-
-## Parameters
-
-- `initialState` - Initial state object
-
-## Returns
-
-Reactive proxy of the state object
 
 ## Example
 
@@ -52,8 +44,9 @@ Never destructure state objects - it breaks reactivity:
 const { count } = state;
 
 // ✅ Good
-state.count
+state.count;
 ```
+
 :::
 
 ## Related
@@ -67,10 +60,12 @@ assignState<T>(state: T, newState: T): T
 ```
 
 **Parameters:**
+
 - `state: T` - The reactive state object to update
 - `newState: T` - Object with properties to merge into the state
 
 **Returns:**
+
 - `T` - The updated state object (same reference as input state)
 
 **Example:**
@@ -86,7 +81,7 @@ function UserProfile() {
   });
 
   const loadProfile = async () => {
-    const profile = await fetch("/api/profile").then(r => r.json());
+    const profile = await fetch("/api/profile").then((r) => r.json());
     return assignState(state, profile);
   };
 
@@ -102,6 +97,7 @@ function UserProfile() {
 ```
 
 **Notes:**
+
 - Equivalent to `Object.assign(state, newState)` - returns the state for chaining
 - Triggers reactivity for all updated properties
 - Useful for bulk state updates from form data or API responses

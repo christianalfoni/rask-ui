@@ -3,12 +3,8 @@
 Creates a ref object for accessing DOM elements or component instances directly.
 
 ```tsx
-const ref = useRef()
+const ref = useRef();
 ```
-
-## Returns
-
-Ref object with a `current` property that references the DOM element or component instance
 
 ## Example
 

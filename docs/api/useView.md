@@ -6,14 +6,6 @@ Creates a view that merges multiple objects (reactive or plain) into a single ob
 const view = useView(obj1, obj2, ...)
 ```
 
-## Parameters
-
-- `...objects` - Objects to merge (reactive or plain). Later arguments override earlier ones.
-
-## Returns
-
-A view object with getters for all properties, maintaining reactivity
-
 ## Example
 
 ```tsx

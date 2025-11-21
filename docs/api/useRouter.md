@@ -66,10 +66,6 @@ Optional configuration object:
 const router = useRouter(routes, { base: "/app" });
 ```
 
-## Return Value
-
-Returns a router object with reactive properties and navigation methods.
-
 ### Properties
 
 #### route

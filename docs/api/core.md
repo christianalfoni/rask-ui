@@ -7,7 +7,7 @@ The fundamental functions for building RASK applications.
 Mounts a component to a DOM element.
 
 ```tsx
-render(component, container)
+render(component, container);
 ```
 
 ### Parameters
@@ -30,16 +30,8 @@ render(<App />, document.getElementById("app")!);
 Creates a reactive state object. Any property access during render is tracked, and changes trigger re-renders.
 
 ```tsx
-useState<T>(initialState: T): T
+const state = useState({});
 ```
-
-### Parameters
-
-- `initialState: T` - Initial state object
-
-### Returns
-
-Reactive proxy of the state object
 
 ### Example
 
@@ -69,20 +61,6 @@ function Example() {
 - **Efficient tracking** - Only re-renders components that access changed properties
 - **Automatic batching** - Multiple updates batched into single render
 
-### Notes
-
-::: warning
-Never destructure state objects - it breaks reactivity:
-
-```tsx
-// ❌ Bad
-const { count } = state;
-
-// ✅ Good
-state.count
-```
-:::
-
 ---
 
 ## useView()
@@ -90,16 +68,8 @@ state.count
 Creates a view that merges multiple objects (reactive or plain) into a single object while maintaining reactivity through getters.
 
 ```tsx
-useView<T>(...objects: object[]): T
+const view = useView(obj1, obj2, obj3);
 ```
-
-### Parameters
-
-- `...objects: object[]` - Objects to merge (reactive or plain). Later arguments override earlier ones.
-
-### Returns
-
-A view object with getters for all properties, maintaining reactivity
 
 ### Example
 
@@ -148,17 +118,11 @@ Do not destructure view objects - breaks reactivity
 
 ## useRef()
 
-Creates a ref object for accessing DOM elements or component instances directly.
+Creates a ref object for accessing DOM elements directly.
 
 ```tsx
-useRef<T>(): Ref<T>
+const ref = useRef();
 ```
-
-### Returns
-
-Ref object with:
-- `current: T | null` - Reference to the DOM element or component instance
-- Function signature for use as ref callback
 
 ### Example
 
@@ -179,17 +143,4 @@ function Example() {
     </div>
   );
 }
-```
-
-### Usage
-
-Pass the ref to an element's `ref` prop. The `current` property will be set to the DOM element when mounted and `null` when unmounted.
-
-### TypeScript
-
-```tsx
-// Generic type parameter for specific element types
-const inputRef = useRef<HTMLInputElement>();
-const divRef = useRef<HTMLDivElement>();
-const buttonRef = useRef<HTMLButtonElement>();
 ```
