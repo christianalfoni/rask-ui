@@ -60,9 +60,26 @@ export function syncBatch(cb: () => void) {
     throw e;
   }
 
-  // Keep flushing while queue has work.
-  // This handles cascading updates (e.g., derived signals notifying their observers).
-  // The queue stays on the stack so any new notifications get added to it.
+  // CASCADING SYNCHRONOUS UPDATES
+  // ------------------------------
+  // Keep flushing the queue in a loop while it has work. This is critical for handling
+  // cascading reactive updates where one observer's notification triggers another.
+  //
+  // Example cascade: state → derived → component
+  //   1. User updates state in a syncBatch
+  //   2. Derived observer is notified and queued
+  //   3. Derived observer runs, marks derived as dirty
+  //   4. Derived's signal notifies component observers
+  //   5. Component observers are added to the SAME queue (because it's still on the stack)
+  //   6. Loop continues, flushing component observers
+  //
+  // By keeping the queue on the stack during the flush loop, all synchronous cascades
+  // are captured in the same batch. This ensures:
+  //   - No updates escape to the async queue
+  //   - Components render with fully updated derived values
+  //   - Deduplication works across the entire cascade (same observer can't be queued twice)
+  //
+  // The loop terminates when all cascades have settled (queue is empty).
   while (queue.length > 0) {
     for (let i = 0; i < queue.length; i++) {
       const cb = queue[i];

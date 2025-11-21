@@ -33,8 +33,12 @@ export class RaskStatelessComponent extends Component {
     this.isReconciling = false;
     return shouldRender;
   }
+  componentWillMount(): void {
+    this.reactiveProps = createReactiveProps(this);
+  }
   componentWillReceiveProps(nextProps: any): void {
     this.isReconciling = true;
+
     syncBatch(() => {
       for (const prop in nextProps) {
         if ((this.props as any)[prop] === (nextProps as any)[prop]) {
@@ -48,12 +52,8 @@ export class RaskStatelessComponent extends Component {
     this.props = nextProps;
   }
   render() {
-    if (!this.reactiveProps) {
-      this.reactiveProps = createReactiveProps(this);
-    }
-
     const stopObserving = this.observer.observe();
-    const result = this.renderFn(this.props);
+    const result = this.renderFn(this.reactiveProps);
 
     stopObserving();
     return result;
@@ -90,8 +90,32 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
   declare setup: RaskStatefulFunctionComponent<P>;
   private renderFn?: () => VNode;
   private reactiveProps?: Props<any>;
+
+  // RECONCILIATION FLAGS
+  // --------------------
+  // These flags coordinate observer notifications with Inferno's reconciliation lifecycle
+  // to prevent double-rendering while ensuring effects can update state synchronously.
+  //
+  // isReconciling: Set to true during componentWillReceiveProps. When true, the observer
+  //   will NOT call forceUpdate() immediately, avoiding a render while Inferno is already
+  //   in the middle of updating this component (which would cause a double-render).
+  //
+  // isNotified: Tracks whether the observer was notified during reconciliation. If true,
+  //   it means reactive prop updates or effects have modified state, and the component
+  //   should render to reflect those changes.
+  //
+  // Flow example (props change triggers effect that updates state):
+  //   1. componentWillReceiveProps → isReconciling = true
+  //   2. Prop updates in syncBatch → reactive prop signals notify
+  //   3. Observer fires → sees isReconciling → sets isNotified = true, skips forceUpdate()
+  //   4. shouldComponentUpdate → checks isNotified → returns true
+  //   5. Component renders once with all updates (props + effect state changes)
+  //
+  // This ensures components render synchronously with fully updated state, without
+  // calling forceUpdate() at the wrong time during Inferno's reconciliation.
   private isNotified = false;
   private isReconciling = false;
+
   observer = new Observer(() => {
     if (this.isReconciling) {
       this.isNotified = true;
