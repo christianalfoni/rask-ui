@@ -174,7 +174,7 @@ function Component() {
 
   // Reactivity
   const state = useState({});
-  const computed = useComputed({});
+  const computed = useDerived({});
   const view = useView(state, computed);
   const [asyncState, run] = useAsync(async (params, signal) => {});
   const ref = useRef();
@@ -195,7 +195,7 @@ function Component() {
 ```tsx {all}
 function createCounter() {
   const state = useState({ count: 0 });
-  const computed = useComputed({
+  const computed = useDerived({
     double: () => state.count * 2,
   });
   const increment = () => state.count++;

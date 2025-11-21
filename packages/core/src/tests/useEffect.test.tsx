@@ -3,7 +3,7 @@ import { useEffect } from "../useEffect";
 import { useState } from "../useState";
 import { render } from "../index";
 
-describe("createEffect", () => {
+describe("useEffect", () => {
   it("should run immediately on creation", () => {
     const effectFn = vi.fn();
 

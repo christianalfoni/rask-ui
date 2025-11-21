@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
-import { useComputed, Computed } from "../useComputed";
+import { useDerived, Derived } from "../useDerived";
 import { useState } from "../useState";
 import { Observer } from "../observation";
 import { render } from "../index";
 
-describe("createComputed", () => {
+describe("useDerived", () => {
   it("should compute values lazily", () => {
     const computeFn = vi.fn();
     let computed!: { doubled: number };
@@ -13,7 +13,7 @@ describe("createComputed", () => {
       const state = useState({ count: 5 });
       computeFn.mockImplementation(() => state.count * 2);
 
-      computed = useComputed({
+      computed = useDerived({
         doubled: computeFn,
       });
 
@@ -40,7 +40,7 @@ describe("createComputed", () => {
       const state = useState({ count: 5 });
       computeFn.mockImplementation(() => state.count * 2);
 
-      computed = useComputed({
+      computed = useDerived({
         doubled: computeFn,
       });
 
@@ -68,7 +68,7 @@ describe("createComputed", () => {
       state = useState({ count: 5 });
       computeFn.mockImplementation(() => state.count * 2);
 
-      computed = useComputed({
+      computed = useDerived({
         doubled: computeFn,
       });
 
@@ -97,7 +97,7 @@ describe("createComputed", () => {
     function Component() {
       state = useState({ width: 10, height: 5 });
 
-      computed = useComputed({
+      computed = useDerived({
         area: () => state.width * state.height,
         perimeter: () => 2 * (state.width + state.height),
       });
@@ -125,7 +125,7 @@ describe("createComputed", () => {
     function Component() {
       state = useState({ count: 5 });
 
-      computed = useComputed({
+      computed = useDerived({
         doubled: () => state.count * 2,
         quadrupled: () => computed.doubled * 2,
       });
@@ -152,7 +152,7 @@ describe("createComputed", () => {
 
     function Component() {
       state = useState({ count: 5 });
-      computed = useComputed({
+      computed = useDerived({
         doubled: () => state.count * 2,
       });
 
@@ -192,7 +192,7 @@ describe("createComputed", () => {
       state = useState({ a: 1, b: 2 });
       computeFn.mockImplementation(() => state.a * 2);
 
-      computed = useComputed({
+      computed = useDerived({
         result: computeFn,
       });
 
@@ -227,7 +227,7 @@ describe("createComputed", () => {
         multiplier: 2,
       });
 
-      computed = useComputed({
+      computed = useDerived({
         total: () => state.items.reduce((sum, item) => sum + item, 0),
         multipliedTotal: () => computed.total * state.multiplier,
         average: () => computed.total / state.items.length,
@@ -263,7 +263,7 @@ describe("createComputed", () => {
     function Component() {
       state = useState({ items: [1, 2, 3] });
 
-      computed = useComputed({
+      computed = useDerived({
         sum: () => state.items.reduce((sum, item) => sum + item, 0),
         count: () => state.items.length,
       });
@@ -304,7 +304,7 @@ describe("createComputed", () => {
         },
       });
 
-      computed = useComputed({
+      computed = useDerived({
         displayName: () =>
           `${state.user.profile.name} (${state.user.profile.age})`,
       });
@@ -339,7 +339,7 @@ describe("createComputed", () => {
       innerFn.mockImplementation(() => state.count * 2);
       outerFn.mockImplementation(() => computed.inner + 10);
 
-      computed = useComputed({
+      computed = useDerived({
         inner: innerFn,
         outer: outerFn,
       });
@@ -379,7 +379,7 @@ describe("createComputed", () => {
       state = useState({ useA: true, a: 10, b: 20 });
       computeFn.mockImplementation(() => (state.useA ? state.a : state.b));
 
-      computed = useComputed({
+      computed = useDerived({
         value: computeFn,
       });
 
@@ -430,7 +430,7 @@ describe("createComputed", () => {
     function Component() {
       state = useState({ count: 5 });
 
-      computed = useComputed({
+      computed = useDerived({
         doubled: () => state.count * 2,
       });
 
@@ -453,7 +453,7 @@ describe("createComputed", () => {
     let computed!: {};
 
     function Component() {
-      computed = useComputed({});
+      computed = useDerived({});
 
       return () => <div>test</div>;
     }
@@ -470,7 +470,7 @@ describe("createComputed", () => {
 
     function Component() {
       state = useState({ x: 1, y: 2 });
-      computed = useComputed({
+      computed = useDerived({
         sum: () => state.x + state.y,
       });
 
@@ -508,7 +508,7 @@ describe("createComputed", () => {
     function Child(props: { filter: string }) {
       computeFn.mockImplementation(() => props.filter || "all");
 
-      childComputed = useComputed({
+      childComputed = useDerived({
         currentFilter: computeFn,
       });
 

@@ -39,7 +39,7 @@ export function useContext<T>(context: Context<T>): T {
   let currentComponent = getCurrentComponent();
 
   if (!currentComponent) {
-    throw new Error("You can not get context outside component setup");
+    throw new Error("Only use useContext in component setup");
   }
 
   if (typeof (currentComponent.context as any).getContext !== "function") {
@@ -60,7 +60,7 @@ export function useInjectContext<T>(context: Context<T>) {
     const currentComponent = getCurrentComponent();
 
     if (!currentComponent) {
-      throw new Error("You can not inject context outside component setup");
+      throw new Error("Only use useInjectContext in component setup");
     }
 
     currentComponent.contexts.set(context, value);

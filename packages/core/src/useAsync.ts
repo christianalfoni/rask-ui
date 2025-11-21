@@ -55,7 +55,7 @@ export function useAsync<P, T, I = null>(
 ) {
   const currentComponent = getCurrentComponent();
   if (!currentComponent || currentComponent.isRendering) {
-    throw new Error("Only use createTask in component setup");
+    throw new Error("Only use useTask in component setup");
   }
 
   const value: any = args.length === 2 ? args[0] : null;

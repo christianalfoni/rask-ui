@@ -21,7 +21,7 @@ export function useRouter<const T extends RoutesConfig>(
   }
 ): Router<T> {
   if (!getCurrentComponent()) {
-    throw new Error("Only use createRouter in component setup");
+    throw new Error("Only use useRouter in component setup");
   }
 
   const router = internalCreateRouter(config, options);

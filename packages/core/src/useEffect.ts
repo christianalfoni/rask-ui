@@ -5,7 +5,7 @@ import { Observer } from "./observation";
 export function useEffect(cb: () => void | (() => void)) {
   const component = getCurrentComponent();
   if (!component || component.isRendering) {
-    throw new Error("Only use createEffect in component setup");
+    throw new Error("Only use useEffect in component setup");
   }
 
   let disposer: (() => void) | void;

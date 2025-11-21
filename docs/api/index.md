@@ -6,7 +6,7 @@ These are component-bound reactive primitives, similar to React hooks but reacti
 
 - [**useState**](/api/useState) - Create reactive state bound to the component
 - [**useEffect**](/api/useEffect) - Create a reactive effect bound to the component
-- [**useComputed**](/api/useComputed) - Create computed properties bound to the component
+- [**useDerived**](/api/useDerived) - Create computed properties bound to the component
 - [**useAsync**](/api/useAsync) - Manage async operations bound to the component
 - [**useView**](/api/useView) - Merge objects while maintaining reactivity
 - [**useRouter**](/api/useRouter) - Access router state and navigation

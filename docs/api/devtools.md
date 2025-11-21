@@ -42,12 +42,12 @@ type InspectEvent =
 ### Basic Example
 
 ```tsx
-import { inspect, useState, useComputed, useView } from "rask-ui";
+import { inspect, useState, useDerived, useView } from "rask-ui";
 
 function Counter() {
   const state = useState({ count: 0, name: "Counter" });
 
-  const computed = useComputed({
+  const computed = useDerived({
     double: () => state.count * 2,
   });
 
@@ -227,7 +227,7 @@ function App() {
     },
   });
 
-  const computed = useComputed({
+  const computed = useDerived({
     completedCount: () => state.todos.filter((t) => t.done).length,
     totalCount: () => state.todos.length,
   });
@@ -586,7 +586,7 @@ Track computed value recalculations:
 
 ```tsx
 function App() {
-  const computed = useComputed({
+  const computed = useDerived({
     expensiveCalculation: () => {/* expensive work */},
   });
 

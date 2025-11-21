@@ -182,7 +182,7 @@ export default defineConfig({
         items: [
           { text: "useState", link: "/api/useState" },
           { text: "useEffect", link: "/api/useEffect" },
-          { text: "useComputed", link: "/api/useComputed" },
+          { text: "useDerived", link: "/api/useDerived" },
           { text: "useAsync", link: "/api/useAsync" },
           { text: "useView", link: "/api/useView" },
           { text: "useRouter", link: "/api/useRouter" },

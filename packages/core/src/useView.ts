@@ -41,7 +41,7 @@ export function useView<A extends object, B extends object>(
 export function useView<T extends readonly object[]>(...args: T): MergeMany<T>;
 export function useView(...args: readonly object[]): any {
   if (!getCurrentComponent()) {
-    throw new Error("Only use createView in component setup");
+    throw new Error("Only use useView in component setup");
   }
 
   const result: any = {};

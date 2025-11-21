@@ -67,11 +67,11 @@ function Parent() {
 
 ## Props reconcile and are reactive
 
-Props also behaves as you would expect in the render scope, but they are also reactive, meaning they can be used with `useEffect` or `useComputed`.
+Props also behaves as you would expect in the render scope, but they are also reactive, meaning they can be used with `useEffect` or `useDerived`.
 
 ```tsx
 function Header(props) {
-  const computed = useComputed({
+  const computed = useDerived({
     double: () => props.count * 2,
   });
 
@@ -105,7 +105,7 @@ Reactive objects are implemented using JavaScript Proxies. When you access a pro
 - `useContext()` - Never destructure context values
 - `useAsync()` - Never destructure async state objects
 - `useView()` - Never destructure view objects
-- `useComputed()` - Never destructure computed objects
+- `useDerived()` - Never destructure computed objects
 
 ## Automatic Batching
 
@@ -163,7 +163,7 @@ function ShoppingCart() {
     taxRate: 0.2,
   });
 
-  const computed = useComputed({
+  const computed = useDerived({
     subtotal: () =>
       state.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     tax: () => computed.subtotal * state.taxRate,

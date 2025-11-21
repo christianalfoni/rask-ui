@@ -219,7 +219,7 @@ export function App() {
 // After editing and HMR reload
 export function App() {
   const state = useState({ count: 0 });
-  const doubled = useComputed(() => state.count * 2);  // ❌ NEW - NEVER RUNS!
+  const doubled = useDerived(() => state.count * 2);  // ❌ NEW - NEVER RUNS!
   return () => <div>{doubled}</div>;  // ❌ THIS NEVER SHOWS!
 }
 ```

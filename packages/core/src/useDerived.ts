@@ -2,14 +2,19 @@ import { getCurrentComponent, useCleanup } from "./component";
 import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorRef } from "./inspect";
 import { getCurrentObserver, Observer, Signal } from "./observation";
 
-export type Computed<T extends Record<string, () => any>> = {
+export type Derived<T extends Record<string, () => any>> = {
   [K in keyof T]: ReturnType<T[K]>;
 };
 
-export function useComputed<T extends Record<string, () => any>>(
+export function useDerived<T extends Record<string, () => any>>(
   computed: T
-): Computed<T> {
+): Derived<T> {
   const currentComponent = getCurrentComponent();
+
+  if (!currentComponent || currentComponent.isRendering) {
+    throw new Error("Only use useDerived in component setup");
+  }
+
   const proxy = {};
   let notifyInspectorRef: InspectorRef = {};
 
@@ -44,6 +49,7 @@ export function useComputed<T extends Record<string, () => any>>(
 
         if (isDirty) {
           const stopObserving = computedObserver.observe();
+
           value = computed[prop]();
           stopObserving();
           isDirty = false;

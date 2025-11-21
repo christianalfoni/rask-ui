@@ -57,7 +57,7 @@ render(<Counter />, document.getElementById("app")!);
 
 ## Key Features
 
-- **Reactive Hooks**: Component-bound reactive primitives like `useState()`, `useEffect()`, `useComputed()`
+- **Reactive Hooks**: Component-bound reactive primitives like `useState()`, `useEffect()`, `useDerived()`
 - **Lifecycle Hooks**: `useMountEffect()`, `useCleanup()`
 - **Context API**: Share state without prop drilling with `createContext()` and related hooks
 - **Async Operations**: Built-in `useAsync()` for managing async operations

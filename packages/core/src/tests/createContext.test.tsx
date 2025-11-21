@@ -84,7 +84,7 @@ describe("createContext", () => {
     expect(() => {
       const inject = useInjectContext(ThemeContext);
       inject({ theme: "dark" });
-    }).toThrow("You can not inject context outside component setup");
+    }).toThrow("Only use useInjectContext in component setup");
   });
 
   it("should throw error when getting context outside component", () => {
@@ -92,7 +92,7 @@ describe("createContext", () => {
 
     expect(() => {
       useContext(ThemeContext);
-    }).toThrow("You can not get context outside component setup");
+    }).toThrow("Only use useContext in component setup");
   });
 
   it("should allow overriding context in nested components", () => {

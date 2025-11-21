@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useState } from "../useState";
 import { Observer } from "../observation";
 
-describe("createState", () => {
+describe("useState", () => {
   it("should create a reactive proxy from an object", () => {
     const state = useState({ count: 0 });
     expect(state.count).toBe(0);

@@ -1,9 +1,9 @@
-# useComputed()
+# useDerived()
 
 Creates an object bound to the component with computed properties that automatically track dependencies and cache results until dependencies change.
 
 ```tsx
-const computed = useComputed({
+const computed = useDerived({
   propertyName: () => {
     // compute value
   },
@@ -13,7 +13,7 @@ const computed = useComputed({
 ## Example
 
 ```tsx
-import { useComputed, useState } from "rask-ui";
+import { useDerived, useState } from "rask-ui";
 
 function ShoppingCart() {
   const state = useState({
@@ -24,7 +24,7 @@ function ShoppingCart() {
     taxRate: 0.2,
   });
 
-  const computed = useComputed({
+  const computed = useDerived({
     subtotal: () =>
       state.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     tax: () => computed.subtotal * state.taxRate,

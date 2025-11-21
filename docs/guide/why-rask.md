@@ -4,17 +4,17 @@ Modern UI frameworks force you to choose between simple state management and pow
 
 ## The Problem with Current Frameworks
 
-**React** excels at UI composition by allowing you to use "just the language2, but creates mental strain with complex state management:
+**React** excels at UI composition by allowing you to use "just the language", but creates mental strain with complex state management:
 
 - Understanding closure captures and stale state
 - Managing dependency arrays in hooks
 - Dealing with re-render cascades
 - Optimizing with `useMemo`, `useCallback`, and `memo`
 
-**Solid** offers simple reactivity but compromises on UI expression:
+**Solid** and other template based frameworks offers simple reactivity but compromises on UI expression:
 
 - Compiler magic that transforms how your code executes
-- Special components for dynamic UIs (`<Show>`, `<For>`)
+- Special components and/or syntax for dynamic UIs (`<Show>`, `<For>`)
 - Different access patterns (`count()` vs `state.count`) and special rules
 
 ## The RASK Solution

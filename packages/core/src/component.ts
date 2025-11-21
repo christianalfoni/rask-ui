@@ -40,7 +40,7 @@ export function getCurrentComponent() {
 
 export function useMountEffect(cb: () => void) {
   if (!currentComponent) {
-    throw new Error("Only use createMountEffect in component setup");
+    throw new Error("Only use useMountEffect in component setup");
   }
 
   currentComponent.onMounts.push(cb);
@@ -48,7 +48,7 @@ export function useMountEffect(cb: () => void) {
 
 export function useCleanup(cb: () => void) {
   if (!currentComponent || currentComponent.isRendering) {
-    throw new Error("Only use createCleanup in component setup");
+    throw new Error("Only use useCleanup in component setup");
   }
 
   currentComponent.onCleanups.push(cb);
@@ -120,7 +120,7 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
         get() {
           const observer = getCurrentObserver();
 
-          if (!self.isRendering && observer) {
+          if (observer) {
             // Lazy create signal only when accessed in reactive context
             let signal = signals.get(prop);
             if (!signal) {
