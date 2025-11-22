@@ -237,13 +237,6 @@ function createReactiveProps(
       continue;
     }
 
-    // Skip objects/arrays - they're already reactive if they're proxies
-    // No need to wrap them in additional signals
-    if (typeof value === "object" && value !== null && PROXY_MARKER in value) {
-      reactiveProps[prop] = value;
-      continue;
-    }
-
     // Only create reactive getters for primitives
     Object.defineProperty(reactiveProps, prop, {
       enumerable: true,

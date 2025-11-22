@@ -154,14 +154,18 @@ export class Observer {
   // Only ONE notify callback closure per observer
   private readonly onNotify: () => void;
 
-  constructor(onNotify: () => void) {
+  constructor(onNotify: () => void, shouldQueue = true) {
     const onNotifyQueued = onNotify as unknown as QueuedCallback;
     onNotifyQueued.__queued = false;
 
-    this.onNotify = () => {
-      if (onNotifyQueued.__queued) return;
-      queue(onNotify as QueuedCallback);
-    };
+    if (shouldQueue) {
+      this.onNotify = () => {
+        if (onNotifyQueued.__queued) return;
+        queue(onNotify as QueuedCallback);
+      };
+    } else {
+      this.onNotify = onNotify;
+    }
   }
 
   /** Called from Signal.notify() */

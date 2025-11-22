@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { useState } from "../useState";
 import { Observer } from "../observation";
+import { render } from "../render";
 
 describe("useState", () => {
   it("should create a reactive proxy from an object", () => {
@@ -180,5 +181,67 @@ describe("useState", () => {
 
     // And accessing it multiple times should return the same reference
     expect(state.data[0]).toBe(state.data[0]);
+  });
+
+  it("should rerender child when array prop changes", async () => {
+    let childRenderCount = 0;
+    let parentState: any;
+
+    function Child(props: { todos: any[] }) {
+      return () => {
+        childRenderCount++;
+        console.log(
+          `[Child render #${childRenderCount}] todos.length=${props.todos.length}`
+        );
+        return (
+          <div>
+            <div class="count">{props.todos.length}</div>
+            <ul>
+              {props.todos.map((todo) => (
+                <li key={todo.id}>{todo.text}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      };
+    }
+
+    function Parent() {
+      parentState = useState<{ todos: any[]; filter: string }>({
+        todos: [
+          { id: "1", text: "Task 1", completed: false },
+          { id: "2", text: "Task 2", completed: true },
+          { id: "3", text: "Task 3", completed: false },
+        ],
+        filter: "all",
+      });
+
+      return () => {
+        console.log(`[Parent render] filter=${parentState.filter}`);
+        const filtered =
+          parentState.filter === "active"
+            ? parentState.todos.filter((t: any) => !t.completed)
+            : parentState.todos;
+        console.log(
+          `  getFiltered returned array with ${filtered.length} items`
+        );
+        return <Child todos={filtered} />;
+      };
+    }
+
+    const container = document.createElement("div");
+    render(<Parent />, container);
+
+    console.log("\n=== After initial render ===");
+    expect(childRenderCount).toBe(1);
+
+    console.log("\n=== Change filter ===");
+    parentState.filter = "active";
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    console.log("\n=== After filter change ===");
+    console.log(`childRenderCount=${childRenderCount}, expected=2`);
+
+    expect(childRenderCount).toBe(2);
   });
 });

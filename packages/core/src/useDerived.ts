@@ -35,7 +35,7 @@ export function useDerived<T extends Record<string, () => any>>(
           value,
         });
       }
-    });
+    }, false);
 
     useCleanup(() => computedObserver.dispose());
 
