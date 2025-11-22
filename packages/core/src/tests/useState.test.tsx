@@ -190,9 +190,6 @@ describe("useState", () => {
     function Child(props: { todos: any[] }) {
       return () => {
         childRenderCount++;
-        console.log(
-          `[Child render #${childRenderCount}] todos.length=${props.todos.length}`
-        );
         return (
           <div>
             <div class="count">{props.todos.length}</div>
@@ -217,14 +214,11 @@ describe("useState", () => {
       });
 
       return () => {
-        console.log(`[Parent render] filter=${parentState.filter}`);
         const filtered =
           parentState.filter === "active"
             ? parentState.todos.filter((t: any) => !t.completed)
             : parentState.todos;
-        console.log(
-          `  getFiltered returned array with ${filtered.length} items`
-        );
+
         return <Child todos={filtered} />;
       };
     }
@@ -232,15 +226,10 @@ describe("useState", () => {
     const container = document.createElement("div");
     render(<Parent />, container);
 
-    console.log("\n=== After initial render ===");
     expect(childRenderCount).toBe(1);
 
-    console.log("\n=== Change filter ===");
     parentState.filter = "active";
     await new Promise((resolve) => setTimeout(resolve, 10));
-
-    console.log("\n=== After filter change ===");
-    console.log(`childRenderCount=${childRenderCount}, expected=2`);
 
     expect(childRenderCount).toBe(2);
   });
