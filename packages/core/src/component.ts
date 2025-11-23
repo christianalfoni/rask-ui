@@ -8,7 +8,7 @@ import {
 import { VNodeFlags } from "inferno-vnode-flags";
 import { getCurrentObserver, Observer, Signal } from "./observation";
 import { syncBatch } from "./batch";
-import { PROXY_MARKER } from "./useState";
+import { CatchErrorContext } from "./error";
 
 export type RaskStatelessFunctionComponent<P extends Props<any>> =
   | (() => VNode)
@@ -199,11 +199,15 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
       result = this.renderFn();
       this.isRendering = false;
     } catch (error) {
-      if (typeof this.context.notifyError !== "function") {
+      const notifyError =
+        this.contexts.get(CatchErrorContext) ||
+        this.context.getContext?.(CatchErrorContext);
+
+      if (typeof notifyError !== "function") {
         throw error;
       }
 
-      this.context.notifyError(error);
+      notifyError(error);
     } finally {
       stopObserving();
       currentComponent = undefined;

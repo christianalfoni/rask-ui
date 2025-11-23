@@ -8,7 +8,9 @@ export {
 export { createContext, useContext, useInjectContext } from "./createContext";
 export { useState, assignState } from "./useState";
 export { useAsync, Async } from "./useAsync";
-export { ErrorBoundary } from "./error";
+export { useAction, Action } from "./useAction";
+export { useSuspend } from "./useSuspend";
+export { useCatchError } from "./error";
 export { useRef } from "./useRef";
 export { useView } from "./useView";
 export { useEffect } from "./useEffect";

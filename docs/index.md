@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: RASK
-  text: Web UI Framework
+  text: SPA Framework
   tagline: Reactive state with reconciling UI
   image:
     src: /logo.png
@@ -60,8 +60,11 @@ render(<Counter />, document.getElementById("app")!);
 - **Reactive Hooks**: Component-bound reactive primitives like `useState()`, `useEffect()`, `useDerived()`
 - **Lifecycle Hooks**: `useMountEffect()`, `useCleanup()`
 - **Context API**: Share state without prop drilling with `createContext()` and related hooks
-- **Async Operations**: Built-in `useAsync()` for managing async operations
-- **Error Boundaries**: Catch and handle errors gracefully
+- **Async Operations**: Built-in hooks for async handling:
+  - `useAsync()` - Fetch data with observation and cancellation
+  - `useAction()` - Queue operations with retry support
+  - `useSuspend()` - Coordinate multiple async values
+- **Error Handling**: `useCatchError()` hook for catching component errors
 - **Automatic Batching**: State updates batched automatically
 - **TypeScript Support**: Full type inference and safety
 

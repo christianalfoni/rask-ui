@@ -23,7 +23,9 @@ export function TodoInput(props: TodoInputProps) {
         <input
           type="text"
           value={state.inputValue}
-          onInput={(e) => (state.inputValue = (e.target as HTMLInputElement).value)}
+          onInput={(e) =>
+            (state.inputValue = (e.target as HTMLInputElement).value)
+          }
           placeholder="What needs to be done?"
           class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />

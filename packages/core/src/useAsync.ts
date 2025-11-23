@@ -1,80 +1,87 @@
 import { useCleanup, getCurrentComponent } from "./component";
+import { Observer } from "./observation";
 import { assignState, useState } from "./useState";
 
-export type AsyncState<P, T, I = null> =
+export type AsyncState<T> =
   | {
-      isPending: false;
-      params: null;
-      value: I;
-      error: null;
+      error: Error;
+      isLoading: true;
+      isRefreshing: false;
+      value: null;
     }
   | {
-      isPending: true;
-      value: T | I;
-      params: P;
-      error: null;
-    }
-  | {
-      isPending: false;
-      params: null;
+      error: Error;
+      isLoading: false;
+      isRefreshing: true;
       value: T;
-      error: null;
     }
   | {
-      isPending: false;
-      params: null;
-      value: T | I;
-      error: string;
+      error: null;
+      isLoading: true;
+      isRefreshing: false;
+      value: null;
+    }
+  | {
+      error: null;
+      isLoading: false;
+      isRefreshing: true;
+      value: T;
+    }
+  | {
+      error: null;
+      isLoading: false;
+      isRefreshing: false;
+      value: T;
     };
 
-export type Async<A, B = never, I = null> = [B] extends [never]
-  ? [AsyncState<null, A, I>, () => void]
-  : [AsyncState<A, B, I>, (params: A) => void];
+export type Async<T extends NonNullable<any>> = [
+  AsyncState<T>,
+  () => Promise<void>
+];
 
-export function useAsync<T>(
-  initialValue: T,
-  fn: (params: undefined, signal: AbortSignal) => Promise<T>
-): Async<T, never, T>;
-export function useAsync<P, T>(
-  initialValue: T,
-  fn: (params: P, signal: AbortSignal) => Promise<T>
-): Async<P, T, T>;
-export function useAsync<T>(
-  fn: (params: undefined, signal: AbortSignal) => Promise<T>
-): Async<T>;
-export function useAsync<P, T>(
-  fn: (params: P, signal: AbortSignal) => Promise<T>
-): Async<P, T>;
-export function useAsync<P, T, I = null>(
-  ...args:
-    | [fn: (params: P | undefined, signal: AbortSignal) => Promise<T>]
-    | [
-        initial: T,
-        fn: (params: P | undefined, signal: AbortSignal) => Promise<T>
-      ]
-) {
-  const currentComponent = getCurrentComponent();
-  if (!currentComponent || currentComponent.isRendering) {
-    throw new Error("Only use useTask in component setup");
+export function isAsync(value: unknown) {
+  if (value === null || typeof value !== "object") {
+    return false;
   }
 
-  const value: any = args.length === 2 ? args[0] : null;
-  const fn = args.length === 2 ? args[1] : args[0];
+  return Boolean(
+    "isLoading" in value &&
+      "isRefreshing" in value &&
+      "error" in value &&
+      "value" in value
+  );
+}
 
-  const state = useState<AsyncState<P, T, I>>({
-    isPending: false,
-    value,
+export function useAsync<T extends NonNullable<any>>(
+  fn: (signal?: AbortSignal) => Promise<T>
+) {
+  const currentComponent = getCurrentComponent();
+
+  if (!currentComponent || currentComponent.isRendering) {
+    throw new Error("Only use useAsync in component setup");
+  }
+
+  const state = useState<AsyncState<T>>({
+    isLoading: true,
+    isRefreshing: false,
+    value: null,
     error: null,
-    params: null,
   });
+
+  const refreshResolvers: Array<{
+    resolve: () => void;
+    reject: (error: Error) => void;
+  }> = [];
 
   let currentAbortController: AbortController | undefined;
 
-  const fetch = (params?: P) => {
+  const refresh = () => {
     currentAbortController?.abort();
 
     const abortController = (currentAbortController = new AbortController());
-    const promise = fn(params, abortController.signal);
+    const stopObserving = observer.observe();
+    const promise = fn(abortController.signal);
+    stopObserving();
 
     promise
       .then((result) => {
@@ -83,52 +90,97 @@ export function useAsync<P, T, I = null>(
         }
 
         assignState(state, {
-          isPending: false,
+          isLoading: false,
+          isRefreshing: false,
           value: result,
           error: null,
-          params: null,
-        });
+        } as any);
+
+        refreshResolvers.forEach((resolver) => resolver.resolve());
+        refreshResolvers.length = 0;
       })
       .catch((error) => {
         if (abortController.signal.aborted) {
           return;
         }
         assignState(state, {
-          isPending: false,
-          value: state.value,
-          error: String(error),
-          params: null,
-        });
+          isLoading: state.isLoading,
+          isRefreshing: state.isRefreshing,
+          value: state.value as any,
+          error,
+        } as any);
+
+        refreshResolvers.forEach((resolver) => resolver.reject(error));
+        refreshResolvers.length = 0;
       });
 
     return promise;
   };
 
-  useCleanup(() => currentAbortController?.abort());
+  const observer = new Observer(() => {
+    if (state.isLoading) {
+      refresh();
+    } else if (state.error && state.value === null) {
+      assignState(state, {
+        isLoading: true,
+        isRefreshing: false,
+        value: state.value as any,
+        error: null,
+      } as any);
+      refresh();
+    } else {
+      assignState(state, {
+        isLoading: false,
+        isRefreshing: true,
+        value: state.value as any,
+        error: null,
+      });
+      refresh();
+    }
+  });
+
+  useCleanup(() => {
+    currentAbortController?.abort();
+    observer.dispose();
+  });
+
+  refresh();
 
   return [
-    {
-      get isPending() {
-        return state.isPending;
-      },
-      get value() {
-        return state.value;
-      },
-      get error() {
-        return state.error;
-      },
-      get params() {
-        return state.params;
-      },
-    },
-    (params?: P) => {
-      fetch(params);
-      assignState(state, {
-        isPending: true,
-        value: state.value,
-        error: null,
-        params: (params || null) as any,
+    state,
+    async () => {
+      if (state.isLoading && !state.error) {
+        return;
+      }
+
+      if (state.error && state.value === null) {
+        assignState(state, {
+          isLoading: true,
+          isRefreshing: false,
+          value: state.value as any,
+          error: null,
+        } as any);
+      } else {
+        assignState(state, {
+          isLoading: false,
+          isRefreshing: true,
+          value: state.value as any,
+          error: null,
+        });
+      }
+
+      let resolve!: () => void;
+      let reject!: (error: Error) => void;
+      const promise = new Promise<void>((res, rej) => {
+        resolve = res;
+        reject = rej;
       });
+
+      refreshResolvers.push({ resolve, reject });
+
+      refresh();
+
+      return promise;
     },
-  ];
+  ] as Async<T>;
 }

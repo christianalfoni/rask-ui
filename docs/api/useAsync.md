@@ -1,33 +1,17 @@
 # useAsync()
 
-A reactive hook for managing asynchronous operations. Use `useAsync` for data fetching, mutations, background operations, and any async work. It provides automatic cancellation, optional initial values, and a unified API for all async patterns.
+A reactive hook for managing asynchronous data fetching. `useAsync` automatically observes reactive dependencies, fetches data when they change, and cancels previous requests when new ones start.
 
 ```tsx
-// Without parameters
-const [state, run] = useAsync(async (_, signal) => {
+const [state, refresh] = useAsync((signal) => {
   // async operation
-});
-
-// With initial value
-const [state, run] = useAsync(initialValue, async (_, signal) => {
-  // async operation
-});
-
-// With parameters
-const [state, run] = useAsync(async (params, signal) => {
-  // async operation with params
-});
-
-// With parameters and initial value
-const [state, run] = useAsync(initialValue, async (params, signal) => {
-  // async operation with params
 });
 ```
 
-## Basic Example - Data Fetching
+## Basic Example
 
 ```tsx
-import { useAsync } from "rask-ui";
+import { useAsync, useState } from "rask-ui";
 
 interface User {
   id: number;
@@ -36,142 +20,59 @@ interface User {
 }
 
 function UserProfile() {
-  const [user, fetchUser] = useAsync(async (id: number, signal) => {
-    const response = await fetch(`/api/users/${id}`, { signal });
+  const userId = useState({ id: 1 });
+
+  const [user, refresh] = useAsync(async (signal) => {
+    const response = await fetch(`/api/users/${userId.id}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch user");
     return response.json() as Promise<User>;
   });
 
-  fetchUser(1);
-
   return () => {
-    if (user.isPending) {
-      return <p>Loading...</p>;
+    if (user.error) {
+      return (
+        <div>
+          <p>Error: {user.error.message}</p>
+          <button onClick={refresh}>Retry</button>
+        </div>
+      );
     }
 
-    if (user.error) {
-      return <p>Error: {user.error}</p>;
+    if (user.isLoading) {
+      return <p>Loading...</p>;
     }
 
     return (
       <div>
         <h1>{user.value.name}</h1>
         <p>{user.value.email}</p>
-        <button onClick={() => fetchUser(1)}>Refresh</button>
+        <button onClick={() => userId.id++}>Next User</button>
+        <button onClick={refresh}>Refresh</button>
       </div>
     );
   };
 }
 ```
 
-## With Initial Value
+## Automatic Dependency Tracking
 
-Provide an initial value to avoid null checks:
-
-```tsx
-import { useAsync } from "rask-ui";
-
-function TodoList() {
-  const [todos, fetchTodos] = useAsync([], async (_, signal) => {
-    const response = await fetch("/api/todos", { signal });
-    return response.json();
-  });
-
-  fetchTodos();
-
-  return () => (
-    <div>
-      <h1>Todos</h1>
-      {todos.isPending && <p>Loading...</p>}
-      <ul>
-        {todos.value.map((todo) => (
-          <li key={todo.id}>{todo.text}</li>
-        ))}
-      </ul>
-      <button onClick={fetchTodos}>Refresh</button>
-    </div>
-  );
-}
-```
-
-## Form Submission
+`useAsync` observes reactive state accessed during execution and automatically refetches when dependencies change:
 
 ```tsx
 import { useAsync, useState } from "rask-ui";
 
-interface LoginData {
-  email: string;
-  password: string;
-}
+function SearchResults() {
+  const state = useState({ query: "", filter: "all" });
 
-function LoginForm() {
-  const state = useState({ email: "", password: "" });
+  // Automatically refetches when state.query or state.filter change
+  const [results, refresh] = useAsync(async (signal) => {
+    if (!state.query) return [];
 
-  const [user, login] = useAsync(async (data: LoginData, signal) => {
-    const response = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      signal,
-    });
-    if (!response.ok) throw new Error("Login failed");
+    const response = await fetch(
+      `/api/search?q=${state.query}&filter=${state.filter}`,
+      { signal }
+    );
     return response.json();
-  });
-
-  const handleSubmit = (e: Event) => {
-    e.preventDefault();
-    login({ email: state.email, password: state.password });
-  };
-
-  return () => {
-    if (!user.value) {
-      return (
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            value={state.email}
-            onInput={(e) => (state.email = e.target.value)}
-            placeholder="Email"
-          />
-          <input
-            type="password"
-            value={state.password}
-            onInput={(e) => (state.password = e.target.value)}
-            placeholder="Password"
-          />
-          <button type="submit" disabled={loginState.isPending}>
-            {user.isPending ? "Logging in..." : "Login"}
-          </button>
-          {user.error && <p>Error: {user.error}</p>}
-        </form>
-      );
-    }
-
-    return <p>Welcome back!</p>;
-  };
-}
-```
-
-## Search with Debouncing
-
-```tsx
-import { useAsync, useState, useEffect } from "rask-ui";
-
-function SearchComponent() {
-  const state = useState({ query: "" });
-
-  const [results, search] = useAsync([], async (query: string, signal) => {
-    const response = await fetch(`/api/search?q=${query}`, { signal });
-    return response.json();
-  });
-
-  useEffect(() => {
-    if (state.query.length > 2) {
-      const timeout = setTimeout(() => {
-        search(state.query);
-      }, 300);
-      return () => clearTimeout(timeout);
-    }
   });
 
   return () => (
@@ -181,10 +82,16 @@ function SearchComponent() {
         onInput={(e) => (state.query = e.target.value)}
         placeholder="Search..."
       />
-      {results.isPending && <p>Searching...</p>}
-      {results.error && <p>Error: {results.error}</p>}
+      <select value={state.filter} onChange={(e) => (state.filter = e.target.value)}>
+        <option value="all">All</option>
+        <option value="active">Active</option>
+        <option value="archived">Archived</option>
+      </select>
+
+      {results.error && <p>Error: {results.error.message}</p>}
+      {results.isLoading && <p>Loading...</p>}
       <ul>
-        {results.value.map((item) => (
+        {results.value?.map((item) => (
           <li key={item.id}>{item.name}</li>
         ))}
       </ul>
@@ -193,124 +100,293 @@ function SearchComponent() {
 }
 ```
 
-## File Upload
+## Loading and Refreshing States
+
+The state distinguishes between initial loading and refreshing existing data. Use `isRefreshing` to show loading indicators while preserving the current data:
 
 ```tsx
-function FileUploader() {
-  const state = useState<{ file: File | null }>({ file: null });
+function DataView() {
+  const state = useState({ endpoint: "/api/data" });
 
-  const [uploadState, uploadFile] = useAsync(async (file: File, signal) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-      signal,
-    });
-
-    if (!response.ok) throw new Error("Upload failed");
+  const [data, refresh] = useAsync(async (signal) => {
+    const response = await fetch(state.endpoint, { signal });
     return response.json();
   });
 
-  const handleFileChange = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    state.file = input.files?.[0] || null;
-  };
-
-  const handleUpload = () => {
-    if (state.file) {
-      uploadFile(state.file);
-    }
-  };
-
   return () => (
     <div>
-      <input type="file" onChange={handleFileChange} />
-      <button
-        onClick={handleUpload}
-        disabled={!state.file || uploadState.isPending}
-      >
-        {uploadState.isPending ? "Uploading..." : "Upload"}
-      </button>
+      {data.error && <p>Error: {data.error.message}</p>}
+      {data.isLoading && <p>Loading initial data...</p>}
+      {data.isRefreshing && <p>Refreshing data...</p>}
 
-      {uploadState.isPending && <progress>Uploading...</progress>}
-      {uploadState.error && <p>Error: {uploadState.error}</p>}
-      {uploadState.value && <p>Upload successful: {uploadState.value.url}</p>}
+      {data.value && (
+        <div>
+          <pre>{JSON.stringify(data.value, null, 2)}</pre>
+          <button onClick={refresh} disabled={data.isLoading}>
+            Refresh
+          </button>
+        </div>
+      )}
     </div>
   );
+}
+```
+
+## Error Handling: Hard Errors vs Soft Errors
+
+Distinguish between "hard errors" (initial load failure) and "soft errors" (refresh failure while data is still available):
+
+```tsx
+function RobustDataView() {
+  const [data, refresh] = useAsync(async (signal) => {
+    const response = await fetch("/api/data", { signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  });
+
+  return () => {
+    // Hard error: Initial load failed, no data available
+    if (data.error && data.isLoading) {
+      return (
+        <div>
+          <h2>Failed to load data</h2>
+          <p>{data.error.message}</p>
+          <button onClick={refresh}>Try Again</button>
+        </div>
+      );
+    }
+
+    // Soft error: Refresh failed, but we still have stale data
+    if (data.error && data.isRefreshing) {
+      return (
+        <div>
+          <div className="warning-banner">
+            <strong>Out of sync:</strong> {data.error.message}
+            <button onClick={refresh}>Retry</button>
+          </div>
+          {/* Show stale data with visual indication */}
+          <div className="stale-content">
+            <pre>{JSON.stringify(data.value, null, 2)}</pre>
+          </div>
+        </div>
+      );
+    }
+
+    if (data.isLoading) return <p>Loading...</p>;
+
+    // Show refresh indicator with existing content
+    return (
+      <div>
+        {data.isRefreshing && (
+          <div className="refresh-indicator">Updating...</div>
+        )}
+        <pre>{JSON.stringify(data.value, null, 2)}</pre>
+        <button onClick={refresh}>Refresh</button>
+      </div>
+    );
+  };
+}
+```
+
+::: tip Hard vs Soft Errors
+- **Hard Error** (`error && isLoading`): Initial fetch failed, no data to display - show error UI
+- **Soft Error** (`error && isRefreshing`): Refresh failed but previous data still valid - show stale data with warning
+:::
+
+## Error Handling
+
+Errors are captured and can be displayed or handled:
+
+```tsx
+function RobustDataFetcher() {
+  const [data, refresh] = useAsync(async (signal) => {
+    const response = await fetch("/api/data", { signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  });
+
+  return () => {
+    if (data.error) {
+      return (
+        <div>
+          <h2>Failed to load data</h2>
+          <p>{data.error.message}</p>
+          <button onClick={refresh}>Try Again</button>
+        </div>
+      );
+    }
+
+    if (data.isLoading) return <p>Loading...</p>;
+
+    return (
+      <div>
+        <div>{data.value.content}</div>
+        <button onClick={refresh}>Refresh</button>
+      </div>
+    );
+  };
 }
 ```
 
 ## Using the Signal Parameter
 
-### Cancelling Fetch Requests
-
-The signal is automatically passed to fetch and will cancel in-flight requests when a new operation starts:
+The `AbortSignal` parameter automatically cancels in-flight requests when new fetches start or when dependencies change:
 
 ```tsx
-function DataFetcher() {
-  const state = useState({ userId: 1 });
+function UserSearch() {
+  const state = useState({ searchTerm: "" });
 
-  const [user, fetchUser] = useAsync(async (id: number, signal) => {
-    // Signal automatically cancels this request if fetchUser is called again
-    const response = await fetch(`/api/users/${id}`, { signal });
+  const [users, refresh] = useAsync(async (signal) => {
+    if (!state.searchTerm) return [];
+
+    // Signal automatically cancels this request if searchTerm changes again
+    const response = await fetch(`/api/users/search?q=${state.searchTerm}`, {
+      signal,
+    });
     return response.json();
   });
 
   return () => (
     <div>
-      <button onClick={() => fetchUser(state.userId++)}>Fetch Next User</button>
-      {user.value && <div>{user.value.name}</div>}
+      <input
+        value={state.searchTerm}
+        onInput={(e) => (state.searchTerm = e.target.value)}
+        placeholder="Search users..."
+      />
+      {users.error && <p>Error: {users.error.message}</p>}
+      {users.isLoading && <p>Searching...</p>}
+      <ul>
+        {users.value?.map((user) => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
     </div>
   );
 }
 ```
 
-### Detecting Cancellation in Multi-Step Operations
+## Multi-Step Operations with Cancellation
+
+Check the signal status between steps in complex operations:
 
 ```tsx
-function ComplexOperation() {
-  const [result, runOperation] = useAsync(async (id: number, signal) => {
-    const step1 = await fetch(`/api/step1/${id}`).then((r) => r.json());
+function ComplexDataFetch() {
+  const [result, refresh] = useAsync(async (signal) => {
+    const step1 = await fetch("/api/step1").then((r) => r.json());
 
     // Check if operation was cancelled after first step
-    if (signal.aborted) {
-      return;
-    }
+    if (signal.aborted) return null;
 
-    // Only continue if not cancelled
-    const step2 = await fetch(`/api/step2/${step1.data}`).then((r) => r.json());
+    const step2 = await fetch(`/api/step2/${step1.id}`).then((r) => r.json());
 
-    return step2;
+    if (signal.aborted) return null;
+
+    const step3 = await fetch(`/api/step3/${step2.id}`).then((r) => r.json());
+
+    return step3;
   });
 
-  return () => <div>{/* ... */}</div>;
+  return () => <div>{result.value && <pre>{JSON.stringify(result.value)}</pre>}</div>;
 }
 ```
 
+## State Type
+
+```tsx
+type AsyncState<T> =
+  | {
+      error: Error;
+      isLoading: true;
+      isRefreshing: false;
+      value: null;
+    }
+  | {
+      error: Error;
+      isLoading: false;
+      isRefreshing: true;
+      value: T;
+    }
+  | {
+      error: null;
+      isLoading: true;
+      isRefreshing: false;
+      value: null;
+    }
+  | {
+      error: null;
+      isLoading: false;
+      isRefreshing: true;
+      value: T;
+    }
+  | {
+      error: null;
+      isLoading: false;
+      isRefreshing: false;
+      value: T;
+    };
+```
+
+## Refresh Function Promise
+
+The `refresh` function returns a promise that resolves when the value has been updated. This is useful when you need to wait for the refresh to complete before performing additional operations:
+
+```tsx
+function DataManager() {
+  const [data, refresh] = useAsync(async (signal) => {
+    const response = await fetch("/api/data", { signal });
+    return response.json();
+  });
+
+  const handleRefreshAndSave = async () => {
+    // Wait for refresh to complete
+    await refresh();
+
+    // Now data.value contains the updated value
+    console.log("Updated data:", data.value);
+
+    // Perform additional operations with the fresh data
+    localStorage.setItem("cachedData", JSON.stringify(data.value));
+  };
+
+  return () => (
+    <div>
+      {data.error && <p>Error: {data.error.message}</p>}
+      {data.isLoading && <p>Loading...</p>}
+      {data.value && <pre>{JSON.stringify(data.value, null, 2)}</pre>}
+      <button onClick={handleRefreshAndSave}>Refresh and Save</button>
+    </div>
+  );
+}
+```
+
+::: tip Multiple Concurrent Refreshes
+If multiple `refresh()` calls are made concurrently, each promise will resolve when the value actually updates, not just when that particular request completes. This ensures consistency when multiple parts of your application trigger refreshes simultaneously.
+:::
+
 ## Features
 
-- **Automatic cancellation** - Previous executions are cancelled when a new one starts
-- **Optional initial values** - Avoid null checks by providing initial values
-- **Type-safe** - Full TypeScript inference for parameters and results
-- **Signal support** - AbortSignal provided for cancellation detection and request cancellation
-- **Unified API** - Single hook for all async patterns (fetching, mutations, polling, etc.)
-- **Value retention** - When using initial values, the previous value is retained during loading
+- **Automatic observation** - Tracks reactive dependencies and refetches when they change
+- **Automatic cancellation** - Previous fetches are cancelled when new ones start
+- **Type-safe** - Full TypeScript inference for results
+- **Signal support** - AbortSignal provided for request cancellation
+- **Loading states** - Distinguishes between initial loading and refreshing
+- **Error handling** - Captures and exposes errors for UI handling
 - **Reactive state** - All properties are reactive and tracked automatically
+- **Promise-based refresh** - Refresh function returns a promise that resolves when value updates
 
 ## Notes
 
 ::: warning Important
 
-- Previous executions are automatically cancelled when a new one starts
+- Previous fetches are automatically cancelled when dependencies change or refresh is called
 - **Do not destructure** state objects - breaks reactivity
-- Error messages are automatically converted to strings
+- Runs immediately on component setup
 - Only call `useAsync` during component setup phase
   :::
 
 ## Related
 
+- [useAction](/api/useAction) - Handle async operations with queuing
+- [useSuspend](/api/useSuspend) - Suspend until multiple async values resolve
 - [useState](/api/useState) - Reactive state management
 - [useEffect](/api/useEffect) - Side effects
-- [useMountEffect](/api/useMountEffect) - Run effects on mount

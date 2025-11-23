@@ -1,23 +1,22 @@
-import { Component, VNode } from "inferno";
+import { useState } from "./useState";
+import { createContext, useInjectContext } from "./createContext";
+import { getCurrentComponent } from "./component";
 
-export class ErrorBoundary extends Component<
-  { children: any; error: (error: unknown) => VNode },
-  { error: unknown }
-> {
-  getChildContext() {
-    return {
-      notifyError: (error: unknown) => {
-        this.setState({ error });
-      },
-    };
+export const CatchErrorContext = createContext<(error: unknown) => void>();
+
+export function useCatchError() {
+  const currentComponent = getCurrentComponent();
+
+  if (!currentComponent || currentComponent.isRendering) {
+    throw new Error("Only use the useCatchError hook in setup");
   }
-  state = { error: null };
 
-  render() {
-    if (this.state.error) {
-      return this.props.error(this.state.error);
-    }
+  const inject = useInjectContext(CatchErrorContext);
+  const state = useState<{ error: unknown }>({
+    error: null,
+  });
 
-    return this.props.children;
-  }
+  inject((error) => (state.error = error));
+
+  return state;
 }

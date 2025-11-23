@@ -184,6 +184,8 @@ export default defineConfig({
           { text: "useEffect", link: "/api/useEffect" },
           { text: "useDerived", link: "/api/useDerived" },
           { text: "useAsync", link: "/api/useAsync" },
+          { text: "useAction", link: "/api/useAction" },
+          { text: "useSuspend", link: "/api/useSuspend" },
           { text: "useView", link: "/api/useView" },
           { text: "useRouter", link: "/api/useRouter" },
         ],
@@ -200,7 +202,7 @@ export default defineConfig({
       {
         text: "Other APIs",
         items: [
-          { text: "ErrorBoundary", link: "/api/ErrorBoundary" },
+          { text: "useCatchError", link: "/api/useCatchError" },
           { text: "inspect", link: "/api/inspect" },
         ],
       },

@@ -1,14 +1,15 @@
-import { useState, useView } from "rask-ui";
+import {
+  createContext,
+  useAction,
+  useAsync,
+  useDerived,
+  useState,
+  useView,
+} from "rask-ui";
 import { TodoInput } from "./TodoInput";
 import { TodoFilters, type FilterType } from "./TodoFilters";
 import { TodoList } from "./TodoList";
-
-interface Todo {
-  id: string;
-  text: string;
-  completed: boolean;
-  createdAt: number;
-}
+import { serverAddTodo, serverGetTodos } from "../server";
 
 function Header() {
   return (
@@ -23,132 +24,64 @@ function Header() {
   );
 }
 
-export function TodoApp() {
-  const state = useState<{
-    todos: Todo[];
-    filter: FilterType;
-  }>({
-    todos: [
-      {
-        id: "1",
-        text: "Welcome to RASK Todo App! 🎉",
-        completed: false,
-        createdAt: Date.now(),
-      },
-      {
-        id: "2",
-        text: "Double-click to edit a todo",
-        completed: false,
-        createdAt: Date.now(),
-      },
-      {
-        id: "3",
-        text: "Hover over todos to see actions",
-        completed: false,
-        createdAt: Date.now(),
-      },
-    ],
-    filter: "all",
-  });
+const TodosContext = createContext();
 
-  const addTodo = (text: string) => {
-    state.todos.push({
+export function TodoApp() {
+  const [todos, refreshTodos] = useAsync(serverGetTodos);
+  const state = useState({
+    filter: "all" as FilterType,
+  });
+  const derived = useDerived({
+    todos: () => todos.value || [],
+    stats: () => {
+      const total = derived.todos.length;
+      const completed = derived.todos.filter((t) => t.completed).length;
+      const active = total - completed;
+
+      return { total, completed, active };
+    },
+  });
+  const [addingTodo, addTodo] = useAction(async (text: string) => {
+    await serverAddTodo({
       id: crypto.randomUUID(),
       text,
       completed: false,
       createdAt: Date.now(),
     });
-  };
-
-  const toggleTodo = (id: string) => {
-    const todo = state.todos.find((t) => t.id === id);
-    if (todo) {
-      todo.completed = !todo.completed;
-    }
-  };
-
-  const deleteTodo = (id: string) => {
-    const index = state.todos.findIndex((t) => t.id === id);
-    if (index !== -1) {
-      state.todos.splice(index, 1);
-    }
-  };
-
-  const editTodo = (id: string, newText: string) => {
-    const todo = state.todos.find((t) => t.id === id);
-    if (todo) {
-      todo.text = newText;
-    }
-  };
-
+    await refreshTodos();
+  });
   const changeFilter = (filter: FilterType) => {
     state.filter = filter;
   };
-
-  const getFilteredTodos = () => {
-    switch (state.filter) {
-      case "active":
-        return state.todos.filter((t) => !t.completed);
-      case "completed":
-        return state.todos.filter((t) => t.completed);
-      default:
-        return state.todos;
-    }
-  };
-
-  const getStats = () => {
-    const total = state.todos.length;
-    const completed = state.todos.filter((t) => t.completed).length;
-    const active = total - completed;
-    return { total, completed, active };
-  };
-
-  const view = useView(state, {
-    addTodo,
-    toggleTodo,
-    deleteTodo,
-    editTodo,
-    changeFilter,
-    getFilteredTodos,
-    getStats,
-  });
 
   return () => (
     <div class="w-full max-w-3xl mx-auto">
       <div class="bg-white rounded-2xl shadow-xl p-8">
         <Header />
 
-        <TodoInput onAdd={view.addTodo} />
+        <TodoInput onAdd={addTodo} />
 
         <TodoFilters
-          currentFilter={view.filter}
-          onFilterChange={view.changeFilter}
-          activeCount={view.getStats().active}
-          completedCount={view.getStats().completed}
-          totalCount={view.getStats().total}
+          currentFilter={state.filter}
+          onFilterChange={changeFilter}
         />
 
-        <TodoList
-          todos={view.getFilteredTodos()}
-          onToggle={view.toggleTodo}
-          onDelete={view.deleteTodo}
-          onEdit={view.editTodo}
-        />
+        <TodoList filter={state.filter} />
 
-        {view.getStats().total > 0 && (
+        {todos.stats.total > 0 && (
           <footer class="mt-6 pt-6 border-t border-gray-200">
             <div class="flex justify-between items-center text-sm text-gray-500">
               <span>
-                {view.getStats().active === 0
+                {todos.stats.active === 0
                   ? "All tasks completed! 🎉"
-                  : `${view.getStats().active} ${
-                      view.getStats().active === 1 ? "task" : "tasks"
+                  : `${todos.stats.active} ${
+                      todos.stats.active === 1 ? "task" : "tasks"
                     } remaining`}
               </span>
-              {view.getStats().completed > 0 && (
+              {todos.stats.completed > 0 && (
                 <button
                   onClick={() => {
-                    state.todos = state.todos.filter((t) => !t.completed);
+                    // state.todos = state.todos.filter((t) => !t.completed);
                   }}
                   class="text-red-500 hover:text-red-700 transition-colors"
                 >

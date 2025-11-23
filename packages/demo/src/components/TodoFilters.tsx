@@ -1,3 +1,5 @@
+import { useDerived } from "rask-ui";
+
 export type FilterType = "all" | "active" | "completed";
 
 interface TodoFiltersProps {
@@ -9,6 +11,16 @@ interface TodoFiltersProps {
 }
 
 export function TodoFilters(props: TodoFiltersProps) {
+  const derived = useDerived({
+    stats: () => {
+      const allTodos = todos.value || [];
+      const total = allTodos.length;
+      const completed = allTodos.filter((t) => t.completed).length;
+      const active = total - completed;
+
+      return { total, completed, active };
+    },
+  });
   return () => (
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
       <div class="flex gap-2">
