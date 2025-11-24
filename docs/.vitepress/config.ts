@@ -156,7 +156,7 @@ export default defineConfig({
     nav: [
       { text: "Home", link: "/" },
       { text: "Get Started", link: "/guide/getting-started" },
-      { text: "API Reference", link: "/api/" },
+      { text: "API Reference", link: "/api/components" },
       { text: "Slides", link: "/slides/", target: "_self" },
     ],
 
@@ -172,9 +172,9 @@ export default defineConfig({
       {
         text: "API Reference",
         items: [
-          { text: "Overview", link: "/api/" },
           { text: "Components", link: "/api/components" },
           { text: "render", link: "/api/render" },
+          { text: "inspect", link: "/api/inspect" },
         ],
       },
       {
@@ -183,27 +183,31 @@ export default defineConfig({
           { text: "useState", link: "/api/useState" },
           { text: "useEffect", link: "/api/useEffect" },
           { text: "useDerived", link: "/api/useDerived" },
+        ],
+      },
+      {
+        text: "Async Hooks",
+        items: [
           { text: "useAsync", link: "/api/useAsync" },
           { text: "useAction", link: "/api/useAction" },
           { text: "useSuspend", link: "/api/useSuspend" },
-          { text: "useView", link: "/api/useView" },
-          { text: "useRouter", link: "/api/useRouter" },
         ],
       },
       {
-        text: "Context & Lifecycle",
+        text: "Lifecycle Hooks",
         items: [
-          { text: "createContext", link: "/api/createContext" },
           { text: "useMountEffect", link: "/api/useMountEffect" },
           { text: "useCleanup", link: "/api/useCleanup" },
-          { text: "useRef", link: "/api/useRef" },
         ],
       },
       {
-        text: "Other APIs",
+        text: "Other Hooks",
         items: [
+          { text: "useView", link: "/api/useView" },
+          { text: "useRef", link: "/api/useRef" },
           { text: "useCatchError", link: "/api/useCatchError" },
-          { text: "inspect", link: "/api/inspect" },
+          { text: "useRouter", link: "/api/useRouter" },
+          { text: "useContext", link: "/api/createContext" },
         ],
       },
     ],
