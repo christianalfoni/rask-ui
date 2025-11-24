@@ -267,6 +267,5 @@ type ErrorState = {
 
 ## Related
 
-- [ErrorBoundary](/api/ErrorBoundary) - Component-based error boundary
 - [useState](/api/useState) - Reactive state management
 - [useEffect](/api/useEffect) - Side effects

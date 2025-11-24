@@ -23,5 +23,5 @@ These are component-bound reactive primitives, similar to React hooks but reacti
 - [**useRef**](/api/useRef) - Create a reference to a DOM element
 - [**useMountEffect**](/api/useMountEffect) - Run effect after mount
 - [**useCleanup**](/api/useCleanup) - Register cleanup function
-- [**ErrorBoundary**](/api/ErrorBoundary) - Catch and handle errors
+- [**useCatchError**](/api/useCatchError) - Catch and handle errors
 - [**inspect**](/api/inspect) - Inspect reactive state changes
