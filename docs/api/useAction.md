@@ -43,11 +43,11 @@ function TodoForm() {
         </button>
       </form>
 
-      {createState.actions.length > 0 && (
+      {createState.queue.length > 0 && (
         <div>
           <h3>Pending Actions</h3>
           <ul>
-            {createState.actions.map((action, index) => (
+            {createState.queue.map((action, index) => (
               <li key={index}>
                 {action.error ? (
                   <div>
@@ -146,10 +146,10 @@ function LoginForm() {
         {loginState.isPending ? "Logging in..." : "Login"}
       </button>
 
-      {loginState.actions.map((action, index) =>
+      {loginState.queue.map((action, index) =>
         action.error ? (
           <div key={index}>
-            <p>Error: {action.error}</p>
+            <p>Error: {action.error.message}</p>
             <button onClick={action.retry}>Retry</button>
             <button onClick={action.cancel}>Dismiss</button>
           </div>
@@ -201,16 +201,16 @@ function FileUploader() {
         Upload {state.files.length} file(s)
       </button>
 
-      {uploadState.actions.length > 0 && (
+      {uploadState.queue.length > 0 && (
         <div>
           <h3>Upload Queue</h3>
           <ul>
-            {uploadState.actions.map((action, index) => (
+            {uploadState.queue.map((action, index) => (
               <li key={index}>
                 {action.error ? (
                   <div>
                     <span>
-                      ❌ {action.params.name} - {action.error}
+                      ❌ {action.params.name} - {action.error.message}
                     </span>
                     <button onClick={action.retry}>Retry</button>
                     <button onClick={action.cancel}>Cancel</button>
@@ -259,9 +259,9 @@ function BatchProcessor() {
       <div>
         <h3>Queue Status</h3>
         <p>Processing: {processState.isPending ? "Yes" : "No"}</p>
-        <p>Queue Size: {processState.actions.length}</p>
+        <p>Queue Size: {processState.queue.length}</p>
 
-        {processState.actions.map((action, index) => (
+        {processState.queue.map((action, index) => (
           <div key={index}>
             <span>
               {index === 0 && processState.isPending ? "⏳" : "⏸️"} Item:{" "}
@@ -269,7 +269,7 @@ function BatchProcessor() {
             </span>
             {action.error && (
               <div>
-                <span>Error: {action.error}</span>
+                <span>Error: {action.error.message}</span>
                 <button onClick={action.retry}>Retry</button>
                 <button onClick={action.cancel}>Skip</button>
               </div>
@@ -287,12 +287,12 @@ function BatchProcessor() {
 ```tsx
 type ActionState<P> = {
   isPending: boolean;
-  actions: PendingAction<P>[];
+  queue: QueuedAction<P>[];
 };
 
-type PendingAction<P> = {
+type QueuedAction<P> = {
   params: P;
-  error: string | null;
+  error: Error | null;
   retry(): void;
   cancel(): void;
 };
@@ -313,7 +313,7 @@ type PendingAction<P> = {
 ::: warning Important
 
 - Actions are processed sequentially, not in parallel
-- Failed actions pause the queue until retried or cancelled
+- **Failed actions stop the queue** - processing will not continue to the next action until the failed action is either retried or cancelled
 - **Do not destructure** state objects - breaks reactivity
 - Only call `useAction` during component setup phase
   :::

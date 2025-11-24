@@ -10,7 +10,7 @@ export { useState, assignState } from "./useState";
 export { useAsync, Async } from "./useAsync";
 export { useAction, Action } from "./useAction";
 export { useSuspend } from "./useSuspend";
-export { useCatchError } from "./error";
+export { useCatchError } from "./useCatchError";
 export { useRef } from "./useRef";
 export { useView } from "./useView";
 export { useEffect } from "./useEffect";

@@ -8,7 +8,7 @@ import {
 import { VNodeFlags } from "inferno-vnode-flags";
 import { getCurrentObserver, Observer, Signal } from "./observation";
 import { syncBatch } from "./batch";
-import { CatchErrorContext } from "./error";
+import { CatchErrorContext } from "./useCatchError";
 
 export type RaskStatelessFunctionComponent<P extends Props<any>> =
   | (() => VNode)

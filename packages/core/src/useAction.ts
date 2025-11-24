@@ -1,15 +1,15 @@
 import { useState } from "./useState";
 
-export type PendingAction<P> = {
+export type QueuedAction<P> = {
   params: P;
-  error: string | null;
+  error: Error | null;
   retry(): void;
   cancel(): void;
 };
 
 export type ActionState<P> = {
   isPending: boolean;
-  actions: PendingAction<P>[];
+  queue: QueuedAction<P>[];
 };
 
 export type Action<P = null> = [
@@ -22,11 +22,11 @@ export function useAction<P = null>(
 ): Action<P> {
   const state = useState<ActionState<P>>({
     isPending: false,
-    actions: [],
+    queue: [],
   });
 
   const processQueue = () => {
-    const next = state.actions.find((action) => !action.error);
+    const next = state.queue[0];
 
     if (!next) {
       state.isPending = false;
@@ -37,35 +37,35 @@ export function useAction<P = null>(
 
     fn(next.params)
       .then(() => {
-        state.actions.shift();
+        state.queue.shift();
         processQueue();
       })
       .catch((error) => {
-        next.error = String(error);
-        processQueue();
+        next.error = error;
       });
   };
 
   const run = (params?: P) => {
     params = (params || null) as P;
 
-    let actionProxy!: PendingAction<P>;
+    let actionProxy!: QueuedAction<P>;
     const index =
-      state.actions.push({
+      state.queue.push({
         params,
         error: null,
         retry() {
-          state.actions.splice(state.actions.indexOf(actionProxy), 1);
-          run(params);
+          processQueue();
         },
         cancel() {
-          state.actions.splice(state.actions.indexOf(actionProxy), 1);
+          state.queue.splice(state.queue.indexOf(actionProxy), 1);
           processQueue();
         },
       }) - 1;
-    actionProxy = state.actions[index];
+    actionProxy = state.queue[index];
 
-    processQueue();
+    if (index === 0) {
+      processQueue();
+    }
   };
 
   return [state, run];

@@ -1,3 +1,4 @@
+import { syncBatch } from "./batch";
 import { useCleanup, getCurrentComponent } from "./component";
 import { Observer } from "./observation";
 import { assignState, useState } from "./useState";
@@ -89,12 +90,14 @@ export function useAsync<T extends NonNullable<any>>(
           return;
         }
 
-        assignState(state, {
-          isLoading: false,
-          isRefreshing: false,
-          value: result,
-          error: null,
-        } as any);
+        syncBatch(() => {
+          assignState(state, {
+            isLoading: false,
+            isRefreshing: false,
+            value: result,
+            error: null,
+          } as any);
+        });
 
         refreshResolvers.forEach((resolver) => resolver.resolve());
         refreshResolvers.length = 0;
@@ -103,12 +106,15 @@ export function useAsync<T extends NonNullable<any>>(
         if (abortController.signal.aborted) {
           return;
         }
-        assignState(state, {
-          isLoading: state.isLoading,
-          isRefreshing: state.isRefreshing,
-          value: state.value as any,
-          error,
-        } as any);
+
+        syncBatch(() => {
+          assignState(state, {
+            isLoading: state.isLoading,
+            isRefreshing: state.isRefreshing,
+            value: state.value as any,
+            error,
+          } as any);
+        });
 
         refreshResolvers.forEach((resolver) => resolver.reject(error));
         refreshResolvers.length = 0;
@@ -118,25 +124,27 @@ export function useAsync<T extends NonNullable<any>>(
   };
 
   const observer = new Observer(() => {
-    if (state.isLoading) {
-      refresh();
-    } else if (state.error && state.value === null) {
-      assignState(state, {
-        isLoading: true,
-        isRefreshing: false,
-        value: state.value as any,
-        error: null,
-      } as any);
-      refresh();
-    } else {
-      assignState(state, {
-        isLoading: false,
-        isRefreshing: true,
-        value: state.value as any,
-        error: null,
-      });
-      refresh();
-    }
+    syncBatch(() => {
+      if (state.isLoading) {
+        refresh();
+      } else if (state.error && state.value === null) {
+        assignState(state, {
+          isLoading: true,
+          isRefreshing: false,
+          value: state.value as any,
+          error: null,
+        } as any);
+        refresh();
+      } else {
+        assignState(state, {
+          isLoading: false,
+          isRefreshing: true,
+          value: state.value as any,
+          error: null,
+        });
+        refresh();
+      }
+    });
   });
 
   useCleanup(() => {
@@ -153,21 +161,23 @@ export function useAsync<T extends NonNullable<any>>(
         return;
       }
 
-      if (state.error && state.value === null) {
-        assignState(state, {
-          isLoading: true,
-          isRefreshing: false,
-          value: state.value as any,
-          error: null,
-        } as any);
-      } else {
-        assignState(state, {
-          isLoading: false,
-          isRefreshing: true,
-          value: state.value as any,
-          error: null,
-        });
-      }
+      syncBatch(() => {
+        if (state.error && state.value === null) {
+          assignState(state, {
+            isLoading: true,
+            isRefreshing: false,
+            value: state.value as any,
+            error: null,
+          } as any);
+        } else {
+          assignState(state, {
+            isLoading: false,
+            isRefreshing: true,
+            value: state.value as any,
+            error: null,
+          });
+        }
+      });
 
       let resolve!: () => void;
       let reject!: (error: Error) => void;

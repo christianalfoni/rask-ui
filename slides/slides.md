@@ -169,7 +169,6 @@ const MyContext = createContext();
 function Component() {
   // Context
   const inject = useInjectContext(MyContext);
-  inject(value);
   const context = useContext(MyContext);
 
   // Reactivity
@@ -177,7 +176,11 @@ function Component() {
   const computed = useDerived({});
   const view = useView(state, computed);
   const [asyncState, run] = useAsync(async (params, signal) => {});
+  const [action, execute] = useAction(async (params, signal) => {});
+  const data = useSuspend(async (signal) => {});
+  const error = useCatchError();
   const ref = useRef();
+  const router = useRouter();
 
   // Lifecycle
   useEffect(() => {});
