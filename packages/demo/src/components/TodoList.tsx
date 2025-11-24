@@ -1,3 +1,4 @@
+import { useDerived } from "rask-ui";
 import { TodoItem } from "./TodoItem";
 
 interface Todo {
@@ -6,14 +7,23 @@ interface Todo {
   completed: boolean;
 }
 
-interface TodoListProps {
-  todos: Todo[];
-  onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
-  onEdit: (id: string, newText: string) => void;
-}
+export function TodoList() {
+  const derived = useDerived({
+    filteredTodos: () => {
+      if (!todos.value) {
+        return [];
+      }
 
-export function TodoList(props: TodoListProps) {
+      switch (state.filter) {
+        case "active":
+          return todos.value.filter((t) => !t.completed);
+        case "completed":
+          return todos.value.filter((t) => t.completed);
+        default:
+          return todos.value;
+      }
+    },
+  });
   return () => (
     <div>
       {props.todos.length === 0 ? (
@@ -27,7 +37,6 @@ export function TodoList(props: TodoListProps) {
             <TodoItem
               key={todo.id}
               todo={todo}
-              onToggle={props.onToggle}
               onDelete={props.onDelete}
               onEdit={props.onEdit}
             />

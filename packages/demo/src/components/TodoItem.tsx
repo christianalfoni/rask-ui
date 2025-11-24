@@ -1,4 +1,5 @@
-import { useState } from "rask-ui";
+import { useAction, useState } from "rask-ui";
+import { serverToggleTodo } from "../server";
 
 interface TodoItemProps {
   todo: {
@@ -8,7 +9,7 @@ interface TodoItemProps {
   };
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onEdit: (id: string, newText: string) => void;
+  onEdit: (params: { id: string; text: string }) => void;
 }
 
 export function TodoItem(props: TodoItemProps) {
@@ -17,6 +18,23 @@ export function TodoItem(props: TodoItemProps) {
     editText: props.todo.text,
   });
 
+  const [togglingTodo, toggleTodo] = useAction(async (id: string) => {
+    await serverToggleTodo(id);
+    await refreshTodos();
+  });
+
+  const [deletingTodo, deleteTodo] = useAction(async (id: string) => {
+    await serverDeleteTodo(id);
+    await refreshTodos();
+  });
+
+  const [editingTodo, editTodo] = useAction(
+    async (params: { id: string; text: string }) => {
+      await serverEditTodo(params.id, params.text);
+      await refreshTodos();
+    }
+  );
+
   const startEditing = () => {
     state.isEditing = true;
     state.editText = props.todo.text;
@@ -24,7 +42,7 @@ export function TodoItem(props: TodoItemProps) {
 
   const saveEdit = () => {
     if (state.editText.trim()) {
-      props.onEdit(props.todo.id, state.editText.trim());
+      props.onEdit({ id: props.todo.id, text: state.editText.trim() });
       state.isEditing = false;
     }
   };
@@ -49,7 +67,9 @@ export function TodoItem(props: TodoItemProps) {
           <input
             type="text"
             value={state.editText}
-            onInput={(e) => (state.editText = (e.target as HTMLInputElement).value)}
+            onInput={(e) =>
+              (state.editText = (e.target as HTMLInputElement).value)
+            }
             onKeyDown={handleKeyDown}
             class="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             autoFocus

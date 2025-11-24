@@ -48,7 +48,10 @@ RASK provides a set of reactive hooks for building interactive UIs. These hooks 
 - **`useState`** - Create reactive state objects
 - **`useEffect`** - Run side effects when dependencies change
 - **`useDerived`** - Derive values from state with automatic caching
-- **`useAsync`** - Manage async operations (fetch, mutations, polling, etc.)
+- **`useAsync`** - Fetch async values with automatic observation and cancellation
+- **`useAction`** - Perform async operations with queuing and retry support
+- **`useSuspend`** - Suspend until multiple async values resolve
+- **`useCatchError`** - Catch and handle component errors (hook-based error boundary)
 - **`useRouter`** - Type-safe client-side routing
 - **`createContext`** / **`useContext`** - Share data through the component tree
 - **`useView`** - Compose state and methods into reusable objects

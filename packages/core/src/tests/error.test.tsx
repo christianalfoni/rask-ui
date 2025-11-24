@@ -1,21 +1,22 @@
 import { describe, it, expect } from "vitest";
-import { ErrorBoundary } from "../error";
+import { useCatchError } from "../useCatchError";
 import { render } from "../";
 
-describe("ErrorBoundary", () => {
+describe("useCatchError", () => {
   it("should render children when no error occurs", async () => {
     function SafeChild() {
       return () => <div>Safe content</div>;
     }
 
     function TestComponent() {
-      return () => (
-        <ErrorBoundary
-          error={(error: any) => <div>Error: {String(error)}</div>}
-        >
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div>Error: {String(errorState.error)}</div>
+        ) : (
           <SafeChild />
-        </ErrorBoundary>
-      );
+        );
     }
 
     const container = document.createElement("div");
@@ -40,13 +41,14 @@ describe("ErrorBoundary", () => {
     }
 
     function TestComponent() {
-      return () => (
-        <ErrorBoundary
-          error={(error: any) => <div>Error: {String(error)}</div>}
-        >
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div>Error: {String(errorState.error)}</div>
+        ) : (
           <ThrowingChild />
-        </ErrorBoundary>
-      );
+        );
     }
 
     const container = document.createElement("div");
@@ -71,18 +73,17 @@ describe("ErrorBoundary", () => {
     }
 
     function TestComponent() {
-      return () => (
-        <ErrorBoundary
-          error={(error: any) => (
-            <div class="error-ui">
-              <h1>Oops!</h1>
-              <p>{String(error)}</p>
-            </div>
-          )}
-        >
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div class="error-ui">
+            <h1>Oops!</h1>
+            <p>{String(errorState.error)}</p>
+          </div>
+        ) : (
           <ThrowingChild />
-        </ErrorBoundary>
-      );
+        );
     }
 
     const container = document.createElement("div");
@@ -110,14 +111,17 @@ describe("ErrorBoundary", () => {
     }
 
     function TestComponent() {
-      return () => (
-        <ErrorBoundary
-          error={(error: any) => <div>Error: {String(error)}</div>}
-        >
-          <SafeChild1 />
-          <SafeChild2 />
-        </ErrorBoundary>
-      );
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div>Error: {String(errorState.error)}</div>
+        ) : (
+          <>
+            <SafeChild1 />
+            <SafeChild2 />
+          </>
+        );
     }
 
     const container = document.createElement("div");
@@ -146,13 +150,14 @@ describe("ErrorBoundary", () => {
     }
 
     function TestComponent() {
-      return () => (
-        <ErrorBoundary
-          error={(error: any) => <div>Caught: {String(error)}</div>}
-        >
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div>Caught: {String(errorState.error)}</div>
+        ) : (
           <MiddleChild />
-        </ErrorBoundary>
-      );
+        );
     }
 
     const container = document.createElement("div");
@@ -177,18 +182,26 @@ describe("ErrorBoundary", () => {
       };
     }
 
+    function InnerBoundary() {
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div>Inner: {String(errorState.error)}</div>
+        ) : (
+          <ThrowingChild />
+        );
+    }
+
     function TestComponent() {
-      return () => (
-        <ErrorBoundary
-          error={(error: any) => <div>Outer: {String(error)}</div>}
-        >
-          <ErrorBoundary
-            error={(error: any) => <div>Inner: {String(error)}</div>}
-          >
-            <ThrowingChild />
-          </ErrorBoundary>
-        </ErrorBoundary>
-      );
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div>Outer: {String(errorState.error)}</div>
+        ) : (
+          <InnerBoundary />
+        );
     }
 
     const container = document.createElement("div");
@@ -215,13 +228,14 @@ describe("ErrorBoundary", () => {
     }
 
     function TestComponent() {
-      return () => (
-        <ErrorBoundary
-          error={(error: any) => <div>Error: {String(error)}</div>}
-        >
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div>Error: {String(errorState.error)}</div>
+        ) : (
           <ThrowingChild />
-        </ErrorBoundary>
-      );
+        );
     }
 
     const container = document.createElement("div");
@@ -246,17 +260,17 @@ describe("ErrorBoundary", () => {
     }
 
     function TestComponent() {
-      return () => (
-        <ErrorBoundary
-          error={(error: any) => (
-            <div>
-              Error: {error.message} (Code: {error.code})
-            </div>
-          )}
-        >
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div>
+            Error: {(errorState.error as any).message} (Code:{" "}
+            {(errorState.error as any).code})
+          </div>
+        ) : (
           <ThrowingChild />
-        </ErrorBoundary>
-      );
+        );
     }
 
     const container = document.createElement("div");
@@ -280,13 +294,14 @@ describe("ErrorBoundary", () => {
     }
 
     function TestComponent() {
-      return () => (
-        <ErrorBoundary
-          error={(error: any) => <div>Error: {String(error)}</div>}
-        >
+      const errorState = useCatchError();
+
+      return () =>
+        errorState.error ? (
+          <div>Error: {String(errorState.error)}</div>
+        ) : (
           <SafeChild />
-        </ErrorBoundary>
-      );
+        );
     }
 
     const container = document.createElement("div");
