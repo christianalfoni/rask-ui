@@ -25,6 +25,7 @@ export class RaskStatelessComponent extends Component {
     }
     this.forceUpdate();
   });
+  propsSignals: Record<string, Signal> = {};
   private reactiveProps!: Props<any>;
 
   shouldComponentUpdate(): boolean {
@@ -38,18 +39,18 @@ export class RaskStatelessComponent extends Component {
   }
   componentWillReceiveProps(nextProps: any): void {
     this.isReconciling = true;
-
+    const prevProps = this.props;
+    this.props = nextProps;
     syncBatch(() => {
-      for (const prop in nextProps) {
-        if ((this.props as any)[prop] === (nextProps as any)[prop]) {
+      for (const prop in this.propsSignals!) {
+        if ((prevProps as any)[prop] === (nextProps as any)[prop]) {
           continue;
         }
 
-        // @ts-ignore
-        this.reactiveProps[prop] = nextProps[prop];
+        // This just triggers the signal
+        this.propsSignals[prop].notify();
       }
     });
-    this.props = nextProps;
   }
   render() {
     const stopObserving = this.observer.observe();
@@ -89,7 +90,8 @@ export type RaskStatefulFunctionComponent<P extends Props<any>> =
 export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
   declare setup: RaskStatefulFunctionComponent<P>;
   private renderFn?: () => VNode;
-  private reactiveProps?: Props<any>;
+  propsSignals: Record<string, Signal> = {};
+  private reactiveProps!: Props<any>;
 
   // RECONCILIATION FLAGS
   // --------------------
@@ -152,17 +154,17 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
     nextProps: Readonly<{ children?: InfernoNode } & P>
   ): void {
     this.isReconciling = true;
+    const prevProps = this.props;
+    this.props = nextProps;
     syncBatch(() => {
-      for (const prop in nextProps) {
-        if ((this.props as any)[prop] === (nextProps as any)[prop]) {
+      for (const prop in this.propsSignals!) {
+        if ((prevProps as any)[prop] === (nextProps as any)[prop]) {
           continue;
         }
 
-        // @ts-ignore
-        this.reactiveProps[prop] = nextProps[prop];
+        this.propsSignals[prop].notify();
       }
     });
-    this.props = nextProps;
   }
   shouldComponentUpdate(): boolean {
     const shouldRender = this.isNotified;
@@ -229,47 +231,31 @@ export function createComponent(props: Props<any>, key?: string) {
 function createReactiveProps(
   comp: RaskStatefulComponent<any> | RaskStatelessComponent
 ) {
-  const reactiveProps = {} as any;
-  const signals = new Map<string, Signal>();
+  const props = new Proxy(
+    {},
+    {
+      get(_, prop: string) {
+        // Skip known non-reactive props
+        if (prop === "key" || prop === "ref") {
+          return;
+        }
 
-  for (const prop in comp.props) {
-    const value = (comp.props as any)[prop];
-
-    // Skip known non-reactive props
-    if (prop === "key" || prop === "ref") {
-      reactiveProps[prop] = value;
-      continue;
-    }
-
-    // Only create reactive getters for primitives
-    Object.defineProperty(reactiveProps, prop, {
-      enumerable: true,
-      get() {
         const observer = getCurrentObserver();
 
         if (observer) {
           // Lazy create signal only when accessed in reactive context
-          let signal = signals.get(prop);
+          let signal = comp.propsSignals[prop];
           if (!signal) {
             signal = new Signal();
-            signals.set(prop, signal);
+            comp.propsSignals[prop] = signal;
           }
           observer.subscribeSignal(signal);
         }
 
         return comp.props[prop];
       },
-      set(value) {
-        (comp.props as any)[prop] = value;
-        // Only notify if signal was created (i.e., prop was accessed reactively)
-        const signal = signals.get(prop);
+    }
+  );
 
-        if (signal) {
-          signal.notify();
-        }
-      },
-    });
-  }
-
-  return reactiveProps;
+  return props;
 }

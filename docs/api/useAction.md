@@ -1,6 +1,6 @@
 # useAction()
 
-A reactive hook for managing async operations that should be queued rather than cancelled. Use `useAction` for mutations, form submissions, and operations where you want to preserve and track each invocation.
+A reactive hook for managing async operations with state tracking. Use `useAction` for mutations, form submissions, and operations where you want to track the execution state, parameters, results, and errors.
 
 ```tsx
 const [state, run] = useAction(async (params) => {
@@ -43,25 +43,12 @@ function TodoForm() {
         </button>
       </form>
 
-      {createState.queue.length > 0 && (
-        <div>
-          <h3>Pending Actions</h3>
-          <ul>
-            {createState.queue.map((action, index) => (
-              <li key={index}>
-                {action.error ? (
-                  <div>
-                    <span>Failed: {action.params}</span>
-                    <button onClick={action.retry}>Retry</button>
-                    <button onClick={action.cancel}>Cancel</button>
-                  </div>
-                ) : (
-                  <span>Creating: {action.params}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+      {createState.error && (
+        <div>Error: {createState.error.message}</div>
+      )}
+
+      {createState.result && (
+        <div>Created todo: {createState.result.text}</div>
       )}
     </div>
   );
@@ -146,28 +133,22 @@ function LoginForm() {
         {loginState.isPending ? "Logging in..." : "Login"}
       </button>
 
-      {loginState.queue.map((action, index) =>
-        action.error ? (
-          <div key={index}>
-            <p>Error: {action.error.message}</p>
-            <button onClick={action.retry}>Retry</button>
-            <button onClick={action.cancel}>Dismiss</button>
-          </div>
-        ) : null
+      {loginState.error && (
+        <div>
+          <p>Error: {loginState.error.message}</p>
+        </div>
       )}
     </form>
   );
 }
 ```
 
-## File Upload Queue
+## File Upload
 
 ```tsx
 import { useAction, useState } from "rask-ui";
 
 function FileUploader() {
-  const state = useState<{ files: File[] }>({ files: [] });
-
   const [uploadState, uploadFile] = useAction(async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -181,46 +162,35 @@ function FileUploader() {
     return response.json();
   });
 
-  const handleFilesChange = (e: Event) => {
+  const handleFileChange = (e: Event) => {
     const input = e.target as HTMLInputElement;
-    state.files = Array.from(input.files || []);
-  };
-
-  const handleUpload = () => {
-    state.files.forEach((file) => uploadFile(file));
-    state.files = [];
+    const file = input.files?.[0];
+    if (file) {
+      uploadFile(file);
+    }
   };
 
   return () => (
     <div>
-      <input type="file" multiple onChange={handleFilesChange} />
-      <button
-        onClick={handleUpload}
-        disabled={state.files.length === 0 || uploadState.isPending}
-      >
-        Upload {state.files.length} file(s)
-      </button>
+      <input
+        type="file"
+        onChange={handleFileChange}
+        disabled={uploadState.isPending}
+      />
 
-      {uploadState.queue.length > 0 && (
+      {uploadState.isPending && (
+        <div>Uploading {uploadState.params?.name}...</div>
+      )}
+
+      {uploadState.error && (
         <div>
-          <h3>Upload Queue</h3>
-          <ul>
-            {uploadState.queue.map((action, index) => (
-              <li key={index}>
-                {action.error ? (
-                  <div>
-                    <span>
-                      ❌ {action.params.name} - {action.error.message}
-                    </span>
-                    <button onClick={action.retry}>Retry</button>
-                    <button onClick={action.cancel}>Cancel</button>
-                  </div>
-                ) : (
-                  <span>⏳ Uploading {action.params.name}...</span>
-                )}
-              </li>
-            ))}
-          </ul>
+          Error: {uploadState.error.message}
+        </div>
+      )}
+
+      {uploadState.result && (
+        <div>
+          Successfully uploaded {uploadState.params?.name}
         </div>
       )}
     </div>
@@ -228,54 +198,36 @@ function FileUploader() {
 }
 ```
 
-## Action Queue Management
+## Tracking State Changes
 
-Actions are processed sequentially, and each action can be retried or cancelled:
+The action state tracks the full lifecycle of your async operation:
 
 ```tsx
 import { useAction } from "rask-ui";
 
-function BatchProcessor() {
-  const [processState, processItem] = useAction(async (itemId: string) => {
-    const response = await fetch(`/api/process/${itemId}`, {
+function DataProcessor() {
+  const [processState, processData] = useAction(async (data: string) => {
+    const response = await fetch("/api/process", {
       method: "POST",
+      body: JSON.stringify({ data }),
     });
 
-    if (!response.ok) throw new Error(`Failed to process ${itemId}`);
+    if (!response.ok) throw new Error("Processing failed");
     return response.json();
   });
 
-  const handleBatchProcess = () => {
-    const items = ["item-1", "item-2", "item-3", "item-4"];
-    items.forEach((id) => processItem(id));
-  };
-
   return () => (
     <div>
-      <button onClick={handleBatchProcess} disabled={processState.isPending}>
-        Process Batch
+      <button onClick={() => processData("test")} disabled={processState.isPending}>
+        Process Data
       </button>
 
       <div>
-        <h3>Queue Status</h3>
-        <p>Processing: {processState.isPending ? "Yes" : "No"}</p>
-        <p>Queue Size: {processState.queue.length}</p>
-
-        {processState.queue.map((action, index) => (
-          <div key={index}>
-            <span>
-              {index === 0 && processState.isPending ? "⏳" : "⏸️"} Item:{" "}
-              {action.params}
-            </span>
-            {action.error && (
-              <div>
-                <span>Error: {action.error.message}</span>
-                <button onClick={action.retry}>Retry</button>
-                <button onClick={action.cancel}>Skip</button>
-              </div>
-            )}
-          </div>
-        ))}
+        <h3>State</h3>
+        <p>Pending: {processState.isPending ? "Yes" : "No"}</p>
+        <p>Params: {JSON.stringify(processState.params)}</p>
+        <p>Result: {JSON.stringify(processState.result)}</p>
+        <p>Error: {processState.error?.message || "None"}</p>
       </div>
     </div>
   );
@@ -284,36 +236,49 @@ function BatchProcessor() {
 
 ## State Type
 
-```tsx
-type ActionState<P> = {
-  isPending: boolean;
-  queue: QueuedAction<P>[];
-};
+The state is a discriminated union that represents different stages of the action:
 
-type QueuedAction<P> = {
-  params: P;
-  error: Error | null;
-  retry(): void;
-  cancel(): void;
-};
+```tsx
+type ActionState<T, P> =
+  | {
+      isPending: false;
+      params: null;
+      result: null;
+      error: null;
+    }
+  | {
+      isPending: true;
+      params: P;
+      result: null;
+      error: null;
+    }
+  | {
+      isPending: false;
+      params: P;
+      result: T;
+      error: null;
+    }
+  | {
+      isPending: false;
+      params: P;
+      result: null;
+      error: Error;
+    };
 ```
 
 ## Features
 
-- **Action queuing** - Actions are queued and processed sequentially
-- **Retry support** - Each action can be individually retried
-- **Cancel support** - Actions can be cancelled and removed from the queue
-- **Error tracking** - Errors are captured per action
-- **Type-safe** - Full TypeScript inference for parameters
-- **Sequential processing** - Only one action runs at a time
+- **State tracking** - Tracks pending, params, result, and error states
+- **Automatic cancellation** - Starting a new action cancels the previous one
+- **Type-safe** - Full TypeScript inference for parameters and results
+- **Discriminated union** - State type narrows based on isPending/error/result
 - **Reactive state** - All properties are reactive and tracked automatically
 
 ## Notes
 
 ::: warning Important
 
-- Actions are processed sequentially, not in parallel
-- **Failed actions stop the queue** - processing will not continue to the next action until the failed action is either retried or cancelled
+- Starting a new action will abort the previous one (if still pending)
 - **Do not destructure** state objects - breaks reactivity
 - Only call `useAction` during component setup phase
   :::

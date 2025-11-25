@@ -1,71 +1,85 @@
-import { useState } from "./useState";
+import { assignState, useState } from "./useState";
 
-export type QueuedAction<P> = {
-  params: P;
-  error: Error | null;
-  retry(): void;
-  cancel(): void;
-};
+export type ActionState<T, P> =
+  | {
+      isPending: false;
+      params: null;
+      result: null;
+      error: null;
+    }
+  | {
+      isPending: true;
+      params: P;
+      result: null;
+      error: null;
+    }
+  | {
+      isPending: false;
+      params: P;
+      result: T;
+      error: null;
+    }
+  | {
+      isPending: false;
+      params: P;
+      result: null;
+      error: Error;
+    };
 
-export type ActionState<P> = {
-  isPending: boolean;
-  queue: QueuedAction<P>[];
-};
-
-export type Action<P = null> = [
-  ActionState<P>,
+export type Action<T, P = null> = [
+  ActionState<T, P>,
   [P] extends [null] ? () => void : (params: P) => void
 ];
 
-export function useAction<P = null>(
-  fn: [P] extends [null] ? () => Promise<void> : (params: P) => Promise<void>
-): Action<P> {
-  const state = useState<ActionState<P>>({
+export function useAction<T, P = null>(
+  fn: [P] extends [null] ? () => Promise<T> : (params: P) => Promise<T>
+): Action<T, P> {
+  const state = useState<ActionState<T, P>>({
     isPending: false,
-    queue: [],
+    error: null,
+    params: null,
+    result: null,
   });
 
-  const processQueue = () => {
-    const next = state.queue[0];
-
-    if (!next) {
-      state.isPending = false;
-      return;
-    }
-
-    state.isPending = true;
-
-    fn(next.params)
-      .then(() => {
-        state.queue.shift();
-        processQueue();
-      })
-      .catch((error) => {
-        next.error = error;
-      });
-  };
+  let abortController: AbortController | undefined;
 
   const run = (params?: P) => {
     params = (params || null) as P;
 
-    let actionProxy!: QueuedAction<P>;
-    const index =
-      state.queue.push({
-        params,
-        error: null,
-        retry() {
-          processQueue();
-        },
-        cancel() {
-          state.queue.splice(state.queue.indexOf(actionProxy), 1);
-          processQueue();
-        },
-      }) - 1;
-    actionProxy = state.queue[index];
+    abortController?.abort();
 
-    if (index === 0) {
-      processQueue();
-    }
+    const currentAbortController = (abortController = new AbortController());
+
+    assignState(state, {
+      isPending: true,
+      error: null,
+      params,
+      result: null,
+    });
+
+    fn(params)
+      .then((result) => {
+        if (currentAbortController.signal.aborted) {
+          return;
+        }
+        assignState(state, {
+          isPending: false,
+          error: null,
+          params,
+          result,
+        });
+      })
+      .catch((error) => {
+        if (currentAbortController.signal.aborted) {
+          return;
+        }
+        assignState(state, {
+          isPending: false,
+          error,
+          params,
+          result: null,
+        });
+      });
   };
 
   return [state, run];
