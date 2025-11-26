@@ -86,3 +86,74 @@ function TodoList(props) {
 ```
 
 **Key Point:** When `props.todo.done` changes in a `Todo` component, only that specific component reconciles. The `TodoList` doesn't re-render, and neither do the other `Todo` components. This is because RASK tracks property access at a granular level.
+
+## Event Types
+
+RASK provides event types through the global `Rask` namespace. These types are available automatically when you import from `rask-ui` and don't require the "Inferno" prefix:
+
+```tsx
+function MyInput(props) {
+  const handleChange = (e: Rask.ChangeEvent<HTMLInputElement>) => {
+    console.log(e.target.value);
+  };
+
+  const handleClick = (e: Rask.MouseEvent<HTMLButtonElement>) => {
+    console.log("Button clicked!");
+  };
+
+  return () => (
+    <div>
+      <input type="text" onInput={handleChange} />
+      <button onClick={handleClick}>Submit</button>
+    </div>
+  );
+}
+```
+
+### Available Event Types
+
+All event types are generic and accept an optional element type parameter (defaults to `Element`):
+
+- `Rask.MouseEvent<T>` - Mouse events (click, mousedown, etc.)
+- `Rask.KeyboardEvent<T>` - Keyboard events (keydown, keyup, etc.)
+- `Rask.FocusEvent<T>` - Focus events (focus, blur, etc.)
+- `Rask.ChangeEvent<T>` - Change events (input, textarea changes)
+- `Rask.FormEvent<T>` - Form events (submit, reset, etc.)
+- `Rask.ClipboardEvent<T>` - Clipboard events (copy, paste, cut)
+- `Rask.DragEvent<T>` - Drag and drop events
+- `Rask.TouchEvent<T>` - Touch events for mobile devices
+- `Rask.PointerEvent<T>` - Pointer events (unified mouse/touch/pen)
+- `Rask.WheelEvent<T>` - Mouse wheel events
+- `Rask.AnimationEvent<T>` - CSS animation events
+- `Rask.TransitionEvent<T>` - CSS transition events
+- `Rask.CompositionEvent<T>` - IME composition events
+- `Rask.EventHandler<E>` - Generic event handler type
+
+### Example with Specific Element Types
+
+```tsx
+function Form(props) {
+  const handleInputChange = (e: Rask.ChangeEvent<HTMLInputElement>) => {
+    // e.target is typed as HTMLInputElement
+    console.log(e.target.value);
+  };
+
+  const handleTextareaChange = (e: Rask.ChangeEvent<HTMLTextAreaElement>) => {
+    // e.target is typed as HTMLTextAreaElement
+    console.log(e.target.value);
+  };
+
+  const handleSubmit = (e: Rask.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // e.target is typed as HTMLFormElement
+  };
+
+  return () => (
+    <form onSubmit={handleSubmit}>
+      <input type="text" onInput={handleInputChange} />
+      <textarea onInput={handleTextareaChange} />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```

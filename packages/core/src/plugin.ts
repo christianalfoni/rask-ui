@@ -63,7 +63,7 @@ export default function raskPlugin(options: RaskPluginOptions = {}): Plugin {
         [
           infernoPluginPath,
           {
-            importSource: importSource,
+            importSource: `${importSource}/compiler`,
             defineAllArguments: false,
           },
         ],

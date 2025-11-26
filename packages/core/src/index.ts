@@ -1,3 +1,6 @@
+// Import global types - this makes the Rask namespace available globally
+import "./types";
+
 export { render } from "./render";
 export {
   useCleanup,
@@ -18,13 +21,3 @@ export { useDerived, Derived } from "./useDerived";
 export { syncBatch } from "./batch";
 export { inspect } from "./inspect";
 export { Router, useRouter } from "./useRouter";
-
-// Re-export Inferno JSX runtime functions so users don't need to install Inferno directly
-export {
-  createVNode,
-  createComponentVNode,
-  createFragment,
-  createTextVNode,
-  normalizeProps,
-  Component,
-} from "inferno";

@@ -415,7 +415,7 @@ impl RaskComponentTransform {
         }
     }
 
-    /// Rewrite imports from "inferno" to the configured import source
+    /// Rewrite imports from "inferno" to the configured import source + "/compiler"
     fn rewrite_inferno_imports(&mut self, module: &mut Module) {
         let import_source = self
             .config
@@ -424,13 +424,15 @@ impl RaskComponentTransform {
             .map(|s| s.as_str())
             .unwrap_or("rask-ui");
 
+        let compiler_import = format!("{}/compiler", import_source);
+
         for item in &mut module.body {
             if let ModuleItem::ModuleDecl(ModuleDecl::Import(import)) = item {
                 if &*import.src.value == "inferno" {
-                    // Rewrite the import source from "inferno" to the configured source
+                    // Rewrite the import source from "inferno" to the configured source + "/compiler"
                     import.src = Box::new(Str {
                         span: Default::default(),
-                        value: Wtf8Atom::from(import_source),
+                        value: Wtf8Atom::from(compiler_import.as_str()),
                         raw: None,
                     });
                 }
@@ -630,15 +632,45 @@ impl VisitMut for RaskComponentTransform {
                 }
             }
             ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(export)) => {
-                // Handle: export default function() { return () => <div /> }
-                if let DefaultDecl::Fn(fn_expr) = &mut export.decl {
-                    if self.is_rask_component(&fn_expr.function) {
-                        // For default exports, we need to keep it as a function expression
-                        // but transform the pattern internally if needed
-                        // For now, we'll skip transforming default exports
-                        // as they need special handling
-                    } else if self.is_stateless_component(&fn_expr.function) {
-                        // Same for stateless default exports
+                match &mut export.decl {
+                    // Handle: export default function MyComponent() { return () => <div /> }
+                    DefaultDecl::Fn(fn_expr) => {
+                        let is_stateful = self.is_rask_component(&fn_expr.function);
+                        let is_stateless = self.is_stateless_component(&fn_expr.function);
+
+                        if is_stateful || is_stateless {
+                            // Get or create a name for the component
+                            let name = fn_expr
+                                .ident
+                                .clone()
+                                .unwrap_or_else(|| quote_ident!("DefaultComponent").into());
+
+                            let func = (*fn_expr.function).clone();
+                            let class_expr = self.create_component_class_expr(name, func, is_stateful);
+                            export.decl = DefaultDecl::Class(ClassExpr {
+                                ident: class_expr.ident,
+                                class: class_expr.class,
+                            });
+                            return;
+                        }
+                    }
+                    // No need to handle DefaultDecl::Class as it's already a class
+                    _ => {}
+                }
+            }
+            // Handle: const MyComponent = () => ...; export default MyComponent;
+            ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(export)) => {
+                // Check if it's an arrow function
+                if let Expr::Arrow(arrow) = &*export.expr {
+                    let func = self.arrow_to_function(arrow);
+                    let is_stateful = self.is_rask_component(&func);
+                    let is_stateless = self.is_stateless_component(&func);
+
+                    if is_stateful || is_stateless {
+                        let name = quote_ident!("DefaultComponent").into();
+                        let class_expr = self.create_component_class_expr(name, func, is_stateful);
+                        export.expr = Box::new(Expr::Class(class_expr));
+                        return;
                     }
                 }
             }
