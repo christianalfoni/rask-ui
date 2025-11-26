@@ -54,9 +54,22 @@ export class RaskStatelessComponent extends Component {
   }
   render() {
     const stopObserving = this.observer.observe();
-    const result = this.renderFn(this.reactiveProps);
+    let result: any = null;
 
-    stopObserving();
+    try {
+      result = this.renderFn(this.reactiveProps);
+    } catch (error) {
+      const notifyError = this.context.getContext?.(CatchErrorContext);
+
+      if (typeof notifyError !== "function") {
+        throw error;
+      }
+
+      notifyError(error);
+    } finally {
+      stopObserving();
+    }
+
     return result;
   }
 }
@@ -234,6 +247,17 @@ function createReactiveProps(
   const props = new Proxy(
     {},
     {
+      ownKeys() {
+        return Object.getOwnPropertyNames(comp.props);
+      },
+      getOwnPropertyDescriptor(_, prop: string) {
+        return {
+          configurable: true,
+          enumerable: true,
+          value: comp.props[prop],
+          writable: false,
+        };
+      },
       get(_, prop: string) {
         // Skip known non-reactive props
         if (prop === "key" || prop === "ref") {
