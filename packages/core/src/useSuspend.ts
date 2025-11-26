@@ -1,76 +1,75 @@
-import { AsyncState, isAsync } from "./useAsync";
+import { AsyncState, isAsync, useAsync } from "./useAsync";
 import { useEffect } from "./useEffect";
 import { assignState, useState } from "./useState";
 
 type SuspendState<T extends Record<string, () => any>> =
-  | {
+  | ({
       error: Error;
       isLoading: true;
       isRefreshing: false;
-      values: {
-        [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
-          ? ReturnType<T[K]>["value"]
-          : ReturnType<T[K]>;
-      };
-    }
-  | {
+    } & {
+      [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
+        ? ReturnType<T[K]>["value"]
+        : ReturnType<T[K]>;
+    })
+  | ({
       error: Error;
       isLoading: false;
       isRefreshing: true;
-      values: {
-        [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
-          ? NonNullable<ReturnType<T[K]>["value"]>
-          : ReturnType<T[K]>;
-      };
-    }
-  | {
+    } & {
+      [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
+        ? NonNullable<ReturnType<T[K]>["value"]>
+        : ReturnType<T[K]>;
+    })
+  | ({
       error: null;
       isLoading: true;
       isRefreshing: false;
-      values: {
-        [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
-          ? ReturnType<T[K]>["value"]
-          : ReturnType<T[K]>;
-      };
-    }
-  | {
+    } & {
+      [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
+        ? ReturnType<T[K]>["value"]
+        : ReturnType<T[K]>;
+    })
+  | ({
       error: null;
       isLoading: false;
       isRefreshing: true;
-      values: {
-        [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
-          ? NonNullable<ReturnType<T[K]>["value"]>
-          : ReturnType<T[K]>;
-      };
-    }
-  | {
+    } & {
+      [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
+        ? NonNullable<ReturnType<T[K]>["value"]>
+        : ReturnType<T[K]>;
+    })
+  | ({
       error: null;
       isLoading: false;
       isRefreshing: false;
-      values: {
-        [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
-          ? NonNullable<ReturnType<T[K]>["value"]>
-          : ReturnType<T[K]>;
-      };
-    };
+    } & {
+      [K in keyof T]: ReturnType<T[K]> extends AsyncState<any>
+        ? NonNullable<ReturnType<T[K]>["value"]>
+        : ReturnType<T[K]>;
+    });
 
 export function useSuspend<T extends Record<string, any>>(asyncs: T) {
-  const state = useState<SuspendState<T>>({
-    isLoading: true,
-    isRefreshing: false,
-    error: null,
-    values: Object.keys(asyncs).reduce((aggr, key) => {
-      let value = asyncs[key]();
+  const state = useState<SuspendState<T>>(
+    Object.keys(asyncs).reduce(
+      (aggr, key) => {
+        let value = asyncs[key]();
 
-      if (isAsync(value)) {
-        value = value.value;
-      }
+        if (isAsync(value)) {
+          value = value.value;
+        }
 
-      aggr[key] = value;
+        aggr[key] = value;
 
-      return aggr;
-    }, {} as any),
-  });
+        return aggr;
+      },
+      {
+        isLoading: true,
+        isRefreshing: false,
+        error: null,
+      } as any
+    )
+  );
 
   useEffect(() => {
     let isLoading = false;
@@ -103,7 +102,7 @@ export function useSuspend<T extends Record<string, any>>(asyncs: T) {
     state.error = error || null;
 
     if (!state.isLoading && !state.isRefreshing && !error) {
-      assignState(state.values, values);
+      assignState(state, values);
     }
   });
 
