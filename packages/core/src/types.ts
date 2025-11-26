@@ -13,6 +13,7 @@ import type {
   InfernoWheelEvent,
   InfernoTransitionEvent,
   CompositionEvent as InfernoCompositionEvent,
+  Inferno,
 } from "inferno";
 
 declare global {
@@ -31,6 +32,10 @@ declare global {
     export type FocusEvent<T = Element> = InfernoFocusEvent<T>;
     export type FormEvent<T = Element> = InfernoFormEvent<T>;
     export type CompositionEvent<T = Element> = InfernoCompositionEvent<T>;
+    export type ElementProps<T extends keyof JSX.IntrinsicElements> = Omit<
+      JSX.IntrinsicElements[T],
+      keyof Inferno.Attributes
+    >;
   }
 }
 
