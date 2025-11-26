@@ -53,10 +53,10 @@ function UserProfile() {
 
     return (
       <div>
-        <h1>{suspended.values.user.name}</h1>
+        <h1>{suspended.user.name}</h1>
         <h2>Posts</h2>
         <ul>
-          {suspended.values.posts.map((post) => (
+          {suspended.posts.map((post) => (
             <li key={post.id}>{post.title}</li>
           ))}
         </ul>
@@ -92,23 +92,23 @@ function Dashboard() {
     return response.json();
   });
 
-  const data = useSuspend({
+  const suspended = useSuspend({
     users: () => users,
     sales: () => sales,
   });
 
   return () => {
-    if (data.error) {
-      return <p>Error: {data.error.message}</p>;
+    if (suspended.error) {
+      return <p>Error: {suspended.error.message}</p>;
     }
 
-    if (data.isLoading) {
+    if (suspended.isLoading) {
       return <p>Loading dashboard...</p>;
     }
 
     return (
       <div>
-        {data.isRefreshing && <div className="loading-indicator">Updating...</div>}
+        {suspended.isRefreshing && <div className="loading-indicator">Updating...</div>}
 
         <select
           value={filters.region}
@@ -119,8 +119,8 @@ function Dashboard() {
           <option value="asia">Asia</option>
         </select>
 
-        <h2>Users: {data.values.users.count}</h2>
-        <h2>Sales: ${data.values.sales.total}</h2>
+        <h2>Users: {suspended.users.count}</h2>
+        <h2>Sales: ${suspended.sales.total}</h2>
       </div>
     );
   };
@@ -152,26 +152,26 @@ function ProductPage() {
 
   // Coordinate async states with synchronous values
   // When productId changes, all values update together - no partial renders
-  const data = useSuspend({
+  const suspended = useSuspend({
     product: () => product,
     reviews: () => reviews,
     settings: () => localSettings, // Syncs with async updates
   });
 
   return () => {
-    if (data.error) {
+    if (suspended.error) {
       return <p>Error loading product</p>;
     }
 
-    if (data.isLoading) {
+    if (suspended.isLoading) {
       return <p>Loading product...</p>;
     }
 
     return (
       <div>
-        <h1>{data.values.product.name}</h1>
+        <h1>{suspended.product.name}</h1>
         <p>
-          Price: {data.values.settings.currency} {data.values.product.price}
+          Price: {suspended.settings.currency} {suspended.product.price}
         </p>
 
         {/* Change productId - component suspends until both async values resolve */}
@@ -179,7 +179,7 @@ function ProductPage() {
 
         {/* Change currency - updates immediately with current product data */}
         <select
-          value={data.values.settings.currency}
+          value={suspended.settings.currency}
           onChange={(e) => (localSettings.currency = e.target.value)}
         >
           <option value="USD">USD</option>
@@ -187,8 +187,8 @@ function ProductPage() {
         </select>
 
         <div>
-          <h2>Reviews ({data.values.reviews.length})</h2>
-          {data.values.reviews.map((review) => (
+          <h2>Reviews ({suspended.reviews.length})</h2>
+          {suspended.reviews.map((review) => (
             <div key={review.id}>{review.text}</div>
           ))}
         </div>
@@ -223,23 +223,23 @@ function AnalyticsDashboard() {
     return response.json();
   });
 
-  const dashboard = useSuspend({
+  const suspended = useSuspend({
     metrics: () => metrics,
     events: () => events,
     users: () => users,
   });
 
   return () => {
-    if (dashboard.error) {
+    if (suspended.error) {
       return (
         <div>
           <h1>Analytics Dashboard</h1>
-          <p>Failed to load: {dashboard.error.message}</p>
+          <p>Failed to load: {suspended.error.message}</p>
         </div>
       );
     }
 
-    if (dashboard.isLoading) {
+    if (suspended.isLoading) {
       return (
         <div>
           <h1>Analytics Dashboard</h1>
@@ -251,18 +251,18 @@ function AnalyticsDashboard() {
     return (
       <div>
         <h1>Analytics Dashboard</h1>
-        {dashboard.isRefreshing && <span>Refreshing...</span>}
+        {suspended.isRefreshing && <span>Refreshing...</span>}
 
         <div className="metrics">
           <h2>Metrics</h2>
-          <div>Views: {dashboard.values.metrics.views}</div>
-          <div>Clicks: {dashboard.values.metrics.clicks}</div>
+          <div>Views: {suspended.metrics.views}</div>
+          <div>Clicks: {suspended.metrics.clicks}</div>
         </div>
 
         <div className="events">
           <h2>Recent Events</h2>
           <ul>
-            {dashboard.values.events.map((event) => (
+            {suspended.events.map((event) => (
               <li key={event.id}>{event.name}</li>
             ))}
           </ul>
@@ -270,8 +270,8 @@ function AnalyticsDashboard() {
 
         <div className="users">
           <h2>User Stats</h2>
-          <div>Active: {dashboard.values.users.active}</div>
-          <div>Total: {dashboard.values.users.total}</div>
+          <div>Active: {suspended.users.active}</div>
+          <div>Total: {suspended.users.total}</div>
         </div>
       </div>
     );
@@ -281,38 +281,45 @@ function AnalyticsDashboard() {
 
 ## State Type
 
+The state is a discriminated union where values are merged directly into the state object:
+
 ```tsx
 type SuspendState<T extends Record<string, () => any>> =
-  | {
+  | ({
       error: Error;
       isLoading: true;
       isRefreshing: false;
-      values: { [K in keyof T]: /* resolved value or null */ };
-    }
-  | {
+    } & {
+      [K in keyof T]: /* resolved value or null */
+    })
+  | ({
       error: Error;
       isLoading: false;
       isRefreshing: true;
-      values: { [K in keyof T]: /* resolved non-null value */ };
-    }
-  | {
+    } & {
+      [K in keyof T]: /* resolved non-null value */
+    })
+  | ({
       error: null;
       isLoading: true;
       isRefreshing: false;
-      values: { [K in keyof T]: /* resolved value or null */ };
-    }
-  | {
+    } & {
+      [K in keyof T]: /* resolved value or null */
+    })
+  | ({
       error: null;
       isLoading: false;
       isRefreshing: true;
-      values: { [K in keyof T]: /* resolved non-null value */ };
-    }
-  | {
+    } & {
+      [K in keyof T]: /* resolved non-null value */
+    })
+  | ({
       error: null;
       isLoading: false;
       isRefreshing: false;
-      values: { [K in keyof T]: /* resolved non-null value */ };
-    };
+    } & {
+      [K in keyof T]: /* resolved non-null value */
+    });
 ```
 
 ## Features
@@ -333,7 +340,7 @@ type SuspendState<T extends Record<string, () => any>> =
 
 - All async values must resolve before `isLoading` becomes false
 - If any async value has an error, the error is surfaced in the suspend state
-- Values are accessed through the `values` object
+- Values are merged directly into the state object (e.g., `state.user`, not `state.values.user`)
 - **Do not destructure** state objects - breaks reactivity
 - Only call `useSuspend` during component setup phase
   :::
