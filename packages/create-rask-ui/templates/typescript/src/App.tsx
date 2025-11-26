@@ -1,7 +1,7 @@
-import { createState } from "rask-ui";
+import { useState } from "rask-ui";
 
 export function App() {
-  const state = createState({ count: 0 });
+  const state = useState({ count: 0 });
 
   return () => (
     <div className="app-container">
