@@ -7,8 +7,13 @@ Functions for sharing data through the component tree without props.
 Creates a context by wrapping a hook function that will be used as a context identifier. The hook defines how the context value is created.
 
 ```tsx
-const ThemeContext = createContext(() => {
-  return useState({ color: "blue" });
+const CounterContext = createContext(() => {
+  const state = useState({ count: 0 });
+
+  const increment = () => state.count++;
+  const decrement = () => state.count--;
+
+  return useView(state, { increment, decrement });
 });
 ```
 
@@ -17,24 +22,33 @@ Returns the hook function, which can be used with `useContext()` and `useInjectC
 ### Example
 
 ```tsx
-import { createContext, useContext, useInjectContext, useState } from "rask-ui";
+import { createContext, useContext, useInjectContext, useState, useView } from "rask-ui";
 
-const ThemeContext = createContext(() => {
-  return useState({ color: "blue" });
+const CounterContext = createContext(() => {
+  const state = useState({ count: 0 });
+
+  const increment = () => state.count++;
+  const decrement = () => state.count--;
+
+  return useView(state, { increment, decrement });
 });
 
 function App() {
-  const theme = useInjectContext(ThemeContext);
-
-  theme.color = "blue";
+  const counter = useInjectContext(CounterContext);
 
   return () => <Child />;
 }
 
 function Child() {
-  const theme = useContext(ThemeContext);
+  const counter = useContext(CounterContext);
 
-  return () => <div style={{ color: theme.color }}>Themed text</div>;
+  return () => (
+    <div>
+      <p>Count: {counter.count}</p>
+      <button onClick={counter.increment}>Increment</button>
+      <button onClick={counter.decrement}>Decrement</button>
+    </div>
+  );
 }
 ```
 
@@ -49,12 +63,17 @@ const value = useInjectContext(MyContext, ...params);
 ### Example
 
 ```tsx
-const ThemeContext = createContext((defaultColor: string) => {
-  return useState({ color: defaultColor });
+const CounterContext = createContext((initialCount: number) => {
+  const state = useState({ count: initialCount });
+
+  const increment = () => state.count++;
+  const decrement = () => state.count--;
+
+  return useView(state, { increment, decrement });
 });
 
 function App() {
-  const theme = useInjectContext(ThemeContext, "blue");
+  const counter = useInjectContext(CounterContext, 10);
 
   return () => <Content />;
 }
@@ -79,12 +98,25 @@ const value = useContext(MyContext);
 ### Example
 
 ```tsx
-const ThemeContext = createContext(() => useState({ color: "blue" }));
+const CounterContext = createContext(() => {
+  const state = useState({ count: 0 });
+
+  const increment = () => state.count++;
+  const decrement = () => state.count--;
+
+  return useView(state, { increment, decrement });
+});
 
 function Child() {
-  const theme = useContext(ThemeContext);
+  const counter = useContext(CounterContext);
 
-  return () => <div style={{ color: theme.color }}>Themed content</div>;
+  return () => (
+    <div>
+      <p>Count: {counter.count}</p>
+      <button onClick={counter.increment}>Increment</button>
+      <button onClick={counter.decrement}>Decrement</button>
+    </div>
+  );
 }
 ```
 
@@ -165,26 +197,42 @@ function App() {
 Child contexts override parent contexts:
 
 ```tsx
-const ThemeContext = createContext((color) => useState({ color }));
+const CounterContext = createContext((initialCount: number) => {
+  const state = useState({ count: initialCount });
+
+  const increment = () => state.count++;
+  const decrement = () => state.count--;
+
+  return useView(state, { increment, decrement });
+});
 
 function App() {
-  useInjectContext(ThemeContext, "blue");
+  useInjectContext(CounterContext, 0);
 
   return () => (
     <div>
-      <Content /> {/* Uses blue */}
+      <Counter /> {/* Uses count starting at 0 */}
       <Sidebar />
     </div>
   );
 }
 
 function Sidebar() {
-  useInjectContext(ThemeContext, "red");
+  useInjectContext(CounterContext, 100);
 
-  return () => <Content />;
-  {
-    /* Uses red */
-  }
+  return () => <Counter />; {/* Uses count starting at 100 */}
+}
+
+function Counter() {
+  const counter = useContext(CounterContext);
+
+  return () => (
+    <div>
+      <p>Count: {counter.count}</p>
+      <button onClick={counter.increment}>Increment</button>
+      <button onClick={counter.decrement}>Decrement</button>
+    </div>
+  );
 }
 ```
 
