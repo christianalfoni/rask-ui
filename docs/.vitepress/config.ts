@@ -43,11 +43,7 @@ export default defineConfig({
             },
           },
           {
-            scope: [
-              "variable.parameter",
-              "meta.parameters",
-              "variable.other",
-            ],
+            scope: ["variable.parameter", "meta.parameters", "variable.other"],
             settings: {
               foreground: "#be185d", // pink-700 - deep pink
             },
@@ -111,11 +107,7 @@ export default defineConfig({
             },
           },
           {
-            scope: [
-              "variable.parameter",
-              "meta.parameters",
-              "variable.other",
-            ],
+            scope: ["variable.parameter", "meta.parameters", "variable.other"],
             settings: {
               foreground: "#f9a8d4", // pink-300
             },
@@ -174,6 +166,7 @@ export default defineConfig({
         items: [
           { text: "Components", link: "/api/components" },
           { text: "render", link: "/api/render" },
+          { text: "context", link: "/api/context" },
           { text: "inspect", link: "/api/inspect" },
         ],
       },
@@ -207,7 +200,6 @@ export default defineConfig({
           { text: "useRef", link: "/api/useRef" },
           { text: "useCatchError", link: "/api/useCatchError" },
           { text: "useRouter", link: "/api/useRouter" },
-          { text: "useContext", link: "/api/createContext" },
         ],
       },
     ],

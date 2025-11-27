@@ -7,9 +7,9 @@ Functions for sharing data through the component tree without props.
 Creates a context by wrapping a hook function that will be used as a context identifier. The hook defines how the context value is created.
 
 ```tsx
-const useTheme = createContext(() => {
+const useTheme = () => {
   return useState({ color: "blue" });
-});
+};
 ```
 
 Returns the hook function, which can be used with `useContext()` and `useInjectContext()`.
@@ -19,12 +19,12 @@ Returns the hook function, which can be used with `useContext()` and `useInjectC
 ```tsx
 import { createContext, useContext, useInjectContext, useState } from "rask-ui";
 
-const useTheme = createContext(() => {
+const ThemeContext = createContext(() => {
   return useState({ color: "blue" });
 });
 
 function App() {
-  const theme = useInjectContext(useTheme);
+  const theme = useInjectContext(ThemeContext);
 
   theme.color = "blue";
 
@@ -32,7 +32,7 @@ function App() {
 }
 
 function Child() {
-  const theme = useContext(useTheme);
+  const theme = useContext(ThemeContext);
 
   return () => <div style={{ color: theme.color }}>Themed text</div>;
 }
@@ -43,20 +43,18 @@ function Child() {
 Injects a context value by calling the context hook with parameters. The value will be available to the current component and all child components.
 
 ```tsx
-const value = useInjectContext(useMyContext, ...params);
+const value = useInjectContext(MyContext, ...params);
 ```
 
 ### Example
 
 ```tsx
-const useTheme = createContext((defaultColor: string) => {
+const ThemeContext = createContext((defaultColor: string) => {
   return useState({ color: defaultColor });
 });
 
 function App() {
-  const theme = useInjectContext(useTheme, "blue");
-
-  theme.fontSize = 16;
+  const theme = useInjectContext(ThemeContext, "blue");
 
   return () => <Content />;
 }
@@ -75,16 +73,16 @@ function App() {
 Gets the context value from the nearest parent component that injected a value for this context.
 
 ```tsx
-const value = useContext(useMyContext);
+const value = useContext(MyContext);
 ```
 
 ### Example
 
 ```tsx
-const useTheme = createContext(() => useState({ color: "blue" }));
+const ThemeContext = createContext(() => useState({ color: "blue" }));
 
 function Child() {
-  const theme = useContext(useTheme);
+  const theme = useContext(ThemeContext);
 
   return () => <div style={{ color: theme.color }}>Themed content</div>;
 }
@@ -112,7 +110,7 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-const useAuth = createContext(() => {
+const AuthContext = createContext(() => {
   const state = useState<AuthState>({
     user: null,
     isAuthenticated: false,
@@ -137,7 +135,7 @@ const useAuth = createContext(() => {
 });
 
 function LoginButton() {
-  const auth = useContext(useAuth);
+  const auth = useContext(AuthContext);
 
   return () => (
     <div>
@@ -156,85 +154,9 @@ function LoginButton() {
 }
 
 function App() {
-  useInjectContext(useAuth);
+  useInjectContext(AuthContext);
 
   return () => <LoginButton />;
-}
-```
-
-## TypeScript Support
-
-Context is fully typed:
-
-```tsx
-interface Theme {
-  color: string;
-  fontSize: number;
-  spacing: number;
-}
-
-const useTheme = createContext(() => {
-  return useState<Theme>({
-    color: "blue",
-    fontSize: 16,
-    spacing: 8,
-  });
-});
-
-function Provider() {
-  const theme = useInjectContext(useTheme);
-
-  theme.color = "blue";
-  theme.fontSize = 16;
-  theme.spacing = 8;
-
-  return () => <Child />;
-}
-
-function Child() {
-  const theme = useContext(useTheme); // Type is Theme
-
-  return () => (
-    <div
-      style={{
-        color: theme.color,
-        fontSize: theme.fontSize,
-        padding: theme.spacing,
-      }}
-    >
-      Content
-    </div>
-  );
-}
-```
-
-## Multiple Contexts
-
-Use multiple contexts for different concerns:
-
-```tsx
-const useTheme = createContext(() => useState({ color: "blue" }));
-const useAuth = createContext(() => useState({ user: null }));
-const useI18n = createContext(() => useState({ locale: "en" }));
-
-function App() {
-  useInjectContext(useTheme);
-  useInjectContext(useAuth);
-  useInjectContext(useI18n);
-
-  return () => <Content />;
-}
-
-function Content() {
-  const theme = useContext(useTheme);
-  const auth = useContext(useAuth);
-  const i18n = useContext(useI18n);
-
-  return () => (
-    <div style={{ color: theme.color }}>
-      {i18n.locale === "en" ? "Hello" : "Hola"}, {auth.user?.name}!
-    </div>
-  );
 }
 ```
 
@@ -243,12 +165,10 @@ function Content() {
 Child contexts override parent contexts:
 
 ```tsx
-const useTheme = createContext(() => useState({ color: "blue" }));
+const ThemeContext = createContext((color) => useState({ color }));
 
 function App() {
-  const theme = useInjectContext(useTheme);
-
-  theme.color = "blue";
+  useInjectContext(ThemeContext, "blue");
 
   return () => (
     <div>
@@ -259,11 +179,12 @@ function App() {
 }
 
 function Sidebar() {
-  const theme = useInjectContext(useTheme);
+  useInjectContext(ThemeContext, "red");
 
-  theme.color = "red"; // Override
-
-  return () => <Content />; {/* Uses red */}
+  return () => <Content />;
+  {
+    /* Uses red */
+  }
 }
 ```
 
