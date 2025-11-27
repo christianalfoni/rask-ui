@@ -21,7 +21,7 @@ describe("useSuspend", () => {
       expect(state.isLoading).toBe(true);
       expect(state.isRefreshing).toBe(false);
       expect(state.error).toBeNull();
-      expect(state.values.data).toBeNull();
+      expect(state.data).toBeNull();
     });
 
     it("should resolve to success state when all asyncs resolve", async () => {
@@ -46,8 +46,8 @@ describe("useSuspend", () => {
       expect(state.isLoading).toBe(false);
       expect(state.isRefreshing).toBe(false);
       expect(state.error).toBeNull();
-      expect(state.values.data1).toBe("value1");
-      expect(state.values.data2).toBe("value2");
+      expect(state.data1).toBe("value1");
+      expect(state.data2).toBe("value2");
     });
 
     it("should set error when any async fails", async () => {
@@ -89,14 +89,14 @@ describe("useSuspend", () => {
       render(<Component />, container);
 
       expect(state.isLoading).toBe(true);
-      expect(state.values.syncData).toBe("sync-value");
-      expect(state.values.asyncData).toBeNull();
+      expect(state.syncData).toBe("sync-value");
+      expect(state.asyncData).toBeNull();
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(state.isLoading).toBe(false);
-      expect(state.values.asyncData).toBe("async-value");
-      expect(state.values.syncData).toBe("sync-value");
+      expect(state.asyncData).toBe("async-value");
+      expect(state.syncData).toBe("sync-value");
     });
   });
 
@@ -143,8 +143,8 @@ describe("useSuspend", () => {
 
       expect(state.isLoading).toBe(false);
       expect(state.isRefreshing).toBe(false);
-      expect(state.values.data1).toBe("first");
-      expect(state.values.data2).toBe("second");
+      expect(state.data1).toBe("first");
+      expect(state.data2).toBe("second");
     });
 
     it("should set isRefreshing true when any async is refreshing", async () => {
@@ -196,8 +196,8 @@ describe("useSuspend", () => {
 
       expect(state.isLoading).toBe(false);
       expect(state.isRefreshing).toBe(true);
-      expect(state.values.data1).toBe("first");
-      expect(state.values.data2).toBe("second");
+      expect(state.data1).toBe("first");
+      expect(state.data2).toBe("second");
 
       // Resolve refresh
       resolveRefresh!("refreshed");
@@ -205,7 +205,7 @@ describe("useSuspend", () => {
 
       expect(state.isLoading).toBe(false);
       expect(state.isRefreshing).toBe(false);
-      expect(state.values.data2).toBe("refreshed");
+      expect(state.data2).toBe("refreshed");
     });
 
     it("should prioritize isLoading over isRefreshing", async () => {
@@ -272,8 +272,8 @@ describe("useSuspend", () => {
 
       expect(state.isLoading).toBe(false);
       expect(state.isRefreshing).toBe(false);
-      expect(state.values.data1).toBe("refreshed");
-      expect(state.values.data2).toBe("second");
+      expect(state.data1).toBe("refreshed");
+      expect(state.data2).toBe("second");
     });
   });
 
@@ -344,8 +344,8 @@ describe("useSuspend", () => {
       expect(state.error).toBeNull();
       expect(state.isLoading).toBe(false);
       expect(state.isRefreshing).toBe(false);
-      expect(state.values.data1).toBe("value1");
-      expect(state.values.data2).toBe("value2");
+      expect(state.data1).toBe("value1");
+      expect(state.data2).toBe("value2");
     });
 
     it("should maintain error state when refreshing", async () => {
@@ -411,23 +411,24 @@ describe("useSuspend", () => {
       const container = document.createElement("div");
       render(<Component />, container);
 
-      const initialValues = state.values;
+      const initialData1 = state.data1;
+      const initialData2 = state.data2;
 
       // Resolve first
       resolveFirst!("first");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Values should not update yet (second is still loading)
-      expect(state.values).toBe(initialValues);
-      expect(state.values.data1).toBeNull();
+      expect(state.data1).toBe(initialData1);
+      expect(state.data1).toBeNull();
 
       // Resolve second
       resolveSecond!("second");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Now values should update
-      expect(state.values.data1).toBe("first");
-      expect(state.values.data2).toBe("second");
+      expect(state.data1).toBe("first");
+      expect(state.data2).toBe("second");
     });
 
     it("should not update values while refreshing", async () => {
@@ -471,25 +472,25 @@ describe("useSuspend", () => {
       resolveSecond!("second");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(state.values.data1).toBe("first");
-      expect(state.values.data2).toBe("second");
+      expect(state.data1).toBe("first");
+      expect(state.data2).toBe("second");
 
       // Start refresh
       refresh();
 
-      const valuesBeforeRefresh = state.values;
+      const data1BeforeRefresh = state.data1;
 
       // Values should not change during refresh
-      expect(state.values).toBe(valuesBeforeRefresh);
-      expect(state.values.data1).toBe("first");
+      expect(state.data1).toBe(data1BeforeRefresh);
+      expect(state.data1).toBe("first");
 
       // Resolve refresh
       resolveRefresh!("refreshed");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Now values should update
-      expect(state.values.data1).toBe("refreshed");
-      expect(state.values.data2).toBe("second");
+      expect(state.data1).toBe("refreshed");
+      expect(state.data2).toBe("second");
     });
 
     it("should not update values when there is an error", async () => {
@@ -509,12 +510,14 @@ describe("useSuspend", () => {
       const container = document.createElement("div");
       render(<Component />, container);
 
-      const initialValues = state.values;
+      const initialData1 = state.data1;
+      const initialData2 = state.data2;
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Values should not update because there's an error
-      expect(state.values).toBe(initialValues);
+      expect(state.data1).toBe(initialData1);
+      expect(state.data2).toBe(initialData2);
       expect(state.error).toBeInstanceOf(Error);
     });
 
@@ -548,8 +551,8 @@ describe("useSuspend", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Values not updated yet (second still loading)
-      expect(state.values.data1).toBe(null);
-      expect(state.values.data2).toBe(null);
+      expect(state.data1).toBe(null);
+      expect(state.data2).toBe(null);
 
       // Resolve second
       resolveSecond!("second");
@@ -557,8 +560,8 @@ describe("useSuspend", () => {
 
       // Values should now be updated
 
-      expect(state.values.data1).toBe("first");
-      expect(state.values.data2).toBe("second");
+      expect(state.data1).toBe("first");
+      expect(state.data2).toBe("second");
     });
   });
 
@@ -576,7 +579,7 @@ describe("useSuspend", () => {
       expect(state.isLoading).toBe(false);
       expect(state.isRefreshing).toBe(false);
       expect(state.error).toBeNull();
-      expect(state.values).toEqual({});
+      // No values to check for empty object
     });
 
     it("should handle only sync values", () => {
@@ -596,9 +599,9 @@ describe("useSuspend", () => {
       expect(state.isLoading).toBe(false);
       expect(state.isRefreshing).toBe(false);
       expect(state.error).toBeNull();
-      expect(state.values.value1).toBe("sync1");
-      expect(state.values.value2).toBe("sync2");
-      expect(state.values.value3).toBe(42);
+      expect(state.value1).toBe("sync1");
+      expect(state.value2).toBe("sync2");
+      expect(state.value3).toBe(42);
     });
 
     it("should handle single async value", async () => {
@@ -619,7 +622,7 @@ describe("useSuspend", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(state.isLoading).toBe(false);
-      expect(state.values.data).toBe("value");
+      expect(state.data).toBe("value");
     });
 
     it("should handle many async values", async () => {
@@ -648,11 +651,11 @@ describe("useSuspend", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(state.isLoading).toBe(false);
-      expect(state.values.data1).toBe("value1");
-      expect(state.values.data2).toBe("value2");
-      expect(state.values.data3).toBe("value3");
-      expect(state.values.data4).toBe("value4");
-      expect(state.values.data5).toBe("value5");
+      expect(state.data1).toBe("value1");
+      expect(state.data2).toBe("value2");
+      expect(state.data3).toBe("value3");
+      expect(state.data4).toBe("value4");
+      expect(state.data5).toBe("value5");
     });
 
     it("should handle immediate resolution", async () => {
@@ -671,7 +674,7 @@ describe("useSuspend", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(state.isLoading).toBe(false);
-      expect(state.values.data).toBe("immediate");
+      expect(state.data).toBe("immediate");
     });
 
     it("should handle immediate rejection", async () => {
@@ -746,16 +749,16 @@ describe("useSuspend", () => {
       resolveSecond!("second");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(state.values.data1).toBe("first");
-      expect(state.values.data2).toBe("second");
+      expect(state.data1).toBe("first");
+      expect(state.data2).toBe("second");
 
       // Start both refreshes
       refresh1();
       refresh2();
 
       expect(state.isRefreshing).toBe(true);
-      expect(state.values.data1).toBe("first");
-      expect(state.values.data2).toBe("second");
+      expect(state.data1).toBe("first");
+      expect(state.data2).toBe("second");
 
       // Resolve first refresh
       resolveRefresh1!("refreshed1");
@@ -763,7 +766,7 @@ describe("useSuspend", () => {
 
       // Still refreshing because second is not done
       expect(state.isRefreshing).toBe(true);
-      expect(state.values.data1).toBe("first"); // Not updated yet
+      expect(state.data1).toBe("first"); // Not updated yet
 
       // Resolve second refresh
       resolveRefresh2!("refreshed2");
@@ -771,8 +774,8 @@ describe("useSuspend", () => {
 
       // Now all done
       expect(state.isRefreshing).toBe(false);
-      expect(state.values.data1).toBe("refreshed1");
-      expect(state.values.data2).toBe("refreshed2");
+      expect(state.data1).toBe("refreshed1");
+      expect(state.data2).toBe("refreshed2");
     });
 
     it("should handle transition from error to success", async () => {
@@ -811,8 +814,8 @@ describe("useSuspend", () => {
       expect(state.error).toBeNull();
       expect(state.isLoading).toBe(false);
       expect(state.isRefreshing).toBe(false);
-      expect(state.values.data1).toBe("success");
-      expect(state.values.data2).toBe("value2");
+      expect(state.data1).toBe("success");
+      expect(state.data2).toBe("value2");
     });
 
     it("should handle alternating async resolutions", async () => {
@@ -863,9 +866,9 @@ describe("useSuspend", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(state.isLoading).toBe(false);
-      expect(state.values.data1).toBe("first");
-      expect(state.values.data2).toBe("second");
-      expect(state.values.data3).toBe("third");
+      expect(state.data1).toBe("first");
+      expect(state.data2).toBe("second");
+      expect(state.data3).toBe("third");
     });
   });
 
@@ -893,10 +896,10 @@ describe("useSuspend", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(state.values.number).toBe(42);
-      expect(state.values.object).toEqual({ id: 1, name: "test" });
-      expect(state.values.array).toEqual([1, 2, 3]);
-      expect(state.values.boolean).toBe(true);
+      expect(state.number).toBe(42);
+      expect(state.object).toEqual({ id: 1, name: "test" });
+      expect(state.array).toEqual([1, 2, 3]);
+      expect(state.boolean).toBe(true);
     });
 
     it("should handle null and undefined values", async () => {
@@ -916,8 +919,8 @@ describe("useSuspend", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(state.values.nullValue).toBeNull();
-      expect(state.values.undefinedValue).toBeUndefined();
+      expect(state.nullValue).toBeNull();
+      expect(state.undefinedValue).toBeUndefined();
     });
   });
 });

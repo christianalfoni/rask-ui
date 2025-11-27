@@ -1,41 +1,39 @@
 /**
- * Creates a context object for providing and consuming values across component trees.
+ * Creates a context by wrapping a hook function that will be used as a context identifier.
  *
- * @warning **Do not destructure context values returned by context.get()!** The returned
- * value may be a reactive object, and destructuring breaks reactivity.
+ * @warning **Do not destructure context values!** The returned value may be a reactive
+ * object, and destructuring breaks reactivity.
  *
  * @example
- * // ❌ Bad - destructuring context value
- * const ThemeContext = createContext<{ color: string }>();
+ * // Create a context hook
+ * const useTheme = createContext(() => {
+ *   return useState({ color: "blue" });
+ * });
  *
- * function Consumer() {
- *   const theme = ThemeContext.get();
- *   const { color } = theme; // Don't do this!
- *   return () => <div style={{ color }}>Text</div>; // Won't update!
+ * // Provider component
+ * function App() {
+ *   const theme = useInjectContext(useTheme);
+ *   // theme is now available to all children
+ *   return () => <Child />;
  * }
  *
- * // ✅ Good - access properties directly
- * function Consumer() {
- *   const theme = ThemeContext.get();
+ * // Consumer component
+ * function Child() {
+ *   const theme = useContext(useTheme);
  *   return () => <div style={{ color: theme.color }}>Text</div>;
  * }
  *
- * @returns Context object with inject() and get() methods
+ * @param hook - A function that will be used as the context identifier
+ * @returns The same hook function, to be used with useContext() and useInjectContext()
  */
 
 import { getCurrentComponent } from "./component";
 
-declare const Type: unique symbol;
-
-export type Context<T> = symbol & {
-  readonly [Type]: T;
-};
-
-export function createContext<T>() {
-  return Symbol() as Context<T>;
+export function createContext<T, P extends any[]>(hook: (...params: P) => T) {
+  return hook;
 }
 
-export function useContext<T>(context: Context<T>): T {
+export function useContext<T, P extends any[]>(hook: (...params: P) => T): T {
   let currentComponent = getCurrentComponent();
 
   if (!currentComponent) {
@@ -46,7 +44,7 @@ export function useContext<T>(context: Context<T>): T {
     throw new Error("There is no parent context");
   }
 
-  const contextValue = (currentComponent.context as any).getContext(context);
+  const contextValue = (currentComponent.context as any).getContext(hook);
 
   if (!contextValue) {
     throw new Error("There is a parent context, but not the one you are using");
@@ -55,14 +53,19 @@ export function useContext<T>(context: Context<T>): T {
   return contextValue;
 }
 
-export function useInjectContext<T>(context: Context<T>) {
-  return (value: T) => {
-    const currentComponent = getCurrentComponent();
+export function useInjectContext<T, P extends any[]>(
+  hook: (...params: P) => T,
+  ...params: P
+) {
+  const currentComponent = getCurrentComponent();
 
-    if (!currentComponent) {
-      throw new Error("Only use useInjectContext in component setup");
-    }
+  if (!currentComponent) {
+    throw new Error("Only use useInjectContext in component setup");
+  }
 
-    currentComponent.contexts.set(context, value);
-  };
+  const value = hook(...params);
+
+  currentComponent.contexts.set(hook, value);
+
+  return value;
 }

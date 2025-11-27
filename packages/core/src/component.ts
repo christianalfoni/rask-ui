@@ -144,7 +144,11 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
   effects: Array<{ isDirty: boolean; run: () => void }> = [];
   contexts = new Map();
   getChildContext() {
-    const parentGetContext = this.context.getContext;
+    const parentGetContext =
+      this.context.getContext ||
+      (() => {
+        throw new Error("No context available");
+      });
 
     return {
       ...this.context,
