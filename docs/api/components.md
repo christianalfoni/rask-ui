@@ -110,7 +110,25 @@ function MyInput(props) {
 }
 ```
 
-### Available Event Types
+### Available Types
+
+#### Element Props
+
+- `Rask.ElementProps<T>` - Get props type for an HTML element tag
+
+Use this when creating wrapper components that should accept all native HTML props:
+
+```tsx
+function WrappedDiv(props: Rask.ElementProps<'div'>) {
+  return <div {...props} />;
+}
+
+function CustomButton(props: Rask.ElementProps<'button'>) {
+  return <button {...props} className={`btn ${props.className || ''}`} />;
+}
+```
+
+#### Event Types
 
 All event types are generic and accept an optional element type parameter (defaults to `Element`):
 
