@@ -336,6 +336,6 @@ function Posts() {
 
 ## Related
 
-- [createContext](/api/createContext) - Share router across components
+- [context](/api/context) - Share router across components
 - [useEffect](/api/useEffect) - React to route changes
 - [useAsync](/api/useAsync) - Load data based on routes
