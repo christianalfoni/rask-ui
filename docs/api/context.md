@@ -7,9 +7,9 @@ Functions for sharing data through the component tree without props.
 Creates a context by wrapping a hook function that will be used as a context identifier. The hook defines how the context value is created.
 
 ```tsx
-const useTheme = () => {
+const ThemeContext = createContext(() => {
   return useState({ color: "blue" });
-};
+});
 ```
 
 Returns the hook function, which can be used with `useContext()` and `useInjectContext()`.
