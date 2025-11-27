@@ -33,7 +33,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "npm run build:plugin && tsc --project tsconfig.build.json && cp ../../README.md . && cp ../../logo.png .",
+    "build": "npm run build:plugin && tsc --project tsconfig.build.json && cpx ../../README.md . && cpx ../../logo.png .",
     "build:plugin": "cd swc-plugin && cargo build --release --target wasm32-wasip1",
     "dev": "tsc --watch",
     "test": "vitest",

@@ -1,22 +1,26 @@
 {
-  "name": "rask-ui-monorepo",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "pnpm --filter @rask-ui/demo dev",
-    "build:core": "pnpm --filter rask-ui build",
-    "build:demo": "pnpm --filter @rask-ui/demo build",
-    "build": "pnpm build:core && pnpm build:demo",
-    "preview": "pnpm --filter @rask-ui/demo preview",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "cd slides && pnpm build && cd .. && mkdir -p docs/public/slides && cp -r slides/dist/* docs/public/slides/ && vitepress build docs",
-    "docs:preview": "vitepress preview docs",
-    "slides:dev": "cd slides && pnpm dev"
-  },
-  "devDependencies": {
-    "typescript": "^5.7.3",
-    "vitepress": "^1.6.4",
-    "vue": "^3.5.24"
-  }
+    "name": "rask-ui-monorepo",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "pnpm --filter @rask-ui/demo dev",
+        "build:core": "pnpm --filter rask-ui build",
+        "build:demo": "pnpm --filter @rask-ui/demo build",
+        "build": "pnpm build:core && pnpm build:demo",
+        "preview": "pnpm --filter @rask-ui/demo preview",
+        "docs:dev": "vitepress dev docs",
+        "docs:build": "pnpm --filter slides build && npx mkdirp docs/public/slides && npx cpx \"slides/dist/**/*\" docs/public/slides && vitepress build docs",
+        "docs:preview": "vitepress preview docs",
+        "slides:dev": "cd slides && pnpm dev",
+        "clean": "npx rimraf packages/rask-ui/dist packages/demo/dist packages/core/dist docs/public/slides"
+    },
+    "devDependencies": {
+        "cpx": "^1.5.0",
+        "mkdirp": "^3.0.1",
+        "rimraf": "^6.1.2",
+        "typescript": "^5.7.3",
+        "vitepress": "^1.6.4",
+        "vue": "^3.5.24"
+    }
 }
