@@ -157,3 +157,22 @@ function Form(props) {
   );
 }
 ```
+## Notes
+
+::: warning Important
+
+- A Component must always return JSX
+
+```tsx
+// ❌ Bad
+function App(props) {
+  return () => props.children // This will throw an error
+}
+
+// ✅ Good
+function App(props) {
+  return () => <>{props.children}</>
+}
+```
+
+  :::
