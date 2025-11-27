@@ -186,4 +186,4 @@ Notice that we are not returning a render function!
 Now that you have RASK set up, learn about the core concepts:
 
 - [Core Concepts](/guide/core-concepts) - Understanding reactive state and effects
-- [API Reference](/api/) - Complete API documentation
+- [API Reference](/api/components) - Complete API documentation
