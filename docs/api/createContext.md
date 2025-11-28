@@ -120,7 +120,7 @@ function AuthProvider(props) {
   const inject = useInjectContext(AuthContext);
   inject(auth);
 
-  return () => <>props.children</>;
+  return () => <>{props.children}</>;
 }
 
 function LoginButton() {
