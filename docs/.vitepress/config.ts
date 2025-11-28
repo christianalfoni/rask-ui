@@ -166,7 +166,7 @@ export default defineConfig({
         items: [
           { text: "Components", link: "/api/components" },
           { text: "render", link: "/api/render" },
-          { text: "context", link: "/api/context" },
+          { text: "createContext", link: "/api/createContext" },
           { text: "inspect", link: "/api/inspect" },
         ],
       },

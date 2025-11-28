@@ -1,10 +1,10 @@
-# Context API
+# createContext
 
-Functions for sharing data through the component tree without props.
+The `createContext` primitive allows sharing data through the component tree without passing props. It returns an object with two methods: `use()` to consume context values and `inject()` to provide context values to child components.
 
 ## createContext()
 
-Creates a context by wrapping a hook function that will be used as a context identifier. The hook defines how the context value is created.
+Creates a context that provides two methods for managing shared state across the component tree. The hook function defines how the context value is created.
 
 ```tsx
 const CounterContext = createContext(() => {
@@ -17,12 +17,12 @@ const CounterContext = createContext(() => {
 });
 ```
 
-Returns the hook function, which can be used with `useContext()` and `useInjectContext()`.
+Returns an object with `use()` and `inject()` methods.
 
 ### Example
 
 ```tsx
-import { createContext, useContext, useInjectContext, useState, useView } from "rask-ui";
+import { createContext, useState, useView } from "rask-ui";
 
 const CounterContext = createContext(() => {
   const state = useState({ count: 0 });
@@ -34,13 +34,13 @@ const CounterContext = createContext(() => {
 });
 
 function App() {
-  const counter = useInjectContext(CounterContext);
+  const counter = CounterContext.inject();
 
   return () => <Child />;
 }
 
 function Child() {
-  const counter = useContext(CounterContext);
+  const counter = CounterContext.use();
 
   return () => (
     <div>
@@ -52,12 +52,12 @@ function Child() {
 }
 ```
 
-## useInjectContext()
+## inject()
 
 Injects a context value by calling the context hook with parameters. The value will be available to the current component and all child components.
 
 ```tsx
-const value = useInjectContext(MyContext, ...params);
+const value = MyContext.inject(...params);
 ```
 
 ### Example
@@ -73,7 +73,7 @@ const CounterContext = createContext((initialCount: number) => {
 });
 
 function App() {
-  const counter = useInjectContext(CounterContext, 10);
+  const counter = CounterContext.inject(10);
 
   return () => <Content />;
 }
@@ -87,12 +87,12 @@ function App() {
 
 ---
 
-## useContext()
+## use()
 
-Gets the context value from the nearest parent component that injected a value for this context.
+Gets the context value from the nearest parent component that called `inject()` for this context.
 
 ```tsx
-const value = useContext(MyContext);
+const value = MyContext.use();
 ```
 
 ### Example
@@ -108,7 +108,7 @@ const CounterContext = createContext(() => {
 });
 
 function Child() {
-  const counter = useContext(CounterContext);
+  const counter = CounterContext.use();
 
   return () => (
     <div>
@@ -129,13 +129,7 @@ function Child() {
 ## Complete Example
 
 ```tsx
-import {
-  createContext,
-  useContext,
-  useInjectContext,
-  useState,
-  useView,
-} from "rask-ui";
+import { createContext, useState, useView } from "rask-ui";
 
 interface AuthState {
   user: { name: string; email: string } | null;
@@ -167,7 +161,7 @@ const AuthContext = createContext(() => {
 });
 
 function LoginButton() {
-  const auth = useContext(AuthContext);
+  const auth = AuthContext.use();
 
   return () => (
     <div>
@@ -186,7 +180,7 @@ function LoginButton() {
 }
 
 function App() {
-  useInjectContext(AuthContext);
+  AuthContext.inject();
 
   return () => <LoginButton />;
 }
@@ -207,7 +201,7 @@ const CounterContext = createContext((initialCount: number) => {
 });
 
 function App() {
-  useInjectContext(CounterContext, 0);
+  CounterContext.inject(0);
 
   return () => (
     <div>
@@ -218,13 +212,13 @@ function App() {
 }
 
 function Sidebar() {
-  useInjectContext(CounterContext, 100);
+  CounterContext.inject(100);
 
   return () => <Counter />; {/* Uses count starting at 100 */}
 }
 
 function Counter() {
-  const counter = useContext(CounterContext);
+  const counter = CounterContext.use();
 
   return () => (
     <div>

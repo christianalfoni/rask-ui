@@ -1,71 +1,85 @@
 /**
- * Creates a context by wrapping a hook function that will be used as a context identifier.
+ * Creates a context that provides two methods: `use()` to consume context values and
+ * `inject()` to provide context values to child components.
  *
  * @warning **Do not destructure context values!** The returned value may be a reactive
  * object, and destructuring breaks reactivity.
  *
  * @example
- * // Create a context hook
- * const useTheme = createContext(() => {
+ * // Create a context
+ * const ThemeContext = createContext(() => {
  *   return useState({ color: "blue" });
  * });
  *
  * // Provider component
  * function App() {
- *   const theme = useInjectContext(useTheme);
+ *   const theme = ThemeContext.inject();
  *   // theme is now available to all children
  *   return () => <Child />;
  * }
  *
  * // Consumer component
  * function Child() {
- *   const theme = useContext(useTheme);
+ *   const theme = ThemeContext.use();
  *   return () => <div style={{ color: theme.color }}>Text</div>;
  * }
  *
  * @param hook - A function that will be used as the context identifier
- * @returns The same hook function, to be used with useContext() and useInjectContext()
+ * @returns An object with `use()` and `inject()` methods
  */
 
 import { getCurrentComponent } from "./component";
 
 export function createContext<T, P extends any[]>(hook: (...params: P) => T) {
-  return hook;
-}
+  return {
+    /**
+     * Consumes the context value from the nearest parent component that called `inject()`.
+     * Must be called during component setup.
+     *
+     * @returns The context value provided by the nearest parent
+     * @throws Error if called outside component setup, if no parent context exists, or if the specific context was not provided
+     */
+    use() {
+      let currentComponent = getCurrentComponent();
 
-export function useContext<T, P extends any[]>(hook: (...params: P) => T): T {
-  let currentComponent = getCurrentComponent();
+      if (!currentComponent) {
+        throw new Error("Only use useContext in component setup");
+      }
 
-  if (!currentComponent) {
-    throw new Error("Only use useContext in component setup");
-  }
+      if (typeof (currentComponent.context as any).getContext !== "function") {
+        throw new Error("There is no parent context");
+      }
 
-  if (typeof (currentComponent.context as any).getContext !== "function") {
-    throw new Error("There is no parent context");
-  }
+      const contextValue = (currentComponent.context as any).getContext(hook);
 
-  const contextValue = (currentComponent.context as any).getContext(hook);
+      if (!contextValue) {
+        throw new Error(
+          "There is a parent context, but not the one you are using"
+        );
+      }
 
-  if (!contextValue) {
-    throw new Error("There is a parent context, but not the one you are using");
-  }
+      return contextValue;
+    },
+    /**
+     * Injects a context value by calling the hook function and making it available to all child components.
+     * Must be called during component setup.
+     *
+     * @param params - Parameters to pass to the hook function
+     * @returns The context value created by the hook
+     * @throws Error if called outside component setup
+     */
+    inject(...params: P) {
+      const currentComponent = getCurrentComponent();
 
-  return contextValue;
-}
+      if (!currentComponent) {
+        throw new Error("Only use useInjectContext in component setup");
+      }
 
-export function useInjectContext<T, P extends any[]>(
-  hook: (...params: P) => T,
-  ...params: P
-) {
-  const currentComponent = getCurrentComponent();
+      const value = hook(...params);
 
-  if (!currentComponent) {
-    throw new Error("Only use useInjectContext in component setup");
-  }
+      currentComponent.contexts.set(hook, value);
 
-  const value = hook(...params);
-
-  currentComponent.contexts.set(hook, value);
-
-  return value;
+      return value;
+    },
+  };
 }
