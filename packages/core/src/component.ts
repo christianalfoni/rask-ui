@@ -59,7 +59,7 @@ export class RaskStatelessComponent extends Component {
     try {
       result = this.renderFn(this.reactiveProps);
     } catch (error) {
-      const notifyError = this.context.getContext?.(CatchErrorContext);
+      const notifyError = CatchErrorContext.use();
 
       if (typeof notifyError !== "function") {
         throw error;
@@ -218,9 +218,7 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
       result = this.renderFn();
       this.isRendering = false;
     } catch (error) {
-      const notifyError =
-        this.contexts.get(CatchErrorContext) ||
-        this.context.getContext?.(CatchErrorContext);
+      const notifyError = CatchErrorContext.use();
 
       if (typeof notifyError !== "function") {
         throw error;

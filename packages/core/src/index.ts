@@ -8,7 +8,7 @@ export {
   RaskStatefulComponent,
   RaskStatelessComponent,
 } from "./component";
-export { createContext, useContext, useInjectContext } from "./createContext";
+export { createContext } from "./createContext";
 export { useState, assignState } from "./useState";
 export { useAsync, Async } from "./useAsync";
 export { useAction, Action } from "./useAction";

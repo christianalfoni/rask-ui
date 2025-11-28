@@ -1,5 +1,5 @@
 import { useState } from "./useState";
-import { createContext, useInjectContext } from "./createContext";
+import { createContext } from "./createContext";
 import { getCurrentComponent } from "./component";
 
 export const CatchErrorContext = createContext((state: { error: unknown }) => {
@@ -16,7 +16,7 @@ export function useCatchError() {
     error: null,
   });
 
-  useInjectContext(CatchErrorContext, state);
+  CatchErrorContext.inject(state);
 
   return state;
 }
