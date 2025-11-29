@@ -1,10 +1,6 @@
-import path from "path";
-import { fileURLToPath } from "url";
 import { createRequire } from "module";
 import type { Plugin } from "vite";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 export interface RaskPluginOptions {
@@ -17,19 +13,13 @@ export interface RaskPluginOptions {
 }
 
 /**
- * Vite plugin for transforming JSX to Inferno and function components to RaskComponent classes
+ * Vite plugin for transforming JSX to Inferno with rask-ui/compiler imports
  */
 export default function raskPlugin(options: RaskPluginOptions = {}): Plugin {
   const importSource = options.importSource || "rask-ui";
   // Resolve the path to swc-plugin-inferno WASM file
   const infernoPluginPath = require.resolve(
     "swc-plugin-inferno/swc_plugin_inferno.wasm"
-  );
-
-  // Resolve the path to our RaskComponent plugin
-  const componentPluginPath = path.resolve(
-    __dirname,
-    "../swc-plugin/target/wasm32-wasip1/release/swc_plugin_rask_component.wasm"
   );
 
   return {
@@ -58,26 +48,7 @@ export default function raskPlugin(options: RaskPluginOptions = {}): Plugin {
       // Use SWC for transformation
       const swc = await import("@swc/core");
 
-      const plugins: any[] = [
-        // 1. FIRST: Inferno JSX transformation
-        [
-          infernoPluginPath,
-          {
-            importSource: `${importSource}/compiler`,
-            defineAllArguments: false,
-          },
-        ],
-      ];
-
-      // 2. SECOND: RaskComponent transformation (if enabled)
-
-      plugins.push([
-        componentPluginPath,
-        {
-          importSource: importSource,
-        },
-      ]);
-
+      // First, run the inferno plugin to transform JSX
       const result = await swc.transform(code, {
         filename: id,
         jsc: {
@@ -88,14 +59,28 @@ export default function raskPlugin(options: RaskPluginOptions = {}): Plugin {
           },
           target: "es2020",
           experimental: {
-            plugins,
+            plugins: [
+              // Inferno JSX transformation
+              [
+                infernoPluginPath,
+                {
+                  defineAllArguments: false,
+                },
+              ],
+            ],
           },
         },
         sourceMaps: true,
       });
 
+      // Then, replace inferno imports with rask-ui/compiler
+      const transformedCode = result.code.replace(
+        /from\s+(['"])inferno\1/g,
+        `from $1${importSource}/compiler$1`
+      );
+
       return {
-        code: result.code,
+        code: transformedCode,
         map: result.map,
       };
     },

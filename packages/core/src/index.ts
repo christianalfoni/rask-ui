@@ -2,12 +2,7 @@
 import "./types";
 
 export { render } from "./render";
-export {
-  useCleanup,
-  useMountEffect,
-  RaskStatefulComponent,
-  RaskStatelessComponent,
-} from "./component";
+export { useCleanup, useMountEffect } from "./component";
 export { createContext } from "./createContext";
 export { useState, assignState } from "./useState";
 export { useAsync, Async } from "./useAsync";

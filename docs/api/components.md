@@ -119,12 +119,12 @@ function MyInput(props) {
 Use this when creating wrapper components that should accept all native HTML props:
 
 ```tsx
-function WrappedDiv(props: Rask.ElementProps<'div'>) {
+function WrappedDiv(props: Rask.ElementProps<"div">) {
   return <div {...props} />;
 }
 
-function CustomButton(props: Rask.ElementProps<'button'>) {
-  return <button {...props} className={`btn ${props.className || ''}`} />;
+function CustomButton(props: Rask.ElementProps<"button">) {
+  return <button {...props} className={`btn ${props.className || ""}`} />;
 }
 ```
 
@@ -175,22 +175,3 @@ function Form(props) {
   );
 }
 ```
-## Notes
-
-::: warning Important
-
-- A Component must always return JSX
-
-```tsx
-// ❌ Bad
-function App(props) {
-  return () => props.children // This will throw an error
-}
-
-// ✅ Good
-function App(props) {
-  return () => <>{props.children}</>
-}
-```
-
-  :::

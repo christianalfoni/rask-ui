@@ -10,71 +10,7 @@ import { getCurrentObserver, Observer, Signal } from "./observation";
 import { syncBatch } from "./batch";
 import { CatchErrorContext } from "./useCatchError";
 
-export type RaskStatelessFunctionComponent<P extends Props<any>> =
-  | (() => VNode)
-  | ((props: P) => VNode);
-
-export class RaskStatelessComponent extends Component {
-  declare renderFn: RaskStatelessFunctionComponent<any>;
-  private isNotified = false;
-  private isReconciling = false;
-  observer = new Observer(() => {
-    if (this.isReconciling) {
-      this.isNotified = true;
-      return;
-    }
-    this.forceUpdate();
-  });
-  propsSignals: Record<string, Signal> = {};
-  private reactiveProps!: Props<any>;
-
-  shouldComponentUpdate(): boolean {
-    const shouldRender = this.isNotified;
-    this.isNotified = false;
-    this.isReconciling = false;
-    return shouldRender;
-  }
-  componentWillMount(): void {
-    this.reactiveProps = createReactiveProps(this);
-  }
-  componentWillReceiveProps(nextProps: any): void {
-    this.isReconciling = true;
-    const prevProps = this.props;
-    this.props = nextProps;
-    syncBatch(() => {
-      for (const prop in this.propsSignals!) {
-        if ((prevProps as any)[prop] === (nextProps as any)[prop]) {
-          continue;
-        }
-
-        // This just triggers the signal
-        this.propsSignals[prop].notify();
-      }
-    });
-  }
-  render() {
-    const stopObserving = this.observer.observe();
-    let result: any = null;
-
-    try {
-      result = this.renderFn(this.reactiveProps);
-    } catch (error) {
-      const notifyError = CatchErrorContext.use();
-
-      if (typeof notifyError !== "function") {
-        throw error;
-      }
-
-      notifyError(error);
-    } finally {
-      stopObserving();
-    }
-
-    return result;
-  }
-}
-
-let currentComponent: RaskStatefulComponent<any> | undefined;
+let currentComponent: RaskComponent<any> | undefined;
 
 export function getCurrentComponent() {
   return currentComponent;
@@ -96,13 +32,16 @@ export function useCleanup(cb: () => void) {
   currentComponent.onCleanups.push(cb);
 }
 
+export type RaskStatelessFunctionComponent<P extends Props<any>> =
+  | (() => VNode)
+  | ((props: P) => VNode);
+
 export type RaskStatefulFunctionComponent<P extends Props<any>> =
   | (() => () => VNode)
   | ((props: P) => () => VNode);
 
-export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
-  declare setup: RaskStatefulFunctionComponent<P>;
-  private renderFn?: () => VNode;
+export class RaskComponent<P extends Props<any>> extends Component<P> {
+  declare renderFn: RaskStatelessFunctionComponent<P>;
   propsSignals: Record<string, Signal> = {};
   private reactiveProps!: Props<any>;
 
@@ -191,13 +130,21 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
   }
   render() {
     currentComponent = this;
+
+    const stopObserving = this.observer.observe();
+
     if (!this.renderFn) {
       this.reactiveProps = createReactiveProps(this);
       try {
-        this.renderFn = this.setup(this.reactiveProps as any);
+        const component = (this.props as any).__component;
+        const renderFn = component(this.reactiveProps as any);
 
-        if (typeof this.renderFn !== "function") {
-          throw new Error("Component must return a render function");
+        if (typeof renderFn === "function") {
+          this.renderFn = renderFn;
+        } else {
+          this.renderFn = component;
+          // Since we ran a setup function we need to clear any signals accessed
+          this.observer.clearSignals();
         }
       } catch (error) {
         if (typeof this.context.notifyError !== "function") {
@@ -210,12 +157,11 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
       }
     }
 
-    const stopObserving = this.observer.observe();
     let result: any = null;
 
     try {
       this.isRendering = true;
-      result = this.renderFn();
+      result = this.renderFn(this.reactiveProps as any);
       this.isRendering = false;
     } catch (error) {
       const notifyError = CatchErrorContext.use();
@@ -234,18 +180,7 @@ export class RaskStatefulComponent<P extends Props<any>> extends Component<P> {
   }
 }
 
-export function createComponent(props: Props<any>, key?: string) {
-  return createComponentVNode(
-    VNodeFlags.ComponentClass,
-    RaskStatefulComponent,
-    props as any,
-    key
-  );
-}
-
-function createReactiveProps(
-  comp: RaskStatefulComponent<any> | RaskStatelessComponent
-) {
+function createReactiveProps(comp: RaskComponent<any>) {
   const props = new Proxy(
     {},
     {

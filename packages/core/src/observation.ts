@@ -192,7 +192,7 @@ export class Observer {
   }
 
   /** Remove all signal subscriptions (fast + safe) */
-  private clearSignals() {
+  clearSignals() {
     let sub = this.subsHead;
     this.subsHead = this.subsTail = null;
 
