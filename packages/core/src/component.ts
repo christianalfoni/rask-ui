@@ -1,11 +1,4 @@
-import {
-  createComponentVNode,
-  VNode,
-  Component,
-  Props,
-  InfernoNode,
-} from "inferno";
-import { VNodeFlags } from "inferno-vnode-flags";
+import { VNode, Component, Props, InfernoNode } from "inferno";
 import { getCurrentObserver, Observer, Signal } from "./observation";
 import { syncBatch } from "./batch";
 import { CatchErrorContext } from "./useCatchError";
@@ -130,39 +123,33 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
   }
   render() {
     currentComponent = this;
-
     const stopObserving = this.observer.observe();
 
-    if (!this.renderFn) {
-      this.reactiveProps = createReactiveProps(this);
-      try {
+    try {
+      if (!this.renderFn) {
+        this.reactiveProps = createReactiveProps(this);
+
         const component = (this.props as any).__component;
         const renderFn = component(this.reactiveProps as any);
 
         if (typeof renderFn === "function") {
+          // Since we ran a setup function we need to clear any signals accessed
+          this.observer.clearSignals();
           this.renderFn = renderFn;
         } else {
           this.renderFn = component;
-          // Since we ran a setup function we need to clear any signals accessed
-          this.observer.clearSignals();
-        }
-      } catch (error) {
-        if (typeof this.context.notifyError !== "function") {
-          throw error;
-        }
 
-        this.context.notifyError(error);
-
-        return null;
+          return renderFn;
+        }
       }
-    }
 
-    let result: any = null;
+      let result: any = null;
 
-    try {
       this.isRendering = true;
       result = this.renderFn(this.reactiveProps as any);
       this.isRendering = false;
+
+      return result;
     } catch (error) {
       const notifyError = CatchErrorContext.use();
 
@@ -171,12 +158,12 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
       }
 
       notifyError(error);
+
+      return null;
     } finally {
       stopObserving();
       currentComponent = undefined;
     }
-
-    return result;
   }
 }
 
