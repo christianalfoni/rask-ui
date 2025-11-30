@@ -48,10 +48,11 @@ One of the biggest advantages of reactive state is how applications scale.
 In traditional React, contexts that grow large can become performance hazards, because any change tends to re-render all consumers — which triggers memoization workarounds and architectural compromises.
 
 **With RASK**:
-• Context value size doesn’t matter
-• Components only re-render when the specific state they read changes
-• You can keep scaling your mental model instead of fighting your tools
-• No need to reach for a secondary state management library — the same reactive primitives work just as well locally in a component as they do globally across the entire app
+
+- Context value size doesn’t matter
+- Components only re-render when the specific state they read changes
+- You can keep scaling your mental model instead of fighting your tools
+- No need to reach for a secondary state management library — the same reactive primitives work just as well locally in a component as they do globally across the entire app
 
 This enables project-wide state management without switching paradigms — no separate global state library required.
 
