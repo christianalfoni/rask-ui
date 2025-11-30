@@ -13,7 +13,7 @@ export interface RaskPluginOptions {
 }
 
 /**
- * Vite plugin for transforming JSX to Inferno with rask-ui/compiler imports
+ * Vite plugin for transforming JSX to Inferno with rask-ui/transformer imports
  */
 export default function raskPlugin(options: RaskPluginOptions = {}): Plugin {
   const importSource = options.importSource || "rask-ui";
@@ -73,10 +73,10 @@ export default function raskPlugin(options: RaskPluginOptions = {}): Plugin {
         sourceMaps: true,
       });
 
-      // Then, replace inferno imports with rask-ui/compiler
+      // Then, replace inferno imports with rask-ui/transformer
       const transformedCode = result.code.replace(
         /from\s+(['"])inferno\1/g,
-        `from $1${importSource}/compiler$1`
+        `from $1${importSource}/transformer$1`
       );
 
       return {

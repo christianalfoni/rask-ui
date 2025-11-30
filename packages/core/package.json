@@ -21,9 +21,9 @@
       "types": "./dist/plugin.d.ts",
       "import": "./dist/plugin.js"
     },
-    "./compiler": {
-      "types": "./dist/compiler.d.ts",
-      "import": "./dist/compiler.js"
+    "./transformer": {
+      "types": "./dist/transformer.d.ts",
+      "import": "./dist/transformer.js"
     }
   },
   "files": [

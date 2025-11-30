@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: RASK
-  text: SPA Framework
+  text: Reactive React
   tagline: Reactive state with reconciling UI
   image:
     src: /logo.png
@@ -17,14 +17,14 @@ hero:
       link: https://github.com/christianalfoni/rask-ui
 
 features:
-  - title: Use the language
-    details: Use the full power of JavaScript to describe your dynamic UI. No special primitives or magical templating language.
+  - title: A different path
+    details: What if React embraced reactive state management and did not stray to the server.
 
-  - title: Reactive state
-    details: Plain and simple state management. No stale closures, dependency arrays or other mind straining concepts.
+  - title: Hooks composition
+    details: The hooks composition you know and love, but without stale closures, dependency arrays and a melted brain.
 
-  - title: Consistent and minimalistic
-    details: A small set of consistent primitives. No special utilities for edge cases.
+  - title: Scale with context
+    details: No more adding a second layer for state management. With reactive state management you can finally scale contexts.
 ---
 
 ::: warning FEEDBACK WANTED
