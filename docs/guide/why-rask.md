@@ -59,14 +59,12 @@ This enables project-wide state management without switching paradigms — no se
 ## Design Principles
 
 RASK is built on a few clear principles:
-• Reactive state is the default
-State should update directly and intuitively — no immutability gymnastics.
-• Rendering is reconciler-driven
-The reconciler handles UI expression and component composition — reactive state decides when rendering happens.
-• Runtime only
-No build-time transforms. No magic compilation. Code runs as written.
-• Hooks define ownership
-State belongs to the component that created it, simplifying structure and cleanup.
+
+- **Reactive state is the default**.
+  State should update directly and intuitively — no immutability gymnastics.
+- **Rendering is reconciler-driven**. The reconciler handles UI expression and component composition — reactive state decides when rendering happens.
+- **Runtime only**. No build-time transforms. No magic compilation. Code runs as written.
+- **Hooks define ownership**. State belongs to the component that created it, simplifying structure and cleanup.
 
 ## Where RASK Fits Best
 
