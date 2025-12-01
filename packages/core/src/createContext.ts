@@ -39,7 +39,7 @@ export function createContext<T, P extends any[]>(hook: (...params: P) => T) {
      * @returns The context value provided by the nearest parent
      * @throws Error if called outside component setup, if no parent context exists, or if the specific context was not provided
      */
-    use() {
+    use(): T {
       let currentComponent = getCurrentComponent();
 
       if (!currentComponent) {
@@ -68,7 +68,7 @@ export function createContext<T, P extends any[]>(hook: (...params: P) => T) {
      * @returns The context value created by the hook
      * @throws Error if called outside component setup
      */
-    inject(...params: P) {
+    inject(...params: P): T {
       const currentComponent = getCurrentComponent();
 
       if (!currentComponent) {
