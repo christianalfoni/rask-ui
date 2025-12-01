@@ -15,7 +15,7 @@ const routes = {
   home: "/",
   about: "/about",
   user: "/users/:id",
-  post: "/posts/:id",
+  post: "/posts/:id?showComments",
 } as const;
 
 function App() {
@@ -31,7 +31,12 @@ function App() {
     }
 
     if (router.route?.name === "post") {
-      return <Post id={router.route.params.id} />;
+      return (
+        <Post
+          id={router.route.params.id}
+          showComments={router.route.queries.showComments === "true"}
+        />
+      );
     }
 
     return <NotFound />;
