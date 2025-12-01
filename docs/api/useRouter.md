@@ -75,7 +75,7 @@ const router = useRouter(routes, { base: "/app" });
 
 #### route
 
-Current active route with `name` and `params` properties. Reactive - accessing it tracks dependencies.
+Current active route with `name` and `params` properties.
 
 ```tsx
 if (router.route?.name === "user") {
@@ -85,7 +85,7 @@ if (router.route?.name === "user") {
 
 #### queries
 
-Current URL query parameters as an object. Reactive - accessing it tracks dependencies.
+Current URL query parameters as an object.
 
 ```tsx
 const searchTerm = router.queries.q || "";
@@ -94,7 +94,7 @@ const page = parseInt(router.queries.page || "1");
 
 ### Methods
 
-#### push(name, params?, query?)
+#### push(name, paramsQueries?)
 
 Navigate to a route by name, adding a new history entry.
 
@@ -106,10 +106,10 @@ router.push("home");
 router.push("user", { id: "123" });
 
 // Navigate with query
-router.push("home", {}, { tab: "recent" });
+router.push("user", { id: "123", tab: "recent" });
 ```
 
-#### replace(name, params?, query?)
+#### replace(name, paramsQueries?)
 
 Navigate to a route without adding a history entry.
 
@@ -126,7 +126,11 @@ Update query parameters without changing the route.
 router.setQuery({ page: "2", filter: "active" });
 ```
 
-#### url(name, params?, query?)
+```warning
+Setting queries does not cause rerender. This is a one way sync from your app to the url. Only pushing a new route with updated queries would cause a rerender.
+```
+
+#### url(name, paramsQueries?)
 
 Generate a URL string for a route without navigating.
 
@@ -134,8 +138,8 @@ Generate a URL string for a route without navigating.
 const userUrl = router.url("user", { id: "123" });
 // "/users/123"
 
-const searchUrl = router.url("home", {}, { q: "search" });
-// "/?q=search"
+const searchUrl = router.url("user", { id: "123", q: "search" });
+// "/users/123?q=search"
 ```
 
 ## Features
