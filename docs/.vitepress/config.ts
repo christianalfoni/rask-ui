@@ -149,7 +149,7 @@ export default defineConfig({
       { text: "Home", link: "/" },
       { text: "Get Started", link: "/guide/getting-started" },
       { text: "API Reference", link: "/api/components" },
-      { text: "Slides", link: "/slides/", target: "_self" },
+      { text: "Slides", link: "/slides/index.html", target: "_self" },
     ],
 
     sidebar: [
