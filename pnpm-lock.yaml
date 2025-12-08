@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@vue/compiler-sfc':
+        specifier: ^3.5.25
+        version: 3.5.25
       cpx:
         specifier: ^1.5.0
         version: 1.5.0

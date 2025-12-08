@@ -16,6 +16,7 @@
         "clean": "npx rimraf packages/rask-ui/dist packages/demo/dist packages/core/dist docs/public/slides"
     },
     "devDependencies": {
+        "@vue/compiler-sfc": "^3.5.25",
         "cpx": "^1.5.0",
         "mkdirp": "^3.0.1",
         "rimraf": "^6.1.2",
