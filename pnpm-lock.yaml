@@ -106,6 +106,9 @@ importers:
       '@slidev/theme-default':
         specifier: latest
         version: 0.25.0
+      '@vue/compiler-sfc':
+        specifier: ^3.5.25
+        version: 3.5.25
       playwright-chromium:
         specifier: ^1.41.0
         version: 1.56.1
