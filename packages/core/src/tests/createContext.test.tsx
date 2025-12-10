@@ -65,7 +65,7 @@ describe("createContext", () => {
     function Child() {
       expect(() => {
         ThemeContext.use();
-      }).toThrow("There is no parent context");
+      }).toThrow("No context available");
       return () => <div>Child</div>;
     }
 
@@ -183,6 +183,25 @@ describe("createContext", () => {
     render(<Parent />, container);
 
     expect(container.textContent).toContain("42 - a,b,c");
+
+    document.body.removeChild(container);
+  });
+
+  it("should allow using context in the root component that injects it", () => {
+    const ThemeContext = createContext(() => ({ theme: "root-theme" }));
+
+    function RootComponent() {
+      ThemeContext.inject();
+      const theme = ThemeContext.use();
+      return () => <div>{theme.theme}</div>;
+    }
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+
+    render(<RootComponent />, container);
+
+    expect(container.textContent).toContain("root-theme");
 
     document.body.removeChild(container);
   });

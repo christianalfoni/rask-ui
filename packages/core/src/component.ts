@@ -75,18 +75,19 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
   isRendering = false;
   effects: Array<{ isDirty: boolean; run: () => void }> = [];
   contexts = new Map();
-  getChildContext() {
+  getContext(context: unknown) {
     const parentGetContext =
       this.context.getContext ||
       (() => {
         throw new Error("No context available");
       });
 
+    return this.contexts.get(context) || parentGetContext(context);
+  }
+  getChildContext() {
     return {
       ...this.context,
-      getContext: (context: any) => {
-        return this.contexts.get(context) || parentGetContext(context);
-      },
+      getContext: this.getContext.bind(this),
     };
   }
   onMounts: Array<() => void> = [];

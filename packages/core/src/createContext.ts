@@ -46,11 +46,7 @@ export function createContext<T, P extends any[]>(hook: (...params: P) => T) {
         throw new Error("Only use useContext in component setup");
       }
 
-      if (typeof (currentComponent.context as any).getContext !== "function") {
-        throw new Error("There is no parent context");
-      }
-
-      const contextValue = (currentComponent.context as any).getContext(hook);
+      const contextValue = currentComponent.getContext(hook);
 
       if (!contextValue) {
         throw new Error(
