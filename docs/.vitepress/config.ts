@@ -198,6 +198,7 @@ export default defineConfig({
         items: [
           { text: "useView", link: "/api/useView" },
           { text: "useRef", link: "/api/useRef" },
+          { text: "useLookup", link: "/api/useLookup" },
           { text: "useCatchError", link: "/api/useCatchError" },
           { text: "useRouter", link: "/api/useRouter" },
         ],

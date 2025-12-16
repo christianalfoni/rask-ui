@@ -16,3 +16,4 @@ export { useDerived, Derived } from "./useDerived";
 export { syncBatch } from "./batch";
 export { inspect } from "./inspect";
 export { Router, useRouter } from "./useRouter";
+export { useLookup } from "./useLookup";

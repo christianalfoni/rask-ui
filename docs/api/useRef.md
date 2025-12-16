@@ -33,31 +33,55 @@ Pass the ref to an element's `ref` prop. The `current` property will be set to t
 
 ## assignRef()
 
-A helper utility for manually assigning the value of a ref. This is useful when you pass a ref down to a nested component and need to manually assign its value in that nested component.
+A helper utility for manually assigning the value of a ref. This is useful when a child component wants to expose an API to its parent component.
 
 ```tsx
-import { assignRef, type Ref } from "rask-ui";
+import { assignRef, useRef, type Ref } from "rask-ui";
 
-function NestedComponent({ inputRef }: { inputRef: Ref<HTMLInputElement> }) {
-  const setupInput = (element: HTMLInputElement) => {
-    // Manually assign the ref value
-    assignRef(inputRef, element);
+interface VideoPlayerAPI {
+  play: () => void;
+  pause: () => void;
+  seek: (time: number) => void;
+}
+
+function VideoPlayer({ apiRef }: { apiRef?: Ref<VideoPlayerAPI> }) {
+  const videoRef = useRef<HTMLVideoElement>();
+
+  // Create the API object
+  const api: VideoPlayerAPI = {
+    play: () => videoRef.current?.play(),
+    pause: () => videoRef.current?.pause(),
+    seek: (time: number) => {
+      if (videoRef.current) {
+        videoRef.current.currentTime = time;
+      }
+    },
   };
 
-  return () => <input ref={setupInput} type="text" />;
+  // Assign the API to the parent's ref
+  if (apiRef) {
+    assignRef(apiRef, api);
+  }
+
+  return () => <video ref={videoRef} src="video.mp4" />;
 }
 
 function ParentComponent() {
-  const inputRef = useRef<HTMLInputElement>();
+  const playerRef = useRef<VideoPlayerAPI>();
 
-  const focus = () => {
-    inputRef.current?.focus();
+  const handlePlay = () => {
+    playerRef.current?.play();
+  };
+
+  const handleSeek = () => {
+    playerRef.current?.seek(30);
   };
 
   return () => (
     <div>
-      <NestedComponent inputRef={inputRef} />
-      <button onClick={focus}>Focus Input</button>
+      <VideoPlayer apiRef={playerRef} />
+      <button onClick={handlePlay}>Play</button>
+      <button onClick={handleSeek}>Seek to 30s</button>
     </div>
   );
 }
