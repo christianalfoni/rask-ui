@@ -9,7 +9,7 @@ export { useAsync, Async } from "./useAsync";
 export { useAction, Action } from "./useAction";
 export { useSuspend } from "./useSuspend";
 export { useCatchError } from "./useCatchError";
-export { useRef } from "./useRef";
+export { useRef, assignRef, Ref } from "./useRef";
 export { useView } from "./useView";
 export { useEffect } from "./useEffect";
 export { useDerived, Derived } from "./useDerived";
