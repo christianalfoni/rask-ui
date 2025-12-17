@@ -7,7 +7,6 @@ export {
 } from "inferno";
 
 import {
-  Component,
   createComponentVNode as infernoCreateComponentVnode,
   VNode,
 } from "inferno";

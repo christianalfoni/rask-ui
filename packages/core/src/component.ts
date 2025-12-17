@@ -152,15 +152,19 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
 
       return result;
     } catch (error) {
-      const notifyError = CatchErrorContext.use();
+      try {
+        const notifyError = CatchErrorContext.use();
 
-      if (typeof notifyError !== "function") {
+        if (typeof notifyError !== "function") {
+          throw error;
+        }
+
+        notifyError(error);
+
+        return null;
+      } catch {
         throw error;
       }
-
-      notifyError(error);
-
-      return null;
     } finally {
       stopObserving();
       currentComponent = undefined;

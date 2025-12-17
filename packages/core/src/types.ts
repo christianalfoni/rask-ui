@@ -14,10 +14,18 @@ import type {
   InfernoTransitionEvent,
   CompositionEvent as InfernoCompositionEvent,
   Inferno,
+  Component,
+  InfernoNode,
+  Refs,
 } from "inferno";
 
 declare global {
   namespace Rask {
+    export interface Component<P = {}> {
+      (props: P): any;
+      defaultProps?: Partial<P> | undefined | null;
+      defaultHooks?: Refs<P> | undefined | null;
+    }
     // Event types without "Inferno" prefix
     export type MouseEvent<T = Element> = InfernoMouseEvent<T>;
     export type AnimationEvent<T = Element> = InfernoAnimationEvent<T>;
