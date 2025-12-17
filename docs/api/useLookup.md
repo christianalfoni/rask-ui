@@ -3,7 +3,7 @@
 Creates a reactive lookup function that maps an array to an object for efficient key-based access.
 
 ```tsx
-const lookup = useLookup(getArray, key)
+const lookup = useLookup(getArray, key);
 ```
 
 ## Parameters
@@ -32,29 +32,28 @@ function UserList() {
 
   const getUserById = useLookup(() => state.users, "id");
 
-  const selectedUser = getUserById(state.selectedId);
+  return () => {
+    const selectedUser = getUserById(state.selectedId);
 
-  return () => (
-    <div>
-      <h2>Users</h2>
-      {state.users.map((user) => (
-        <button
-          key={user.id}
-          onClick={() => (state.selectedId = user.id)}
-        >
-          {user.name}
-        </button>
-      ))}
+    return (
+      <div>
+        <h2>Users</h2>
+        {state.users.map((user) => (
+          <button key={user.id} onClick={() => (state.selectedId = user.id)}>
+            {user.name}
+          </button>
+        ))}
 
-      {selectedUser && (
-        <div>
-          <h3>Selected User</h3>
-          <p>Name: {selectedUser.name}</p>
-          <p>Role: {selectedUser.role}</p>
-        </div>
-      )}
-    </div>
-  );
+        {selectedUser && (
+          <div>
+            <h3>Selected User</h3>
+            <p>Name: {selectedUser.name}</p>
+            <p>Role: {selectedUser.role}</p>
+          </div>
+        )}
+      </div>
+    );
+  };
 }
 ```
 
@@ -72,9 +71,10 @@ The lookup will only update when the array structure changes (items added, remov
 ```tsx
 // These will trigger a lookup update:
 state.users.push({ id: 4, name: "Dave", role: "User" });
-state.users = state.users.filter(u => u.id !== 2);
+state.users = state.users.filter((u) => u.id !== 2);
 
 // This will NOT trigger a lookup update:
 state.users[0].name = "Alicia";
 ```
+
 :::
