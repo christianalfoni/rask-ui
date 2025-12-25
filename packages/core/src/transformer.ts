@@ -25,7 +25,7 @@ export function createComponentVNode(
     VNodeFlags.ComponentClass,
     RaskComponent,
     props,
-    key,
+    key || component,
     ref
   );
 }
