@@ -62,6 +62,7 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
   // calling forceUpdate() at the wrong time during Inferno's reconciliation.
   private isNotified = false;
   private isReconciling = false;
+  private hasChangedComponent = true;
 
   observer = new Observer(() => {
     if (this.isReconciling) {
@@ -106,6 +107,8 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
     this.isReconciling = true;
     const prevProps = this.props;
     this.props = nextProps;
+    this.hasChangedComponent =
+      (prevProps as any).__component !== (this.props as any).__component;
     syncBatch(() => {
       for (const prop in this.propsSignals!) {
         if ((prevProps as any)[prop] === (nextProps as any)[prop]) {
@@ -117,7 +120,7 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
     });
   }
   shouldComponentUpdate(): boolean {
-    const shouldRender = this.isNotified;
+    const shouldRender = this.isNotified || this.hasChangedComponent;
     this.isNotified = false;
     this.isReconciling = false;
     return shouldRender;
@@ -127,7 +130,9 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
     const stopObserving = this.observer.observe();
 
     try {
-      if (!this.renderFn) {
+      if (this.hasChangedComponent) {
+        this.hasChangedComponent = false;
+        this.componentWillUnmount();
         this.reactiveProps = createReactiveProps(this);
 
         const component = (this.props as any).__component;
