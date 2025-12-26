@@ -25,7 +25,10 @@ export function createComponentVNode(
     VNodeFlags.ComponentClass,
     RaskComponent,
     props,
-    key || component,
+    // Since RaskComponent is generic for all components we need to differentiate changing out the component, which
+    // we do simply by using the name as a key. There is not chance two different components has the same name,
+    // but is not the same component in the same component tree position
+    key || component.name,
     ref
   );
 }
