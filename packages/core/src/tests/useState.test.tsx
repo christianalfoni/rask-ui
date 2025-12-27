@@ -233,4 +233,19 @@ describe("useState", () => {
 
     expect(childRenderCount).toBe(2);
   });
+
+  it("should not proxy wrap Date objects", () => {
+    const originalDate = new Date("2024-01-01");
+    const state = useState({ createdAt: originalDate });
+
+    // The returned date should be the exact same instance, not a proxy
+    expect(state.createdAt).toBe(originalDate);
+
+    // It should still be a Date instance
+    expect(state.createdAt instanceof Date).toBe(true);
+
+    // Date methods should work correctly
+    expect(state.createdAt.getFullYear()).toBe(2024);
+    expect(state.createdAt.toISOString()).toBe(originalDate.toISOString());
+  });
 });

@@ -89,10 +89,11 @@ function getProxy(value: object, notifyInspectorRef: InspectorRef) {
         observer.subscribeSignal(signal);
       }
 
-      if (
-        Array.isArray(value) ||
-        (typeof value === "object" && value !== null)
-      ) {
+      if (value instanceof Date || value === null) {
+        return value;
+      }
+
+      if (Array.isArray(value) || typeof value === "object") {
         return getProxy(
           value,
           INSPECTOR_ENABLED && notifyInspectorRef.current
