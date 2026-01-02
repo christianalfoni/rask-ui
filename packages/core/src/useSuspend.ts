@@ -1,4 +1,4 @@
-import { AsyncState, isAsync, useAsync } from "./useAsync";
+import { AsyncState, isAsync } from "./useAsync";
 import { useEffect } from "./useEffect";
 import { assignState, useState } from "./useState";
 

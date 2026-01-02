@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { useDerived, Derived } from "../useDerived";
 import { useState } from "../useState";
-import { Observer } from "../observation";
 import { render } from "../index";
+import { reaction, Reaction } from "mobx";
 
 describe("useDerived", () => {
   it("should compute values lazily", () => {
@@ -44,7 +44,7 @@ describe("useDerived", () => {
         doubled: computeFn,
       });
 
-      return () => <div>test</div>;
+      return () => <div>test {computed.doubled}</div>;
     }
 
     const container = document.createElement("div");
@@ -156,20 +156,20 @@ describe("useDerived", () => {
         doubled: () => state.count * 2,
       });
 
-      return () => <div>test</div>;
+      return () => <div>test {computed.doubled}</div>;
     }
 
     const container = document.createElement("div");
     render(<Component />, container);
 
     let observedValue: number | null = null;
-    const observer = new Observer(() => {
-      observedValue = computed.doubled;
-    });
-
-    const dispose = observer.observe();
-    computed.doubled; // Track the computed
-    dispose();
+    const disposeReaction = reaction(
+      () => computed.doubled,
+      () => {
+        observedValue = computed.doubled;
+      },
+      { fireImmediately: true }
+    );
 
     expect(observedValue).toBe(null);
 
@@ -180,7 +180,7 @@ describe("useDerived", () => {
 
     expect(observedValue).toBe(20);
 
-    observer.dispose();
+    disposeReaction();
   });
 
   it("should only recompute when actual dependencies change", () => {
@@ -196,7 +196,7 @@ describe("useDerived", () => {
         result: computeFn,
       });
 
-      return () => <div>test</div>;
+      return () => <div>test {computed.result}</div>;
     }
 
     const container = document.createElement("div");
@@ -344,7 +344,11 @@ describe("useDerived", () => {
         outer: outerFn,
       });
 
-      return () => <div>test</div>;
+      return () => (
+        <div>
+          test {computed.inner} {computed.outer}
+        </div>
+      );
     }
 
     const container = document.createElement("div");
@@ -383,7 +387,7 @@ describe("useDerived", () => {
         value: computeFn,
       });
 
-      return () => <div>test</div>;
+      return () => <div>test {computed.value}</div>;
     }
 
     const container = document.createElement("div");
@@ -481,23 +485,25 @@ describe("useDerived", () => {
     render(<Component />, container);
 
     const results: number[] = [];
-    const observer = new Observer(() => {
-      results.push(computed.sum);
-    });
-
-    const dispose = observer.observe();
-    computed.sum; // Track
-    dispose();
+    const disposeReaction = reaction(
+      () => computed.sum,
+      () => {
+        results.push(computed.sum);
+      },
+      {
+        fireImmediately: true,
+      }
+    );
 
     state.x = 10;
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     state.y = 20;
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(results).toEqual([12, 30]);
 
-    observer.dispose();
+    disposeReaction;
   });
 
   it("should recompute when parent props change", async () => {

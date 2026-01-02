@@ -1,6 +1,5 @@
-import { syncBatch } from "./batch";
 import { useCleanup, getCurrentComponent } from "./component";
-import { Observer } from "./observation";
+import { autorun } from "./scheduler";
 
 export function useEffect(cb: () => void | (() => void)) {
   const component = getCurrentComponent();
@@ -9,24 +8,11 @@ export function useEffect(cb: () => void | (() => void)) {
   }
 
   let disposer: (() => void) | void;
-  const observer = new Observer(() => {
-    syncBatch(runEffect);
-  });
-  const runEffect = () => {
-    try {
-      disposer?.();
-    } catch (error) {
-      console.error("Error in effect dispose function:", error);
-    }
-    const stopObserving = observer.observe();
-    disposer = cb();
-    stopObserving();
-  };
 
-  useCleanup(() => {
-    observer.dispose();
+  const autorunDisposer = autorun(() => {
     disposer?.();
+    disposer = cb();
   });
 
-  runEffect();
+  useCleanup(autorunDisposer);
 }

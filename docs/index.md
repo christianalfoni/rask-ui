@@ -17,6 +17,9 @@ hero:
       link: https://github.com/christianalfoni/rask-ui
 
 features:
+  - title: Built on battle-tested foundations
+    details: Leverages Inferno's highly optimized reconciler and MobX's proven reactive system — production-ready technologies trusted by thousands of applications.
+
   - title: A different path
     details: What if React embraced reactive state management and did not stray to the server.
 
@@ -28,7 +31,7 @@ features:
 ---
 
 ::: warning FEEDBACK WANTED
-RASK has concluded its core implementation including the **Inferno-based reconciler**, **JSX transformation plugin**, and **reactive primitives**. The library is feature-complete and considered ready for release.
+RASK has concluded its core implementation including **Inferno's reconciler**, **MobX's reactive system**, **JSX transformation plugin**, and **reactive primitives**. The library is feature-complete and considered ready for release.
 
 [**Share your feedback by creating an issue**](https://github.com/christianalfoni/rask/issues/new) - your input will help shape the final release.
 :::

@@ -68,7 +68,7 @@ yarn add rask-ui
 
 ### Vite Configuration
 
-RASK uses a custom Vite plugin powered by SWC for optimal JSX transformation. This plugin transforms JSX to Inferno's highly optimized `createVNode` calls and automatically converts function components to RASK's reactive component pattern.
+RASK is built on two battle-tested technologies: **Inferno** for the reconciler and **MobX** for reactive state management. The custom Vite plugin powered by SWC transforms JSX to Inferno's highly optimized `createVNode` calls and automatically converts function components to RASK's reactive component pattern.
 
 ### 1. Configure Vite
 
@@ -105,7 +105,8 @@ Update your `tsconfig.json`:
 
 - **TypeScript**: Type-checks JSX using RASK's type definitions (imported from Inferno)
 - **SWC Plugin**: Transforms JSX to Inferno's `createVNode` calls at build time
-- **Result**: Full type safety with zero runtime overhead
+- **MobX**: Provides the reactive state system that powers automatic dependency tracking
+- **Result**: Full type safety with zero runtime overhead and battle-tested reactivity
 
 ## Your First Component
 

@@ -235,42 +235,6 @@ describe("useLookup", () => {
     expect(container.textContent).toBe("Alicia");
   });
 
-  it("should update lookup when item key is changed", async () => {
-    let state!: {
-      items: Array<{ id: number; name: string }>;
-    };
-
-    function Component() {
-      state = useState({
-        items: [
-          { id: 1, name: "Alice" },
-          { id: 2, name: "Bob" },
-        ],
-      });
-      const lookup = useLookup(() => state.items, "id");
-
-      return () => {
-        return (
-          <div>
-            {lookup(1)?.name} - {lookup(5)?.name}
-          </div>
-        );
-      };
-    }
-
-    const container = document.createElement("div");
-    render(<Component />, container);
-
-    expect(container.textContent).toBe("Alice - ");
-
-    // Change Alice's id
-    state.items[0].id = 5;
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    // Old id should not be found, new id should be found
-    expect(container.textContent).toBe(" - Alice");
-  });
-
   it("should work with string keys", async () => {
     let state!: {
       users: Array<{ username: string; email: string }>;

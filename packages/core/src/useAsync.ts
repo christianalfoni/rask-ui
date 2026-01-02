@@ -1,7 +1,7 @@
-import { syncBatch } from "./batch";
 import { useCleanup, getCurrentComponent } from "./component";
-import { Observer } from "./observation";
+import { transaction } from "./scheduler";
 import { assignState, useState } from "./useState";
+import { Reaction } from "mobx";
 
 export type AsyncState<T> =
   | {
@@ -80,17 +80,19 @@ export function useAsync<T extends NonNullable<any>>(
     currentAbortController?.abort();
 
     const abortController = (currentAbortController = new AbortController());
-    const stopObserving = observer.observe();
-    const promise = fn(abortController.signal);
-    stopObserving();
+    let promise: Promise<T>;
 
-    promise
+    reaction.track(() => {
+      promise = fn(abortController.signal);
+    });
+
+    promise!
       .then((result) => {
         if (abortController.signal.aborted) {
           return;
         }
 
-        syncBatch(() => {
+        transaction(() => {
           assignState(state, {
             isLoading: false,
             isRefreshing: false,
@@ -107,7 +109,7 @@ export function useAsync<T extends NonNullable<any>>(
           return;
         }
 
-        syncBatch(() => {
+        transaction(() => {
           assignState(state, {
             isLoading: state.isLoading,
             isRefreshing: state.isRefreshing,
@@ -120,11 +122,11 @@ export function useAsync<T extends NonNullable<any>>(
         refreshResolvers.length = 0;
       });
 
-    return promise;
+    return promise!;
   };
 
-  const observer = new Observer(() => {
-    syncBatch(() => {
+  const reaction = new Reaction("AsyncReaction", () => {
+    transaction(() => {
       if (state.isLoading) {
         refresh();
       } else if (state.error && state.value === null) {
@@ -149,7 +151,7 @@ export function useAsync<T extends NonNullable<any>>(
 
   useCleanup(() => {
     currentAbortController?.abort();
-    observer.dispose();
+    reaction.dispose();
   });
 
   refresh();
@@ -161,7 +163,7 @@ export function useAsync<T extends NonNullable<any>>(
         return;
       }
 
-      syncBatch(() => {
+      transaction(() => {
         if (state.error && state.value === null) {
           assignState(state, {
             isLoading: true,

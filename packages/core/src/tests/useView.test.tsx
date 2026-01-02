@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { useView } from "../useView";
 import { useState } from "../useState";
-import { Observer } from "../observation";
+import { autorun } from "mobx";
 import { render } from "../";
 
 describe("createView", () => {
@@ -57,13 +57,10 @@ describe("createView", () => {
     let renderCount = 0;
     let lastValue = 0;
 
-    const observer = new Observer(() => {
+    autorun(() => {
       renderCount++;
+      lastValue = view.count; // Track the property
     });
-
-    const dispose = observer.observe();
-    lastValue = view.count; // Track the property
-    dispose();
 
     expect(renderCount).toBe(0);
 
@@ -235,13 +232,10 @@ describe("createView", () => {
     let nameRenderCount = 0;
 
     // Observer that only accesses count
-    const countObserver = new Observer(() => {
+    autorun(() => {
+      view.count; // Track count
       countRenderCount++;
     });
-
-    const dispose1 = countObserver.observe();
-    view.count; // Track count
-    dispose1();
 
     expect(countRenderCount).toBe(0);
 
@@ -266,13 +260,10 @@ describe("createView", () => {
     });
 
     // Now track name with a different observer
-    const nameObserver = new Observer(() => {
+    autorun(() => {
+      view.name; // Track name
       nameRenderCount++;
     });
-
-    const dispose2 = nameObserver.observe();
-    view.name; // Track name
-    dispose2();
 
     expect(nameRenderCount).toBe(0);
 

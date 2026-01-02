@@ -6,7 +6,20 @@ Creates a reactive state object bound to the component. Any property access duri
 const state = useState(initialState);
 ```
 
-## Example
+## Supported Value Types
+
+`useState()` accepts the following value types:
+
+- **Objects** - Plain JavaScript objects with nested properties
+- **Arrays** - Arrays with reactive mutation methods (push, pop, splice, etc.)
+- **Maps** - ES6 Map instances with reactive get/set/delete operations
+- **Sets** - ES6 Set instances with reactive add/delete/clear operations
+
+All nested structures within these types are automatically made reactive.
+
+## Examples
+
+### Objects and Arrays
 
 ```tsx
 import { useState } from "rask-ui";
@@ -24,6 +37,53 @@ function Example() {
   state.nested.value = 100;
 
   return () => <div>{state.count}</div>;
+}
+```
+
+### Maps
+
+```tsx
+function UserCache() {
+  const state = useState({
+    users: new Map<string, User>(),
+  });
+
+  const addUser = (user: User) => {
+    state.users.set(user.id, user);
+  };
+
+  return () => (
+    <ul>
+      {Array.from(state.users.values()).map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Sets
+
+```tsx
+function TagManager() {
+  const state = useState({
+    tags: new Set<string>(),
+  });
+
+  const toggleTag = (tag: string) => {
+    if (state.tags.has(tag)) {
+      state.tags.delete(tag);
+    } else {
+      state.tags.add(tag);
+    }
+  };
+
+  return () => (
+    <div>
+      <p>Tags: {Array.from(state.tags).join(", ")}</p>
+      <button onClick={() => toggleTag("react")}>Toggle React</button>
+    </div>
+  );
 }
 ```
 
