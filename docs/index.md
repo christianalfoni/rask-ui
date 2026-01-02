@@ -17,9 +17,6 @@ hero:
       link: https://github.com/christianalfoni/rask-ui
 
 features:
-  - title: Built on battle-tested foundations
-    details: Leverages Inferno's highly optimized reconciler and MobX's proven reactive system — production-ready technologies trusted by thousands of applications.
-
   - title: A different path
     details: What if React embraced reactive state management and did not stray to the server.
 

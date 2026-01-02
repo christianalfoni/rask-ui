@@ -3,7 +3,7 @@
 RASK is built on a simple idea: **what if React had embraced reactive state management from the very beginning?**
 Hooks opened a powerful era of composition — but the core model of immutable updates, dependency arrays and frequent re-renders makes large-scale state management difficult.
 
-RASK combines two battle-tested technologies: **MobX's** proven reactive state system and **Inferno's** highly optimized reconciler. Instead of integrating state into the reconciler itself, RASK integrates the reactive state system directly with the reconciler-driven rendering model. The result is familiar React composition with a different mental model: state updates trigger reactions, and reactions trigger rendering — automatically.
+RASK combines two battle-tested technologies: **MobX's** proven reactive state system and **Inferno's** highly optimized reconciler. Instead of integrating state into the reconciler itself, RASK integrates the reactive state system directly with an observing reconciler-driven rendering model. The result is familiar React composition with a much simpler and performant model for state management.
 
 ## A Different Path
 

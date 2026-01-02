@@ -14,6 +14,7 @@ const state = useState(initialState);
 - **Arrays** - Arrays with reactive mutation methods (push, pop, splice, etc.)
 - **Maps** - ES6 Map instances with reactive get/set/delete operations
 - **Sets** - ES6 Set instances with reactive add/delete/clear operations
+- **Custom Class** - Any custom class you create will have observable properties
 
 All nested structures within these types are automatically made reactive.
 
@@ -82,6 +83,28 @@ function TagManager() {
     <div>
       <p>Tags: {Array.from(state.tags).join(", ")}</p>
       <button onClick={() => toggleTag("react")}>Toggle React</button>
+    </div>
+  );
+}
+```
+
+### Custom Class
+
+```tsx
+class CounterState {
+  count = 0;
+  increase() {
+    this.count++;
+  }
+}
+
+function Counter() {
+  const state = useState(new CounterState());
+
+  return () => (
+    <div>
+      <p>Count: {state.count}</p>
+      <button onClick={() => counter.increase()}>Increase</button>
     </div>
   );
 }
