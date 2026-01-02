@@ -1,5 +1,5 @@
 import { render as infernoRender } from "inferno";
-import { syncBatch } from "./batch";
+import { transaction } from "./scheduler";
 
 /**
  * Renders a component with automatic event batching.
@@ -53,7 +53,7 @@ export function render(...params: Parameters<typeof infernoRender>) {
       patchedEvents.add(type);
 
       const wrappedListener = function (this: any, event: Event) {
-        syncBatch(() => {
+        transaction(() => {
           listener.call(this, event);
         });
       };

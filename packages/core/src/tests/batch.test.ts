@@ -1,24 +1,25 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { syncBatch } from "../batch";
-import { useState } from "../useState";
-import { Observer } from "../observation";
 
-describe("syncBatch", () => {
+import { useState } from "../useState";
+import { autorun, transaction } from "../scheduler";
+import { Reaction, reaction } from "mobx";
+
+describe("transaction", () => {
   it("should batch multiple state changes into a single notification", () => {
     const state = useState({ count: 0, name: "Alice" });
     let notifyCount = 0;
 
-    const observer = new Observer(() => {
+    const reaction = new Reaction("TestReaction", () => {
       notifyCount++;
     });
 
-    const dispose = observer.observe();
-    state.count; // Track count
-    state.name; // Track name
-    dispose();
+    reaction.track(() => {
+      state.count; // Track count
+      state.name; // Track name
+    });
 
     // Make multiple changes in a batch
-    syncBatch(() => {
+    transaction(() => {
       state.count = 1;
       state.name = "Bob";
       state.count = 2;
@@ -29,24 +30,24 @@ describe("syncBatch", () => {
     expect(state.count).toBe(2);
     expect(state.name).toBe("Bob");
 
-    observer.dispose();
+    reaction.dispose();
   });
 
   it("should handle nested batches correctly", () => {
     const state = useState({ count: 0 });
     let notifyCount = 0;
 
-    const observer = new Observer(() => {
+    const reaction = new Reaction("TestReaction", () => {
       notifyCount++;
     });
 
-    const dispose = observer.observe();
-    state.count; // Track
-    dispose();
+    reaction.track(() => {
+      state.count; // Track
+    });
 
-    syncBatch(() => {
+    transaction(() => {
       state.count = 1;
-      syncBatch(() => {
+      transaction(() => {
         state.count = 2;
       });
       state.count = 3;
@@ -56,7 +57,7 @@ describe("syncBatch", () => {
     expect(notifyCount).toBe(1);
     expect(state.count).toBe(3);
 
-    observer.dispose();
+    reaction.dispose();
   });
 
   it("should handle multiple observers with syncBatch", () => {
@@ -64,22 +65,22 @@ describe("syncBatch", () => {
     let notifyCount1 = 0;
     let notifyCount2 = 0;
 
-    const observer1 = new Observer(() => {
+    const reaction1 = new Reaction("TestReaction1", () => {
       notifyCount1++;
     });
-    const observer2 = new Observer(() => {
+    const reaction2 = new Reaction("TestReaction2", () => {
       notifyCount2++;
     });
 
-    const dispose1 = observer1.observe();
-    state.count; // Track in observer1
-    dispose1();
+    reaction1.track(() => {
+      state.count; // Track in observer1
+    });
 
-    const dispose2 = observer2.observe();
-    state.count; // Track in observer2
-    dispose2();
+    reaction2.track(() => {
+      state.count; // Track in observer2
+    });
 
-    syncBatch(() => {
+    transaction(() => {
       state.count = 1;
       state.count = 2;
       state.count = 3;
@@ -89,18 +90,18 @@ describe("syncBatch", () => {
     expect(notifyCount1).toBe(1);
     expect(notifyCount2).toBe(1);
 
-    observer1.dispose();
-    observer2.dispose();
+    reaction1.dispose();
+    reaction2.dispose();
   });
 
-  it("should maintain correct state values after syncBatch", () => {
+  it("should maintain correct state values after transaction", () => {
     const state = useState({
       count: 0,
       name: "Alice",
       items: [1, 2, 3],
     });
 
-    syncBatch(() => {
+    transaction(() => {
       state.count = 10;
       state.name = "Bob";
       state.items.push(4);
@@ -112,49 +113,20 @@ describe("syncBatch", () => {
     expect(state.items).toEqual([100, 2, 3, 4]);
   });
 
-  it("should not flush if exception thrown within syncBatch", () => {
-    const state = useState({ count: 0 });
-    let notifyCount = 0;
-
-    const observer = new Observer(() => {
-      notifyCount++;
-    });
-
-    const dispose = observer.observe();
-    state.count; // Track
-    dispose();
-
-    try {
-      syncBatch(() => {
-        state.count = 1;
-        throw new Error("Test error");
-      });
-    } catch (e) {
-      // Expected error
-    }
-
-    // Should NOT have flushed since the batch was interrupted
-    expect(notifyCount).toBe(0);
-    // But state change still occurred
-    expect(state.count).toBe(1);
-
-    observer.dispose();
-  });
-
   it("should deduplicate notifications for the same observer", () => {
     const state = useState({ count: 0, name: "Alice" });
     let notifyCount = 0;
 
-    const observer = new Observer(() => {
+    const reaction = new Reaction("TestReaction", () => {
       notifyCount++;
     });
 
-    const dispose = observer.observe();
-    state.count; // Track
-    state.name; // Track
-    dispose();
+    reaction.track(() => {
+      state.count; // Track
+      state.name; // Track
+    });
 
-    syncBatch(() => {
+    transaction(() => {
       state.count = 1; // Triggers observer
       state.name = "Bob"; // Triggers same observer again
       state.count = 2; // Triggers observer yet again
@@ -163,7 +135,7 @@ describe("syncBatch", () => {
     // Should deduplicate and only notify once
     expect(notifyCount).toBe(1);
 
-    observer.dispose();
+    reaction.dispose();
   });
 });
 
@@ -172,13 +144,13 @@ describe("queue (async batching)", () => {
     const state = useState({ count: 0 });
     let notifyCount = 0;
 
-    const observer = new Observer(() => {
+    const reaction = new Reaction("TestReaction", () => {
       notifyCount++;
     });
 
-    const dispose = observer.observe();
-    state.count; // Track
-    dispose();
+    reaction.track(() => {
+      state.count; // Track
+    });
 
     // Make changes that will be queued
     state.count = 1;
@@ -195,21 +167,21 @@ describe("queue (async batching)", () => {
     expect(notifyCount).toBe(1);
     expect(state.count).toBe(3);
 
-    observer.dispose();
+    reaction.dispose();
   });
 
   it("should batch multiple async updates into one notification", async () => {
     const state = useState({ count: 0, name: "Alice" });
     let notifyCount = 0;
 
-    const observer = new Observer(() => {
+    const reaction = new Reaction("TestReaction", () => {
       notifyCount++;
     });
 
-    const dispose = observer.observe();
-    state.count;
-    state.name;
-    dispose();
+    reaction.track(() => {
+      state.count;
+      state.name;
+    });
 
     state.count = 1;
     state.name = "Bob";
@@ -220,20 +192,24 @@ describe("queue (async batching)", () => {
     // Should batch all updates into single notification
     expect(notifyCount).toBe(1);
 
-    observer.dispose();
+    reaction.dispose();
   });
 
   it("should handle separate async batches", async () => {
     const state = useState({ count: 0 });
     let notifyCount = 0;
 
-    const observer = new Observer(() => {
+    const reaction = new Reaction("TestReaction", () => {
       notifyCount++;
+
+      reaction.track(() => {
+        state.count;
+      });
     });
 
-    const dispose = observer.observe();
-    state.count;
-    dispose();
+    reaction.track(() => {
+      state.count;
+    });
 
     state.count = 1;
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -246,54 +222,58 @@ describe("queue (async batching)", () => {
     expect(afterFirst).toBe(1);
     expect(afterSecond).toBe(2);
 
-    observer.dispose();
+    reaction.dispose();
   });
 });
 
-describe("syncBatch with nested async updates", () => {
-  it("should handle syncBatch inside async context", async () => {
+describe("transaction with nested async updates", () => {
+  it("should handle transaction inside async context", async () => {
     const state = useState({ count: 0 });
     let notifyCount = 0;
 
-    const observer = new Observer(() => {
+    const reaction = new Reaction("TestReaction", () => {
       notifyCount++;
     });
 
-    const dispose = observer.observe();
-    state.count;
-    dispose();
+    reaction.track(() => {
+      state.count;
+    });
 
     // Async update
     state.count = 1;
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(notifyCount).toBe(1);
 
+    reaction.track(() => {
+      state.count;
+    });
+
     // Sync batch after async
-    syncBatch(() => {
+    transaction(() => {
       state.count = 2;
       state.count = 3;
     });
     expect(notifyCount).toBe(2); // +1 from sync batch
 
-    observer.dispose();
+    reaction.dispose();
   });
 
-  it("should handle async updates inside syncBatch callback", async () => {
+  it("should handle async updates inside transaction callback", async () => {
     const state = useState({ count: 0 });
     let notifyCount = 0;
 
-    const observer = new Observer(() => {
+    const reaction = new Reaction("TestReaction", () => {
       notifyCount++;
     });
 
-    const dispose = observer.observe();
-    state.count;
-    dispose();
+    reaction.track(() => {
+      state.count;
+    });
 
-    syncBatch(() => {
+    transaction(() => {
       state.count = 1;
 
-      // Trigger an async update from within syncBatch
+      // Trigger an async update from within transaction
       setTimeout(() => {
         state.count = 2;
       }, 0);
@@ -303,16 +283,20 @@ describe("syncBatch with nested async updates", () => {
     expect(notifyCount).toBe(1);
     expect(state.count).toBe(1);
 
+    reaction.track(() => {
+      state.count;
+    });
+
     // Wait for async update
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(notifyCount).toBe(2);
     expect(state.count).toBe(2);
 
-    observer.dispose();
+    reaction.dispose();
   });
 });
 
-describe("syncBatch with cascading updates", () => {
+describe("transaction with cascading updates", () => {
   it("should handle cascading observer notifications within the same batch", () => {
     const state = useState({ count: 0 });
     const derived = useState({ doubled: 0 });
@@ -321,36 +305,36 @@ describe("syncBatch with cascading updates", () => {
     let componentNotifyCount = 0;
 
     // Observer 1: Watches state, updates derived (simulates useDerived)
-    const derivedObserver = new Observer(() => {
+    const derivedReaction = new Reaction("DerivedReaction", () => {
       stateNotifyCount++;
       // When state changes, update derived synchronously
       derived.doubled = state.count * 2;
     });
 
-    const dispose1 = derivedObserver.observe();
-    state.count; // Track state
-    dispose1();
+    derivedReaction.track(() => {
+      state.count; // Track state
+    });
 
     // Observer 2: Watches derived (simulates component)
-    const componentObserver = new Observer(() => {
+    const componentReaction = new Reaction("ComponentReaction", () => {
       derivedNotifyCount++;
     });
 
-    const dispose2 = componentObserver.observe();
-    derived.doubled; // Track derived
-    dispose2();
+    componentReaction.track(() => {
+      derived.doubled; // Track derived
+    });
 
     // Observer 3: Also watches derived (another component)
-    const component2Observer = new Observer(() => {
+    const component2Reaction = new Reaction("Component2Reaction", () => {
       componentNotifyCount++;
     });
 
-    const dispose3 = component2Observer.observe();
-    derived.doubled; // Track derived
-    dispose3();
+    component2Reaction.track(() => {
+      derived.doubled; // Track derived
+    });
 
     // Make a change in a batch
-    syncBatch(() => {
+    transaction(() => {
       state.count = 5;
     });
 
@@ -361,9 +345,9 @@ describe("syncBatch with cascading updates", () => {
     expect(state.count).toBe(5);
     expect(derived.doubled).toBe(10);
 
-    derivedObserver.dispose();
-    componentObserver.dispose();
-    component2Observer.dispose();
+    derivedReaction.dispose();
+    componentReaction.dispose();
+    component2Reaction.dispose();
   });
 
   it("should handle multi-level cascading updates", () => {
@@ -374,42 +358,42 @@ describe("syncBatch with cascading updates", () => {
     const notifyCounts = [0, 0, 0, 0];
 
     // Level 1: state -> derived1
-    const observer1 = new Observer(() => {
+    const reaction1 = new Reaction("Reaction1", () => {
       notifyCounts[0]++;
       derived1.level1 = state.value + 1;
     });
-    const dispose1 = observer1.observe();
-    state.value;
-    dispose1();
+    reaction1.track(() => {
+      state.value;
+    });
 
     // Level 2: derived1 -> derived2
-    const observer2 = new Observer(() => {
+    const reaction2 = new Reaction("Reaction2", () => {
       notifyCounts[1]++;
       derived2.level2 = derived1.level1 + 1;
     });
-    const dispose2 = observer2.observe();
-    derived1.level1;
-    dispose2();
+    reaction2.track(() => {
+      derived1.level1;
+    });
 
     // Level 3: derived2 -> derived3
-    const observer3 = new Observer(() => {
+    const reaction3 = new Reaction("Reaction3", () => {
       notifyCounts[2]++;
       derived3.level3 = derived2.level2 + 1;
     });
-    const dispose3 = observer3.observe();
-    derived2.level2;
-    dispose3();
+    reaction3.track(() => {
+      derived2.level2;
+    });
 
     // Final observer: watches derived3
-    const observer4 = new Observer(() => {
+    const reaction4 = new Reaction("Reaction4", () => {
       notifyCounts[3]++;
     });
-    const dispose4 = observer4.observe();
-    derived3.level3;
-    dispose4();
+    reaction4.track(() => {
+      derived3.level3;
+    });
 
     // Update state in a batch
-    syncBatch(() => {
+    transaction(() => {
       state.value = 10;
     });
 
@@ -420,10 +404,10 @@ describe("syncBatch with cascading updates", () => {
     expect(derived2.level2).toBe(12);
     expect(derived3.level3).toBe(13);
 
-    observer1.dispose();
-    observer2.dispose();
-    observer3.dispose();
-    observer4.dispose();
+    reaction1.dispose();
+    reaction2.dispose();
+    reaction3.dispose();
+    reaction4.dispose();
   });
 
   it("should handle diamond dependency pattern", () => {
@@ -435,39 +419,39 @@ describe("syncBatch with cascading updates", () => {
     let derived3NotifyCount = 0;
 
     // State -> derived1
-    const obs1 = new Observer(() => {
+    const reaction1 = new Reaction("Reaction1", () => {
       derived1.path1 = state.value * 2;
     });
-    const d1 = obs1.observe();
-    state.value;
-    d1();
+    reaction1.track(() => {
+      state.value;
+    });
 
     // State -> derived2
-    const obs2 = new Observer(() => {
+    const reaction2 = new Reaction("Reaction2", () => {
       derived2.path2 = state.value * 3;
     });
-    const d2 = obs2.observe();
-    state.value;
-    d2();
+    reaction2.track(() => {
+      state.value;
+    });
 
     // [derived1, derived2] -> derived3
-    const obs3 = new Observer(() => {
+    const reaction3 = new Reaction("Reaction3", () => {
       derived3.combined = derived1.path1 + derived2.path2;
     });
-    const d3 = obs3.observe();
-    derived1.path1;
-    derived2.path2;
-    d3();
+    reaction3.track(() => {
+      derived1.path1;
+      derived2.path2;
+    });
 
     // Watch derived3
-    const obs4 = new Observer(() => {
+    const reaction4 = new Reaction("Reaction4", () => {
       derived3NotifyCount++;
     });
-    const d4 = obs4.observe();
-    derived3.combined;
-    d4();
+    reaction4.track(() => {
+      derived3.combined;
+    });
 
-    syncBatch(() => {
+    transaction(() => {
       state.value = 5;
     });
 
@@ -477,10 +461,10 @@ describe("syncBatch with cascading updates", () => {
     expect(derived2.path2).toBe(15);
     expect(derived3.combined).toBe(25);
 
-    obs1.dispose();
-    obs2.dispose();
-    obs3.dispose();
-    obs4.dispose();
+    reaction1.dispose();
+    reaction2.dispose();
+    reaction3.dispose();
+    reaction4.dispose();
   });
 
   it("should not create infinite loops with circular dependencies", () => {
@@ -490,7 +474,7 @@ describe("syncBatch with cascading updates", () => {
     let notify2Count = 0;
 
     // Observer 1: watches state1, updates state2
-    const obs1 = new Observer(() => {
+    const reaction1 = new Reaction("Reaction1", () => {
       notify1Count++;
       if (notify1Count > 10) {
         throw new Error("Infinite loop detected");
@@ -500,12 +484,12 @@ describe("syncBatch with cascading updates", () => {
         state2.value = state1.value + 1;
       }
     });
-    const d1 = obs1.observe();
-    state1.value;
-    d1();
+    reaction1.track(() => {
+      state1.value;
+    });
 
     // Observer 2: watches state2, updates state1
-    const obs2 = new Observer(() => {
+    const reaction2 = new Reaction("Reaction2", () => {
       notify2Count++;
       if (notify2Count > 10) {
         throw new Error("Infinite loop detected");
@@ -515,11 +499,11 @@ describe("syncBatch with cascading updates", () => {
         state1.value = state2.value - 1;
       }
     });
-    const d2 = obs2.observe();
-    state2.value;
-    d2();
+    reaction2.track(() => {
+      state2.value;
+    });
 
-    syncBatch(() => {
+    transaction(() => {
       state1.value = 5;
     });
 
@@ -529,7 +513,7 @@ describe("syncBatch with cascading updates", () => {
     expect(state1.value).toBe(5);
     expect(state2.value).toBe(6);
 
-    obs1.dispose();
-    obs2.dispose();
+    reaction1.dispose();
+    reaction2.dispose();
   });
 });

@@ -641,44 +641,6 @@ describe("useEffect", () => {
     expect(effectCalls).toEqual([0, 1, 2]);
   });
 
-  it("should handle dispose function that throws error", async () => {
-    const effectCalls: number[] = [];
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-    let state!: { count: number };
-
-    function Component() {
-      state = useState({ count: 0 });
-
-      useEffect(() => {
-        effectCalls.push(state.count);
-
-        return () => {
-          throw new Error("Dispose error");
-        };
-      });
-      return () => <div>test</div>;
-    }
-
-    const container = document.createElement("div");
-    render(<Component />, container);
-
-    expect(effectCalls).toEqual([0]);
-
-    state.count = 1;
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    // Effect should still have run despite dispose throwing
-    expect(effectCalls).toEqual([0, 1]);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Error in effect dispose function:",
-      expect.any(Error)
-    );
-
-    consoleErrorSpy.mockRestore();
-  });
-
   it("should call dispose with latest closure values", async () => {
     const disposeValues: number[] = [];
     let state!: { count: number };

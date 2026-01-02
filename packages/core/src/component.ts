@@ -1,7 +1,8 @@
 import { VNode, Component, Props, InfernoNode } from "inferno";
-import { getCurrentObserver, Observer, Signal } from "./observation";
-import { syncBatch } from "./batch";
 import { CatchErrorContext } from "./useCatchError";
+import { IObservableValue, Reaction, observable } from "mobx";
+import { transaction } from "./scheduler";
+import { assignState } from "./useState";
 
 let currentComponent: RaskComponent<any> | undefined;
 
@@ -35,7 +36,7 @@ export type RaskStatefulFunctionComponent<P extends Props<any>> =
 
 export class RaskComponent<P extends Props<any>> extends Component<P> {
   declare renderFn: RaskStatelessFunctionComponent<P>;
-  propsSignals: Record<string, Signal> = {};
+  propsSignals: Record<string, IObservableValue<any>> = {};
   private reactiveProps!: Props<any>;
 
   // RECONCILIATION FLAGS
@@ -63,15 +64,17 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
   private isNotified = false;
   private isReconciling = false;
   private hasChangedComponent = true;
+  private createReaction() {
+    return new Reaction("ComponentRender", () => {
+      if (this.isReconciling) {
+        this.isNotified = true;
+        return;
+      }
 
-  observer = new Observer(() => {
-    if (this.isReconciling) {
-      this.isNotified = true;
-      return;
-    }
-
-    this.forceUpdate();
-  });
+      this.forceUpdate();
+    });
+  }
+  private reaction: Reaction = this.createReaction();
   // Flag to prevent props from tracking in render scope (We use props reconciliation)
   isRendering = false;
   effects: Array<{ isDirty: boolean; run: () => void }> = [];
@@ -105,18 +108,10 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
     nextProps: Readonly<{ children?: InfernoNode } & P>
   ): void {
     this.isReconciling = true;
-    const prevProps = this.props;
-    this.props = nextProps;
     this.hasChangedComponent =
-      (prevProps as any).__component !== (this.props as any).__component;
-    syncBatch(() => {
-      for (const prop in this.propsSignals!) {
-        if ((prevProps as any)[prop] === (nextProps as any)[prop]) {
-          continue;
-        }
-
-        this.propsSignals[prop].notify();
-      }
+      (nextProps as any).__component !== (this.props as any).__component;
+    transaction(() => {
+      assignState(this.reactiveProps, nextProps);
     });
   }
   shouldComponentUpdate(): boolean {
@@ -127,20 +122,20 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
   }
   render() {
     currentComponent = this;
-    const stopObserving = this.observer.observe();
 
     try {
       if (this.hasChangedComponent) {
         this.hasChangedComponent = false;
         this.componentWillUnmount();
-        this.reactiveProps = createReactiveProps(this);
+        this.reactiveProps = observable(this.props);
 
         const component = (this.props as any).__component;
         const renderFn = component(this.reactiveProps as any);
 
         if (typeof renderFn === "function") {
           // Since we ran a setup function we need to clear any signals accessed
-          this.observer.clearSignals();
+          this.reaction.dispose();
+          this.reaction = this.createReaction();
           this.renderFn = renderFn;
         } else {
           this.renderFn = component;
@@ -152,7 +147,26 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
       let result: any = null;
 
       this.isRendering = true;
-      result = this.renderFn(this.reactiveProps as any);
+
+      this.reaction.track(() => {
+        try {
+          result = this.renderFn(this.reactiveProps as any);
+        } catch (error) {
+          try {
+            const notifyError = CatchErrorContext.use();
+
+            if (typeof notifyError !== "function") {
+              throw error;
+            }
+
+            notifyError(error);
+
+            return null;
+          } catch {
+            throw error;
+          }
+        }
+      });
       this.isRendering = false;
 
       return result;
@@ -171,49 +185,7 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
         throw error;
       }
     } finally {
-      stopObserving();
       currentComponent = undefined;
     }
   }
-}
-
-function createReactiveProps(comp: RaskComponent<any>) {
-  const props = new Proxy(
-    {},
-    {
-      ownKeys() {
-        return Object.getOwnPropertyNames(comp.props);
-      },
-      getOwnPropertyDescriptor(_, prop: string) {
-        return {
-          configurable: true,
-          enumerable: true,
-          value: comp.props[prop],
-          writable: false,
-        };
-      },
-      get(_, prop: string) {
-        // Skip known non-reactive props
-        if (prop === "key" || prop === "ref") {
-          return;
-        }
-
-        const observer = getCurrentObserver();
-
-        if (observer) {
-          // Lazy create signal only when accessed in reactive context
-          let signal = comp.propsSignals[prop];
-          if (!signal) {
-            signal = new Signal();
-            comp.propsSignals[prop] = signal;
-          }
-          observer.subscribeSignal(signal);
-        }
-
-        return comp.props[prop];
-      },
-    }
-  );
-
-  return props;
 }

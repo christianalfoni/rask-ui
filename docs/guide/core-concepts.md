@@ -39,10 +39,14 @@ function TodoList() {
 
 ### How It Works
 
+RASK's reactivity is powered by **MobX**, a battle-tested reactive state management library:
+
 1. **Proxy-based tracking** - State objects use JavaScript Proxies to track property access
 2. **Automatic dependency tracking** - When you access `state.count` during render, that dependency is recorded
 3. **Efficient updates** - Only components that access changed properties re-render
 4. **Deep reactivity** - Nested objects and arrays are automatically reactive
+
+This proven reactivity system has been used in production by thousands of applications, ensuring reliability and performance.
 
 ## Children reconciles
 
@@ -109,7 +113,7 @@ Reactive objects are implemented using JavaScript Proxies. When you access a pro
 
 ## Automatic Batching
 
-RASK automatically batches state updates to minimize re-renders.
+RASK automatically batches state updates to minimize re-renders using MobX's transaction system.
 
 - **User interactions** (clicks, inputs, keyboard, etc.) - State changes are batched and flushed synchronously at the end of the event
 - **Other updates** (setTimeout, fetch callbacks, etc.) - State changes are batched and flushed on the next microtask

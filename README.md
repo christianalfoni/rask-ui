@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/christianalfoni/rask-ui/main/logo.png" alt="Logo" width="200">
 </p>
 
-A lightweight reactive component library that combines the simplicity of observable state management with the full power of a virtual DOM reconciler.
+A lightweight reactive component library built on battle-tested technologies: **Inferno's** highly optimized reconciler and **MobX's** proven reactive state management.
 
 **[Visit rask-ui.io for full documentation](https://rask-ui.io)**
 

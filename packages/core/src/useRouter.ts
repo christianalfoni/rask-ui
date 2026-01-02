@@ -4,8 +4,8 @@ import {
   TRouter,
   TRoutes,
 } from "typed-client-router";
-import { getCurrentObserver, Signal } from "./observation";
 import { useCleanup, getCurrentComponent } from "./component";
+import { observable } from "mobx";
 
 export type Router<T extends RoutesConfig> = Omit<
   TRouter<T>,
@@ -25,19 +25,13 @@ export function useRouter<const T extends RoutesConfig>(
   }
 
   const router = internalCreateRouter(config, options);
-  const signal = new Signal();
+  const route = observable.box(router.current);
 
-  useCleanup(router.listen(() => signal.notify()));
+  useCleanup(router.listen((newRoute) => route.set(newRoute)));
 
   return {
     get route() {
-      const observer = getCurrentObserver();
-
-      if (observer) {
-        observer.subscribeSignal(signal);
-      }
-
-      return router.current;
+      return route.get();
     },
     get queries() {
       return router.queries;

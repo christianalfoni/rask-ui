@@ -262,8 +262,9 @@ describe("useCatchError", () => {
     function TestComponent() {
       const errorState = useCatchError();
 
-      return () =>
-        errorState.error ? (
+      return () => {
+        console.log(errorState.error);
+        return errorState.error ? (
           <div>
             Error: {(errorState.error as any).message} (Code:{" "}
             {(errorState.error as any).code})
@@ -271,6 +272,7 @@ describe("useCatchError", () => {
         ) : (
           <ThrowingChild />
         );
+      };
     }
 
     const container = document.createElement("div");
