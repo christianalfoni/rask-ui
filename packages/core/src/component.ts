@@ -133,14 +133,9 @@ export class RaskComponent<P extends Props<any>> extends Component<P> {
         const renderFn = component(this.reactiveProps as any);
 
         if (typeof renderFn === "function") {
-          // Since we ran a setup function we need to clear any signals accessed
-          this.reaction.dispose();
-          this.reaction = this.createReaction();
           this.renderFn = renderFn;
         } else {
           this.renderFn = component;
-
-          return renderFn;
         }
       }
 
