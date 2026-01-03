@@ -1,5 +1,4 @@
 import { getCurrentComponent } from "./component";
-import { INSPECT_MARKER, INSPECTOR_ENABLED, InspectorRef } from "./inspect";
 
 type Simplify<T> = T extends any ? { [K in keyof T]: T[K] } : never;
 
@@ -46,15 +45,10 @@ export function useView(...args: readonly object[]): any {
 
   const result: any = {};
   const seen = new Set<PropertyKey>();
-  let notifyInspectorRef: InspectorRef = {};
 
   for (let i = args.length - 1; i >= 0; i--) {
     const src = args[i] as any;
     if (!src) continue;
-
-    if (INSPECTOR_ENABLED && src[INSPECT_MARKER]) {
-      src[INSPECT_MARKER] = notifyInspectorRef;
-    }
 
     // Mimic Object.assign: only enumerable own property keys
     for (const key of Reflect.ownKeys(src)) {
@@ -67,56 +61,12 @@ export function useView(...args: readonly object[]): any {
         enumerable: true,
         configurable: true,
         get: () => {
-          const value = src[key as any];
-
-          if (!INSPECTOR_ENABLED || !notifyInspectorRef.current) {
-            return value;
-          }
-
-          // Propagate inspector marker into nested observables
-          if (value?.[INSPECT_MARKER]) {
-            value[INSPECT_MARKER] = {
-              current: {
-                notify: notifyInspectorRef.current.notify,
-                path: notifyInspectorRef.current.path.concat(key as any),
-              },
-            };
-          } else if (typeof value === "function") {
-            // Wrap actions to notify inspector
-            return (...params: any[]) => {
-              notifyInspectorRef.current!.notify({
-                type: "action",
-                path: notifyInspectorRef.current!.path.concat(key as any),
-                params,
-              });
-              return value(...params);
-            };
-          }
-
-          return value;
+          return src[key as any];
         },
       });
 
       seen.add(key);
     }
-  }
-
-  if (INSPECTOR_ENABLED) {
-    Object.defineProperty(result, INSPECT_MARKER, {
-      enumerable: false,
-      configurable: false,
-      get() {
-        return !notifyInspectorRef.current;
-      },
-      set: (value: InspectorRef) => {
-        Object.defineProperty(notifyInspectorRef, "current", {
-          configurable: true,
-          get() {
-            return value.current;
-          },
-        });
-      },
-    });
   }
 
   // The overload signatures expose a precise type; this is the shared impl.

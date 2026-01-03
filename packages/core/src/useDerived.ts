@@ -22,6 +22,7 @@ export function useDerived<T extends Record<string, () => any>>(
       get() {
         return computedValue.get();
       },
+      enumerable: true,
     });
   }
 
