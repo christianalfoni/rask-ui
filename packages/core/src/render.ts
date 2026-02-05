@@ -15,8 +15,9 @@ export function render(...params: Parameters<typeof infernoRender>) {
    * Temporarily patches document.addEventListener during render to capture
    * and wrap Inferno's delegated event listeners with syncBatch
    */
-  const originalAddEventListener = document.addEventListener.bind(document);
-  const patchedEvents = new Set<string>();
+  const originalAddEventListener = EventTarget.prototype.addEventListener;
+  const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
+  const wrappedListeners = new WeakMap<any, any>();
 
   // Inferno's delegated events
   const INFERNO_EVENTS = [
@@ -39,37 +40,61 @@ export function render(...params: Parameters<typeof infernoRender>) {
   ];
 
   // Temporarily replace addEventListener
-  document.addEventListener = function (
+  EventTarget.prototype.addEventListener = function (
+    this: any,
     type: string,
     listener: EventListenerOrEventListenerObject | null,
-    options?: boolean | AddEventListenerOptions
+    options?: boolean | AddEventListenerOptions,
   ) {
     // Only wrap Inferno's delegated event listeners
-    if (
-      INFERNO_EVENTS.includes(type) &&
-      typeof listener === "function" &&
-      !patchedEvents.has(type)
-    ) {
-      patchedEvents.add(type);
-
+    if (INFERNO_EVENTS.includes(type) && typeof listener === "function") {
       const wrappedListener = function (this: any, event: Event) {
         transaction(() => {
           listener.call(this, event);
         });
       };
 
-      return originalAddEventListener(type, wrappedListener, options);
+      wrappedListeners.set(listener, wrappedListener);
+
+      return originalAddEventListener.call(
+        this,
+        type,
+        wrappedListener,
+        options,
+      );
     }
 
     // @ts-ignore
-    return originalAddEventListener(type, listener, options);
+    return originalAddEventListener.call(this, type, listener, options);
   } as any;
 
-  try {
-    // Call render - Inferno will synchronously attach its listeners
-    return infernoRender(...params);
-  } finally {
-    // Restore original addEventListener
-    document.addEventListener = originalAddEventListener;
-  }
+  EventTarget.prototype.removeEventListener = function (
+    this: any,
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ) {
+    if (
+      INFERNO_EVENTS.includes(type) &&
+      typeof listener === "function" &&
+      wrappedListeners.has(listener)
+    ) {
+      const wrappedListener = wrappedListeners.get(listener);
+
+      wrappedListeners.delete(listener);
+
+      // @ts-ignore
+      return originalRemoveEventListener.call(
+        this,
+        type,
+        wrappedListener,
+        options,
+      );
+    }
+
+    // @ts-ignore
+    return originalRemoveEventListener.call(this, type, listener, options);
+  };
+
+  return infernoRender(...params);
 }
