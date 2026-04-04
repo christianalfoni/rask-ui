@@ -40,6 +40,8 @@ declare global {
     export type FocusEvent<T = Element> = InfernoFocusEvent<T>;
     export type FormEvent<T = Element> = InfernoFormEvent<T>;
     export type CompositionEvent<T = Element> = InfernoCompositionEvent<T>;
+    export type Children = InfernoNode;
+    export type RaskNode = InfernoNode;
     export type ElementProps<T extends keyof JSX.IntrinsicElements> = Omit<
       JSX.IntrinsicElements[T],
       keyof Inferno.Attributes
